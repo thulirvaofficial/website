@@ -1,0 +1,29 @@
+name: Deploy Thulirva Website
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy website files
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.VPS_HOST }}
+          REMOTE_USER: ${{ secrets.VPS_USER }}
+          SOURCE: "./"
+          TARGET: "/var/www/thulirva/website/"
+          EXCLUDE: "/.git/, /.github/, /node_modules/"
+          SCRIPT_AFTER: |
+            sudo systemctl reload nginx
