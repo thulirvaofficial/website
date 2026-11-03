@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Login &amp; Register | THULIRVA</title>
+    <meta name="description" content="Sign in or register for your THULIRVA account to manage subscriptions, track fresh farm deliveries, and earn rewards.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="announcement-bar">
+    <div class="container announcement-content">
+        <span>🌿 Pure by Nature, Made for You!</span>
+        <span>🌾 Farm Fresh</span>
+        <span>✕ No Preservatives</span>
+        <span>🚚 Home Delivery</span>
+        <span>📞 93606 71533</span>
+    </div>
+</div>
+
+<header class="site-header">
+    <div class="container header-container">
+        <a href="../index.html" class="brand">
+            <div class="brand-logo-wrap">
+                <img src="../assets/images/logo/logo.jpg" alt="THULIRVA" class="brand-logo-img">
+                <div class="brand-text">
+                    <span class="brand-name">THULIRVA</span>
+                    <span class="brand-tagline">ROOTED IN NATURE</span>
+                </div>
+            </div>
+        </a>
+        <nav class="main-navigation">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="shop.html" class="nav-link">Shop</a>
+            <a href="about.html" class="nav-link">About Us</a>
+            <a href="farms.html" class="nav-link">Our Farms</a>
+            <a href="recipes.html" class="nav-link">Recipes</a>
+            <a href="contact.html" class="nav-link">Contact</a>
+        </nav>
+        <div class="header-actions">
+            <a href="login.html" class="header-icon active" title="Account">👤</a>
+            <a href="cart.html" class="cart-button" title="Cart">
+                🛒<span class="cart-count" id="cartCount">0</span>
+            </a>
+            <button class="mobile-menu-button" id="mobileMenuButton">☰</button>
+        </div>
+    </div>
+    <nav class="mobile-navigation" id="mobileNavigation">
+        <a href="../index.html">Home</a>
+        <a href="shop.html">Shop</a>
+        <a href="about.html">About Us</a>
+        <a href="farms.html">Our Farms</a>
+        <a href="recipes.html">Recipes</a>
+        <a href="contact.html">Contact</a>
+    </nav>
+</header>
+
+<div class="page-hero">
+    <div class="container">
+        <span class="section-label">Customer Portal</span>
+        <h1>My Account</h1>
+        <p>Access your doorstep orders, recurring milk subscriptions, and profile details.</p>
+        <div class="breadcrumb">
+            <a href="../index.html">Home</a>
+            <span>/</span>
+            <span>Account</span>
+        </div>
+    </div>
+</div>
+
+<section>
+    <div class="container">
+        <div class="auth-container">
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tabSignIn" onclick="switchAuthTab('login')">Sign In</button>
+                <button class="auth-tab" id="tabSignUp" onclick="switchAuthTab('register')">Create Account</button>
+            </div>
+
+            <!-- Sign In Form -->
+            <div class="auth-body" id="loginFormContainer">
+                <div class="auth-form-header">
+                    <h2>Welcome Back</h2>
+                    <p>Enter your phone or email to manage your farm orders</p>
+                </div>
+                <form class="auth-form" onsubmit="handleAuthSubmit(event, 'login')">
+                    <div class="form-group">
+                        <label class="form-label">Email or Phone Number</label>
+                        <input type="text" class="form-input" placeholder="e.g. 9876543210 or name@example.com" required id="loginIdentifier">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" placeholder="••••••••" required id="loginPassword">
+                    </div>
+                    <div class="auth-options">
+                        <label class="auth-remember">
+                            <input type="checkbox" checked>
+                            <span>Remember this device</span>
+                        </label>
+                        <a href="#" class="auth-forgot" onclick="event.preventDefault(); alert('Password reset link has been dispatched to your registered phone / email!');">Forgot Password?</a>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block btn-lg">Sign In &rarr;</button>
+                </form>
+
+                <div class="auth-divider">
+                    <span>Quick Access</span>
+                </div>
+
+                <div class="quick-portal-links">
+                    <a href="contact.html" title="Contact farm customer care">
+                        💬 <span>Help &amp; Support</span>
+                    </a>
+                    <a href="shop.html" title="Continue shopping as guest">
+                        🌾 <span>Browse Shop</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Create Account Form -->
+            <div class="auth-body" id="registerFormContainer" style="display: none;">
+                <div class="auth-form-header">
+                    <h2>Join THULIRVA Family</h2>
+                    <p>Enjoy doorstep fresh dairy deliveries and priority farm harvesting</p>
+                </div>
+                <form class="auth-form" onsubmit="handleAuthSubmit(event, 'register')">
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-input" placeholder="e.g. Rajesh Kumar" required id="regName">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mobile Number</label>
+                        <input type="tel" class="form-input" placeholder="10-digit mobile number" required id="regPhone">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address (Optional)</label>
+                        <input type="email" class="form-input" placeholder="name@example.com" id="regEmail">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Create Password</label>
+                        <input type="password" class="form-input" placeholder="At least 6 characters" required id="regPassword">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 22px;">
+                        <label class="auth-remember" style="font-size: 12.5px;">
+                            <input type="checkbox" required checked>
+                            <span>I agree to receive daily farm delivery WhatsApp updates</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block btn-lg">Create Free Account &rarr;</button>
+                </form>
+
+                <div class="auth-divider">
+                    <span>Already Registered?</span>
+                </div>
+
+                <div style="text-align: center;">
+                    <button class="btn btn-outline btn-block" onclick="switchAuthTab('login')">Sign In with Existing Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="site-footer">
+    <div class="footer-top">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="brand-logo-wrap">
+                        <img src="../assets/images/logo/logo.jpg" alt="THULIRVA" class="brand-logo-img">
+                        <div class="brand-text">
+                            <span class="brand-name" style="color:#e5c97a;">THULIRVA</span>
+                            <span class="brand-tagline" style="color:#c8dbbf;">ROOTED IN NATURE</span>
+                        </div>
+                    </div>
+                    <p class="footer-tagline">Pure, unadulterated dairy and agro products delivered direct from organic certified farms to your home.</p>
+                    <p style="font-size:12px; color:#c8dbbf; margin-top:8px;">
+                        📍 Farm: No 1, Mayana Salai, Thimmarajampettai, Kanchipuram - 631601, Tamil Nadu
+                    </p>
+                    <div class="footer-social">
+                        <a href="#" class="social-icon" title="Instagram">📷</a>
+                        <a href="#" class="social-icon" title="Facebook">📘</a>
+                        <a href="#" class="social-icon" title="WhatsApp">💬</a>
+                        <a href="#" class="social-icon" title="YouTube">📺</a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Explore</h3>
+                    <a href="../index.html">Home</a>
+                    <a href="shop.html">Shop All</a>
+                    <a href="about.html">About Us</a>
+                    <a href="farms.html">Our Farms</a>
+                    <a href="recipes.html">Recipes</a>
+                </div>
+                <div class="footer-column">
+                    <h3>Products</h3>
+                    <a href="shop.html?category=milk">Farm Fresh Milk</a>
+                    <a href="shop.html?category=ghee">Desi Cow Ghee</a>
+                    <a href="shop.html?category=paneer">Artisanal Paneer</a>
+                    <a href="shop.html?category=curd">Set Curd &amp; Butter</a>
+                    <a href="shop.html?category=honey">Raw Wild Honey</a>
+                </div>
+                <div class="footer-column">
+                    <h3>Support</h3>
+                    <a href="contact.html">Contact Us</a>
+                    <a href="cart.html">View Cart</a>
+                    <a href="checkout.html">Checkout</a>
+                    <a href="account.html">My Account</a>
+                </div>
+                <div class="footer-newsletter">
+                    <h3>Stay Connected</h3>
+                    <p>Subscribe for exclusive harvest updates, healthy recipes, and doorstep discounts.</p>
+                    <form class="newsletter-form" onsubmit="event.preventDefault(); alert('Thank you for subscribing to THULIRVA farm updates!');">
+                        <input type="email" placeholder="Your email address" class="newsletter-input" required>
+                        <button type="submit" class="newsletter-btn">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div class="container footer-bottom-content">
+            <p>&copy; 2026 THULIRVA Agro &amp; Dairy. All Rights Reserved.</p>
+            <div class="footer-bottom-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Shipping &amp; Returns</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<div class="toast" id="toast">Signed in successfully!</div>
+
+<script src="../js/main.js"></script>
+<script>
+function switchAuthTab(tab) {
+    const tabSignIn = document.getElementById('tabSignIn');
+    const tabSignUp = document.getElementById('tabSignUp');
+    const loginForm = document.getElementById('loginFormContainer');
+    const regForm = document.getElementById('registerFormContainer');
+    
+    if (tab === 'login') {
+        tabSignIn.classList.add('active');
+        tabSignUp.classList.remove('active');
+        loginForm.style.display = 'block';
+        regForm.style.display = 'none';
+    } else {
+        tabSignUp.classList.add('active');
+        tabSignIn.classList.remove('active');
+        loginForm.style.display = 'none';
+        regForm.style.display = 'block';
+    }
+}
+
+function handleAuthSubmit(e, type) {
+    e.preventDefault();
+    const toast = document.getElementById('toast');
+    let registeredUsers = JSON.parse(localStorage.getItem('thulirva_registered_users') || '[]');
+
+    // Remove any previous error message
+    const oldErr = document.getElementById('authErrorNotice');
+    if (oldErr) oldErr.remove();
+
+    if (type === 'login') {
+        const identifier = document.getElementById('loginIdentifier').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const form = e.target;
+
+        // Find user by email or phone
+        const user = registeredUsers.find(u => 
+            (u.email && u.email.toLowerCase() === identifier.toLowerCase()) || 
+            (u.phone && u.phone === identifier)
+        );
+
+        if (!user) {
+            // User does NOT exist - DO NOT CREATE USER
+            const errDiv = document.createElement('div');
+            errDiv.id = 'authErrorNotice';
+            errDiv.style.cssText = 'background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; border-radius:8px; padding:12px; margin-bottom:16px; font-size:13.5px; font-weight:600; text-align:center;';
+            errDiv.innerHTML = `⚠️ User not found. Please <a href="#" onclick="switchAuthTab('register')" style="color:#721c24; text-decoration:underline; font-weight:700;">register first</a> to create your account.`;
+            form.insertBefore(errDiv, form.firstChild);
+
+            if (toast) {
+                toast.textContent = "User not found. Please register to create an account.";
+                toast.style.background = "#c0392b";
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3500);
+            }
+            return;
+        }
+
+        // User exists: verify password
+        if (user.password !== password) {
+            const errDiv = document.createElement('div');
+            errDiv.id = 'authErrorNotice';
+            errDiv.style.cssText = 'background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; border-radius:8px; padding:12px; margin-bottom:16px; font-size:13.5px; font-weight:600; text-align:center;';
+            errDiv.innerHTML = `❌ Incorrect password. Please check and try again.`;
+            form.insertBefore(errDiv, form.firstChild);
+
+            if (toast) {
+                toast.textContent = "Incorrect password. Please try again.";
+                toast.style.background = "#c0392b";
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3500);
+            }
+            return;
+        }
+
+        // Credentials valid! Log in
+        const userId = user.id ? (String(user.id).startsWith("USR-") ? user.id : "USR-" + user.id) : "USR-" + Math.floor(1000 + Math.random() * 9000);
+        user.id = userId;
+        localStorage.setItem('thulirva_registered_users', JSON.stringify(registeredUsers));
+        localStorage.setItem('thulirva_user', JSON.stringify({
+            id: userId,
+            name: user.name,
+            phone: user.phone,
+            email: user.email
+        }));
+
+        if (toast) {
+            toast.textContent = `Welcome back, ${user.name}! Opening your account... 🌿`;
+            toast.style.background = "var(--forest-green)";
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                window.location.href = 'account.html';
+            }, 1000);
+        }
+    } else {
+        // Register account
+        const name = document.getElementById('regName').value.trim();
+        const phone = document.getElementById('regPhone').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
+        const password = document.getElementById('regPassword').value;
+
+        // Check if phone or email already registered
+        const existing = registeredUsers.find(u => (phone && u.phone === phone) || (email && u.email && u.email.toLowerCase() === email.toLowerCase()));
+        if (existing) {
+            const errDiv = document.createElement('div');
+            errDiv.id = 'authErrorNotice';
+            errDiv.style.cssText = 'background:#fff3cd; color:#856404; border:1px solid #ffeeba; border-radius:8px; padding:12px; margin-bottom:16px; font-size:13.5px; font-weight:600; text-align:center;';
+            errDiv.innerHTML = `An account already exists with this phone/email. <a href="#" onclick="switchAuthTab('login')" style="color:#856404; text-decoration:underline;">Click to Sign In</a>`;
+            e.target.insertBefore(errDiv, e.target.firstChild);
+            return;
+        }
+
+        const newUserId = "USR-" + (Math.floor(1000 + Math.random() * 9000));
+        const newUser = {
+            id: newUserId,
+            name: name,
+            phone: phone,
+            email: email,
+            password: password,
+            created_at: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            orders_count: 0,
+            total_spent: 0
+        };
+
+        registeredUsers.push(newUser);
+        localStorage.setItem('thulirva_registered_users', JSON.stringify(registeredUsers));
+        localStorage.setItem('thulirva_user', JSON.stringify({
+            id: newUserId,
+            name: newUser.name,
+            phone: newUser.phone,
+            email: newUser.email
+        }));
+
+        // Try syncing with backend API if available
+        try {
+            fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone, email, password })
+            }).catch(() => {});
+        } catch (err) {}
+
+        if (toast) {
+            toast.textContent = `Account created successfully! Welcome to THULIRVA, ${name}! 🎉`;
+            toast.style.background = "var(--forest-green)";
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                window.location.href = 'account.html';
+            }, 1000);
+        }
+    }
+}
+</script>
+</body>
+</html>

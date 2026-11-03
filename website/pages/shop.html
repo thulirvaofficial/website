@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop | THULIRVA — Fresh, Natural Products</title>
+    <meta name="description" content="Shop fresh dairy and agro products from THULIRVA. Milk, Paneer, Ghee, Oils, Masalas and more.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="announcement-bar">
+    <div class="container announcement-content">
+        <span>🌿 Pure by Nature, Made for You!</span><span>🌾 Farm Fresh</span>
+        <span>✕ No Preservatives</span><span>🚚 Home Delivery</span><span>📞 93606 71533</span>
+    </div>
+</div>
+<header class="site-header">
+    <div class="container header-container">
+        <a href="../index.html" class="brand">
+            <div class="brand-logo-wrap">
+                <img src="../assets/images/logo/logo.jpg" alt="THULIRVA" class="brand-logo-img">
+                <div class="brand-text">
+                    <span class="brand-name">THULIRVA</span>
+                    <span class="brand-tagline">ROOTED IN NATURE</span>
+                </div>
+            </div>
+        </a>
+        <nav class="main-navigation">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="shop.html" class="nav-link active">Shop</a>
+            <a href="subscriptions.html" class="nav-link">Subscriptions</a>
+            <a href="about.html" class="nav-link">About Us</a>
+            <a href="farms.html" class="nav-link">Our Farms</a>
+            <a href="recipes.html" class="nav-link">Recipes</a>
+            <a href="contact.html" class="nav-link">Contact</a>
+        </nav>
+        <div class="header-actions">
+            <button class="header-icon">🔍</button>
+            <a href="account.html" class="header-icon" title="My Account">👤</a>
+            <a href="cart.html" class="cart-button">🛒<span class="cart-count" id="cartCount">0</span></a>
+            <button class="mobile-menu-button" id="mobileMenuButton">☰</button>
+        </div>
+    </div>
+    <nav class="mobile-navigation" id="mobileNavigation">
+        <a href="../index.html">Home</a><a href="shop.html">Shop</a><a href="subscriptions.html">Subscriptions</a><a href="about.html">About Us</a>
+        <a href="farms.html">Our Farms</a><a href="recipes.html">Recipes</a><a href="contact.html">Contact</a>
+    </nav>
+</header>
+
+<div class="page-hero">
+    <div class="container">
+        <div class="breadcrumb"><a href="../index.html">Home</a><span>&rsaquo;</span><span>Our Products</span></div>
+        <h1>Our Products</h1>
+        <p>Fresh. Natural. Pure.</p>
+    </div>
+</div>
+
+<section style="background:var(--light-cream)">
+    <div class="container">
+        <div class="shop-layout">
+            <aside class="shop-sidebar">
+                <div class="sidebar-section">
+                    <h3>Categories</h3>
+                    <div id="shopCategoriesList">
+                        <div class="sidebar-category active" data-cat="all" onclick="filterShop('all')">🛒 All Products <span id="cnt-all">0</span></div>
+                        <div class="sidebar-category" data-cat="Milk" onclick="filterShop('Milk')">🥛 Milk <span id="cnt-Milk">0</span></div>
+                        <div class="sidebar-category" data-cat="Curd" onclick="filterShop('Curd')">🫙 Curd <span id="cnt-Curd">0</span></div>
+                        <div class="sidebar-category" data-cat="Paneer" onclick="filterShop('Paneer')">🧀 Paneer <span id="cnt-Paneer">0</span></div>
+                        <div class="sidebar-category" data-cat="Ghee" onclick="filterShop('Ghee')">🧈 Ghee &amp; Butter <span id="cnt-Ghee">0</span></div>
+                        <div class="sidebar-category" data-cat="Oils" onclick="filterShop('Oils')">🫗 Oils <span id="cnt-Oils">0</span></div>
+                        <div class="sidebar-category" data-cat="Masalas" onclick="filterShop('Masalas')">🌶️ Masalas <span id="cnt-Masalas">0</span></div>
+                        <div class="sidebar-category" data-cat="Vegan" onclick="filterShop('Vegan')">🌱 Vegan <span id="cnt-Vegan">0</span></div>
+                    </div>
+                </div>
+                <div class="sidebar-section">
+                    <h3>Sort By</h3>
+                    <select class="sort-select" id="sortSelect" onchange="sortProducts(this.value)" style="width:100%">
+                        <option value="default">Default</option>
+                        <option value="price-asc">Price: Low to High</option>
+                        <option value="price-desc">Price: High to Low</option>
+                        <option value="name">Name A-Z</option>
+                    </select>
+                </div>
+            </aside>
+            <main class="shop-main">
+                <div class="shop-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+                    <p id="shopResultCount" style="margin:0; font-size:14px; font-weight:600; color:var(--text-mid);">Loading products...</p>
+                    <div style="position:relative; width:100%; max-width:320px;">
+                        <input type="text" id="shopSearchInput" placeholder="Search products..." oninput="handleShopSearch(this.value)" style="width:100%; padding:9px 14px 9px 36px; border:1.5px solid var(--border); border-radius:24px; font-size:13px; outline:none; background:white; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
+                        <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:13px; color:var(--text-muted);">🔍</span>
+                    </div>
+                </div>
+                <div class="shop-product-grid" id="shopGrid">
+                    <div class="loading"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+</section>
+
+<footer class="site-footer">
+    <div class="footer-top">
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <div class="brand-logo-wrap">
+                    <img src="../assets/images/logo/logo.jpg" alt="THULIRVA" class="brand-logo-img">
+                    <div class="brand-text">
+                        <span class="brand-name" style="color:#e5c97a;">THULIRVA</span>
+                        <span class="brand-tagline" style="color:#c8dbbf;">ROOTED IN NATURE</span>
+                    </div>
+                </div>
+                <p class="footer-tagline">Pure by Nature, Made for You!</p>
+                <p style="font-size:12px; color:#c8dbbf; margin-top:8px;">
+                    📍 Farm: No 1, Mayana Salai, Thimmarajampettai, Kanchipuram - 631601, Tamil Nadu
+                </p>
+            </div>
+            <div class="footer-column"><h3>Shop</h3><a href="shop.html">Milk</a><a href="shop.html">Curd</a><a href="shop.html">Paneer</a><a href="shop.html">Ghee &amp; Butter</a></div>
+            <div class="footer-column"><h3>Company</h3><a href="about.html">About Us</a><a href="farms.html">Our Farms</a><a href="contact.html">Contact</a></div>
+            <div class="footer-column"><h3>Help</h3><a href="#">Shipping Policy</a><a href="#">Return &amp; Refund</a><a href="#">FAQ</a></div>
+            <div class="footer-newsletter"><h3>Newsletter</h3><p>Stay updated with farm stories and offers.</p>
+                <div class="newsletter-form"><input type="email" placeholder="Email Address" class="newsletter-input"><button class="newsletter-btn">Subscribe</button></div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom"><div class="container footer-bottom-content"><p>© 2026 THULIRVA. Pure by Nature, Made for You!</p></div></div>
+</footer>
+<div class="toast" id="toast"></div>
+<script src="../js/main.js"></script>
+<script src="../js/shop-page.js"></script>
+</body></html>

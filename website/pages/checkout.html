@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | THULIRVA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .themed-qr-card {
+            background: linear-gradient(135deg, #f7faf5 0%, #ffffff 100%);
+            border: 2px solid #1a4a2e;
+            border-radius: 14px;
+            padding: 22px;
+            text-align: center;
+            margin-top: 14px;
+            box-shadow: 0 4px 16px rgba(26, 74, 46, 0.08);
+        }
+        .themed-qr-wrapper {
+            display: inline-block;
+            background: white;
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px dashed #c8a84b;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            margin: 12px 0;
+        }
+        .themed-qr-img {
+            width: 190px;
+            height: 190px;
+            object-fit: contain;
+            display: block;
+            border-radius: 6px;
+        }
+        .upi-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #eaf2e4;
+            padding: 8px 14px;
+            border-radius: 8px;
+            margin: 10px auto;
+            max-width: 340px;
+            border: 1px solid #c8dbbf;
+        }
+        .upi-id-text {
+            font-family: monospace;
+            font-weight: 700;
+            color: #1a4a2e;
+            font-size: 14px;
+            letter-spacing: .5px;
+        }
+        .copy-upi-btn {
+            background: #1a4a2e;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background .2s;
+        }
+        .copy-upi-btn:hover {
+            background: #0d2818;
+        }
+        .proof-preview-box {
+            display: none;
+            margin-top: 10px;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .proof-preview-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: white;
+            border-radius: 16px;
+            max-width: 540px;
+            width: 100%;
+            padding: 32px 26px;
+            text-align: center;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+            animation: popIn 0.3s ease-out;
+        }
+        @keyframes popIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+<div class="announcement-bar">
+    <div class="container announcement-content">
+        <span>🌿 Pure by Nature, Made for You!</span><span>🔒 Secure Checkout</span><span>🚚 Fast Delivery</span><span>📞 93606 71533</span>
+    </div>
+</div>
+<header class="site-header">
+    <div class="container header-container">
+        <a href="../index.html" class="brand">
+            <div class="brand-logo-wrap">
+                <img src="../assets/images/logo/logo.jpg" alt="THULIRVA" class="brand-logo-img">
+                <div class="brand-text"><span class="brand-name">THULIRVA</span><span class="brand-tagline">ROOTED IN NATURE</span></div>
+            </div>
+        </a>
+        <nav class="main-navigation">
+            <a href="../index.html" class="nav-link">Home</a><a href="shop.html" class="nav-link">Shop</a>
+            <a href="subscriptions.html" class="nav-link">Subscriptions</a>
+            <a href="about.html" class="nav-link">About Us</a><a href="contact.html" class="nav-link">Contact</a>
+        </nav>
+        <div class="header-actions">
+            <a href="account.html" class="header-icon" title="Account">👤</a>
+            <a href="cart.html" class="cart-button">🛒<span class="cart-count" id="cartCount">0</span></a>
+        </div>
+    </div>
+</header>
+
+<div class="page-hero">
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">Home</a><span>&rsaquo;</span>
+            <a href="cart.html">Cart</a><span>&rsaquo;</span>
+            <span>Checkout</span>
+        </div>
+        <h1>Checkout</h1>
+        <p>Complete your delivery details and verify payment below</p>
+    </div>
+</div>
+
+<section style="background:var(--light-cream)">
+    <div class="container">
+        <div class="checkout-layout">
+            <div>
+                <!-- Checkout Step Progress Indicator -->
+                <div style="display:flex; align-items:center; justify-content:space-between; background:white; padding:16px 20px; border-radius:12px; border:1.5px solid var(--border); margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+                    <div id="stepIndicator1" onclick="goToAddressStep()" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                        <div id="stepCircle1" style="width:32px; height:32px; border-radius:50%; background:var(--forest-green); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13.5px; box-shadow:0 2px 6px rgba(26,74,46,0.3);">
+                            1
+                        </div>
+                        <div>
+                            <div id="stepText1" style="font-weight:700; font-size:13.5px; color:var(--forest-green);">Step 1: Address Details</div>
+                            <small style="color:var(--text-muted); font-size:11px;">Delivery location &amp; address</small>
+                        </div>
+                    </div>
+
+                    <div style="flex:1; max-width:140px; height:3px; background:#e0e0e0; margin:0 12px; border-radius:2px; position:relative;">
+                        <div id="stepProgressLine" style="height:100%; width:0%; background:var(--forest-green); border-radius:2px; transition:width 0.3s ease;"></div>
+                    </div>
+
+                    <div id="stepIndicator2" onclick="goToPaymentStep()" style="display:flex; align-items:center; gap:10px; cursor:pointer; opacity:0.6;">
+                        <div id="stepCircle2" style="width:32px; height:32px; border-radius:50%; background:#e0e0e0; color:#555; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13.5px;">
+                            2
+                        </div>
+                        <div>
+                            <div id="stepText2" style="font-weight:700; font-size:13.5px; color:#555;">Step 2: UPI Payment</div>
+                            <small style="color:var(--text-muted); font-size:11px;">Themed QR &amp; UTR verification</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 1: Delivery Address Window -->
+                <div id="checkoutStep1Container">
+                    <div class="checkout-form-section">
+                        <div class="checkout-section-header">
+                            <div class="checkout-step-num">1</div>
+                            <h3>Delivery Address</h3>
+                        </div>
+                        <div class="checkout-form-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">First Name *</label>
+                                    <input type="text" class="form-input" id="firstName" placeholder="First name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Last Name</label>
+                                    <input type="text" class="form-input" id="lastName" placeholder="Last name">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Phone Number *</label>
+                                    <input type="tel" class="form-input" id="phone" placeholder="10-digit mobile number" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Email Address</label>
+                                    <input type="email" class="form-input" id="email" placeholder="name@example.com">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Available Delivery Area *</label>
+                                    <select class="form-select" id="deliveryLocation" onchange="onDeliveryLocationChange(this.value)">
+                                        <option value="">Select your delivery area...</option>
+                                        <option value="Oragadam" data-pin="603109">📍 Oragadam (603109)</option>
+                                        <option value="Padapai" data-pin="601301">📍 Padapai (601301)</option>
+                                        <option value="Sriperumbudur" data-pin="602105">📍 Sriperumbudur (602105)</option>
+                                        <option value="Valasaravakkam" data-pin="600087">📍 Valasaravakkam (600087)</option>
+                                        <option value="Porur" data-pin="600116">📍 Porur (600116)</option>
+                                        <option value="Virugambakkam" data-pin="600092">📍 Virugambakkam (600092)</option>
+                                        <option value="Vadapalani" data-pin="600026">📍 Vadapalani (600026)</option>
+                                        <option value="Koyambedu" data-pin="600107">📍 Koyambedu (600107)</option>
+                                        <option value="KK Nagar" data-pin="600078">📍 KK Nagar (600078)</option>
+                                        <option value="Alapakkam" data-pin="600116">📍 Alapakkam (600116)</option>
+                                        <option value="Maduravoyal" data-pin="600095">📍 Maduravoyal (600095)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">City *</label>
+                                    <input type="text" class="form-input" id="city" value="Chennai / Kanchipuram" placeholder="City" required>
+                                </div>
+                            </div>
+                            <div class="form-group full" style="margin-bottom:16px">
+                                <label class="form-label">Street / House Address *</label>
+                                <input type="text" class="form-input" id="address" placeholder="Flat / Door no., Apartment / Building, Street name" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">PIN Code *</label>
+                                    <input type="text" class="form-input" id="pincode" value="603109" placeholder="6-digit PIN code" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">State</label>
+                                    <select class="form-select" id="state">
+                                        <option>Tamil Nadu</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding-top:16px; border-top:1px solid #eee;">
+                                <a href="cart.html" style="color:var(--text-mid); font-size:13px; text-decoration:underline;">&larr; Back to Cart</a>
+                                <button type="button" class="btn btn-primary" onclick="goToPaymentStep()" style="padding:12px 24px; font-size:15px; font-weight:700;">
+                                    Proceed to UPI Payment &rarr;
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2: UPI Payment Window (Separate View) -->
+                <div id="checkoutStep2Container" style="display:none;">
+                    <!-- Delivery Address Summary Pill -->
+                    <div style="background:#eaf2e4; border:1px solid #c8dbbf; border-radius:10px; padding:12px 16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                        <div>
+                            <span style="font-size:12px; font-weight:700; color:#1a4a2e; text-transform:uppercase; letter-spacing:0.5px;">📍 Delivering to:</span>
+                            <span id="step2AddressSummary" style="font-size:13px; color:#1a4a2e; font-weight:600; margin-left:4px;">Address details</span>
+                        </div>
+                        <button type="button" onclick="goToAddressStep()" style="background:white; border:1px solid #1a4a2e; color:#1a4a2e; border-radius:4px; padding:4px 10px; font-size:12px; font-weight:700; cursor:pointer;">
+                            ✏ Edit Address
+                        </button>
+                    </div>
+
+                    <div class="checkout-form-section">
+                        <div class="checkout-section-header">
+                            <div class="checkout-step-num">2</div>
+                            <h3>Payment Gateway &bull; UPI Direct Transfer</h3>
+                        </div>
+                        <div class="checkout-form-body">
+                            <div class="themed-qr-card">
+                                <div style="display:inline-block; background:var(--forest-green); color:#e5c97a; font-weight:700; font-size:11px; padding:3px 12px; border-radius:20px; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">
+                                    Scan &amp; Pay via Any UPI App
+                                </div>
+                                <div style="font-size:13px; color:var(--text-mid); margin-bottom:4px;">
+                                    Google Pay &bull; PhonePe &bull; Paytm &bull; BHIM &bull; Cred &bull; Any Bank UPI
+                                </div>
+
+                                <!-- Themed QR Code Frame -->
+                                <div class="themed-qr-wrapper">
+                                    <img src="../assets/images/payment_qr.jpg" alt="THULIRVA Official Payment QR Code" class="themed-qr-img">
+                                </div>
+
+                                <div class="upi-box">
+                                    <span style="font-size:12px; color:#555;">UPI ID:</span>
+                                    <span class="upi-id-text" id="checkoutUpiId">7904880944@superyes</span>
+                                    <button type="button" class="copy-upi-btn" onclick="copyCheckoutUpi()">📋 Copy</button>
+                                </div>
+
+                                <div style="font-size:12.5px; color:var(--text-mid); margin-top:6px;">
+                                    Total Amount Payable: <strong id="qrTotalDisplay" style="color:var(--forest-green); font-size:16px;">₹0</strong>
+                                </div>
+                            </div>
+
+                            <!-- Verification Fields -->
+                            <div style="background:#f9faf8; border:1.5px solid var(--border); border-radius:10px; padding:18px; margin-top:16px;">
+                                <div class="form-group" style="margin-bottom:14px;">
+                                    <label class="form-label" style="font-weight:700; color:var(--forest-green);">
+                                        UPI Transaction ID / UTR Number *
+                                    </label>
+                                    <input type="text" class="form-input" id="orderTransactionId" placeholder="e.g. 12-digit UTR (e.g. 429302194821)" required style="font-family:monospace; font-size:14px;">
+                                    <small style="color:var(--text-muted); font-size:11.5px; display:block; margin-top:4px;">
+                                        Enter the 12-digit UTR/reference number displayed in your payment receipt.
+                                    </small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" style="font-weight:700; color:var(--forest-green);">
+                                        Upload Payment Screenshot Proof *
+                                    </label>
+                                    <input type="file" class="form-input" id="orderProofFile" accept="image/*" required onchange="handleOrderProofChange(event)" style="background:white; padding:8px 12px;">
+                                    
+                                    <div class="proof-preview-box" id="orderProofPreviewBox">
+                                        <img id="orderProofPreviewImg" src="" alt="Proof Preview" class="proof-preview-img">
+                                        <div>
+                                            <div id="orderProofFileName" style="font-size:12px; font-weight:700; color:var(--forest-green);">screenshot.jpg</div>
+                                            <small style="color:#2e7d32;">✓ Screenshot attached for verification</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding-top:16px; border-top:1px solid #eee;">
+                                <button type="button" class="btn btn-outline" onclick="goToAddressStep()" style="padding:11px 20px; font-size:14px; font-weight:600;">
+                                    &larr; Back to Address
+                                </button>
+                                <button type="button" class="btn btn-primary" id="placeOrderBtn" onclick="placeOrder()" style="padding:13px 26px; font-size:15px; font-weight:700;">
+                                    Verify &amp; Place Farm Order &rarr;
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="checkout-summary">
+                <div class="checkout-summary-header">
+                    <h3>Order Summary</h3>
+                </div>
+                <div class="checkout-items" id="checkoutItems">
+                    <div class="loading"></div>
+                </div>
+
+                <!-- Promo / Coupon Code Section -->
+                <div style="background:#fdfcf9; border:1.5px dashed #c8dbbf; border-radius:10px; padding:14px; margin:14px 0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-size:12.5px; font-weight:700; color:var(--forest-green);">🎟️ Have a Promo / Offer Code?</span>
+                        <button type="button" onclick="toggleOffersDrawer()" style="background:none; border:none; color:#c67d0a; font-weight:700; font-size:11.5px; cursor:pointer; text-decoration:underline;">View All Offers 🎁</button>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <input type="text" id="checkoutPromoInput" placeholder="e.g. FARM10" style="flex:1; padding:8px 10px; border:1.5px solid var(--border); border-radius:6px; font-size:12.5px; text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">
+                        <button type="button" class="btn btn-secondary" id="applyPromoBtn" onclick="applyCheckoutPromo()" style="padding:8px 14px; font-size:12px; font-weight:700; white-space:nowrap;">Apply</button>
+                    </div>
+                    <div id="checkoutPromoMsg" style="font-size:11.5px; margin-top:6px; display:none;"></div>
+                    <!-- Quick Offer Chips -->
+                    <div id="checkoutOffersPills" style="display:flex; flex-wrap:wrap; gap:5px; margin-top:8px;"></div>
+                </div>
+
+                <div class="checkout-totals">
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span id="checkoutSubtotal">₹0</span>
+                    </div>
+                    <div class="summary-row" id="checkoutDiscountRow" style="display:none; color:#2e7d32; font-weight:700;">
+                        <span>Promo Discount (<span id="appliedPromoBadge"></span>)</span>
+                        <span id="checkoutDiscount">-₹0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Delivery Charge</span>
+                        <span id="checkoutDelivery">₹30</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total</span>
+                        <span id="checkoutTotal">₹0</span>
+                    </div>
+                    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:20px;font-size:15px;" id="sidebarActionBtn" onclick="handleSidebarAction()">
+                        Proceed to UPI Payment &rarr;
+                    </button>
+                    <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:12px;">🔒 Verified Doorstep Dispatch &bull; 100% Pure</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+        </div>
+    </div>
+</section>
+
+<!-- ORDER PLACED SUCCESS MODAL -->
+<div class="modal-overlay" id="orderSuccessModal">
+    <div class="modal-box">
+        <div style="width:72px; height:72px; border-radius:50%; background:#e8f5e9; color:#2e7d32; font-size:36px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; border:2px solid #a5d6a7;">
+            ✓
+        </div>
+        <span style="display:inline-block; background:#eaf2e4; color:#1a4a2e; font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">
+            Order Placed Successfully!
+        </span>
+        <h2 style="font-family:'Playfair Display',serif; font-size:24px; color:var(--forest-green); margin-bottom:8px;">
+            Thank You for Your Farm Order! 🌿
+        </h2>
+        <p style="font-size:13.5px; color:var(--text-mid); margin-bottom:20px;">
+            Your pure farm produce order has been confirmed and scheduled for morning doorstep dispatch.
+        </p>
+
+        <div style="background:#f9faf8; border:1.5px solid var(--border); border-radius:12px; padding:16px; text-align:left; font-size:13px; line-height:1.7; margin-bottom:24px;" id="orderSuccessDetails">
+            <!-- Dynamically populated -->
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            <a href="account.html?tab=orders" class="btn btn-primary" style="width:100%; justify-content:center; font-size:15px; padding:12px 20px;">
+                📦 View My Orders in Account &rarr;
+            </a>
+            <div style="display:flex; gap:10px;">
+                <button type="button" class="btn btn-outline" style="flex:1; justify-content:center;" onclick="printOrderInvoice()">
+                    🧾 Print Tax Invoice
+                </button>
+                <a href="shop.html" class="btn btn-outline" style="flex:1; justify-content:center;">
+                    🛒 Keep Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="../js/main.js"></script>
+<script src="../js/checkout-page.js"></script>
+</body>
+</html>

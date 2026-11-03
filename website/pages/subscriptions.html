@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Doorstep Milk &amp; Dairy Subscriptions | THULIRVA</title>
+    <meta name="description" content="Subscribe to farm fresh pure cow milk, paneer, and bilona ghee delivered fresh to your doorstep before 7:00 AM every morning in Kanchipuram and Chennai.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .sub-plan-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1.5px solid var(--border);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: transform .2s, box-shadow .2s;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .sub-plan-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--forest-green);
+        }
+        .sub-plan-badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: var(--gold);
+            color: var(--forest-green);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            z-index: 2;
+        }
+        .sub-plan-img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--border);
+        }
+        .sub-plan-body {
+            padding: 22px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .sub-benefit-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--pale-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+
+        /* Themed Payment Gateway Styles */
+        .themed-qr-card {
+            background: linear-gradient(135deg, #f7faf5 0%, #ffffff 100%);
+            border: 2px solid #1a4a2e;
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(26, 74, 46, 0.08);
+            position: relative;
+        }
+        .themed-qr-wrapper {
+            display: inline-block;
+            background: white;
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px dashed #c8a84b;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            margin: 12px 0;
+        }
+        .themed-qr-img {
+            width: 190px;
+            height: 190px;
+            object-fit: contain;
+            display: block;
+            border-radius: 6px;
+        }
+        .upi-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #eaf2e4;
+            padding: 8px 14px;
+            border-radius: 8px;
+            margin: 10px auto;
+            max-width: 340px;
+            border: 1px solid #c8dbbf;
+        }
+        .upi-id-text {
+            font-family: monospace;
+            font-weight: 700;
+            color: #1a4a2e;
+            font-size: 14px;
+            letter-spacing: .5px;
+        }
+        .copy-upi-btn {
+            background: #1a4a2e;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background .2s;
+        }
+        .copy-upi-btn:hover {
+            background: #0d2818;
+        }
+        .proof-preview-box {
+            display: none;
+            margin-top: 10px;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .proof-preview-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        /* Printable Invoice Styles */
+        @media print {
+            body * { visibility: hidden; }
+            #invoiceModal, #invoiceModal * { visibility: visible; }
+            #invoiceModal { position: absolute; left: 0; top: 0; width: 100%; display: block !important; background: white; padding: 0; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="announcement-bar">
+    <div class="container announcement-content">
+        <span>🌿 Pure by Nature, Made for You!</span>
+        <span>🚚 Morning Doorstep Delivery before 7:00 AM</span>
+        <span>🥛 100% Raw Unadulterated Cow Milk</span>
+        <span>📞 93606 71533</span>
+    </div>
+</div>
+
+<header class="site-header">
+    <div class="container header-container">
+        <a href="../index.html" class="brand">
+            <div class="brand-logo-wrap">
+                <img src="../assets/images/logo/logo.jpg" alt="THULIRVA" class="brand-logo-img">
+                <div class="brand-text">
+                    <span class="brand-name">THULIRVA</span>
+                    <span class="brand-tagline">ROOTED IN NATURE</span>
+                </div>
+            </div>
+        </a>
+        <nav class="main-navigation">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="shop.html" class="nav-link">Shop</a>
+            <a href="subscriptions.html" class="nav-link active">Subscriptions</a>
+            <a href="about.html" class="nav-link">About Us</a>
+            <a href="farms.html" class="nav-link">Our Farms</a>
+            <a href="recipes.html" class="nav-link">Recipes</a>
+            <a href="contact.html" class="nav-link">Contact</a>
+        </nav>
+        <div class="header-actions">
+            <a href="account.html" class="header-icon" title="Account">👤</a>
+            <a href="cart.html" class="cart-button" title="Cart">
+                🛒<span class="cart-count" id="cartCount">0</span>
+            </a>
+            <button class="mobile-menu-button" id="mobileMenuButton">☰</button>
+        </div>
+    </div>
+    <nav class="mobile-navigation" id="mobileNavigation">
+        <a href="../index.html">Home</a>
+        <a href="shop.html">Shop</a>
+        <a href="subscriptions.html">Subscriptions</a>
+        <a href="about.html">About Us</a>
+        <a href="farms.html">Our Farms</a>
+        <a href="recipes.html">Recipes</a>
+        <a href="contact.html">Contact</a>
+    </nav>
+</header>
+
+<div class="page-hero">
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">Home</a>
+            <span>&rsaquo;</span>
+            <span>Subscriptions</span>
+        </div>
+        <h1>Daily Farm Doorstep Subscriptions</h1>
+        <p>Wake up to pure, natural, and ethical farm-fresh milk and dairy delivered before 7:00 AM</p>
+    </div>
+</div>
+
+<!-- HOW SUBSCRIPTIONS WORK -->
+<section style="background:white; padding:45px 0;">
+    <div class="container">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:24px;">
+            <div style="text-align:center; padding:16px;">
+                <div class="sub-benefit-icon" style="margin:0 auto 12px;">⏰</div>
+                <h3 style="font-size:16px; color:var(--forest-green); margin-bottom:6px;">Before 7:00 AM</h3>
+                <p style="font-size:13px; color:var(--text-mid); line-height:1.5;">Chilled and dispatched at dawn so your morning tea and coffee never wait.</p>
+            </div>
+            <div style="text-align:center; padding:16px;">
+                <div class="sub-benefit-icon" style="margin:0 auto 12px;">🥛</div>
+                <h3 style="font-size:16px; color:var(--forest-green); margin-bottom:6px;">Pure &amp; Unadulterated</h3>
+                <p style="font-size:13px; color:var(--text-mid); line-height:1.5;">Zero preservatives, no synthetic hormones, tested daily for purity.</p>
+            </div>
+            <div style="text-align:center; padding:16px;">
+                <div class="sub-benefit-icon" style="margin:0 auto 12px;">🚚</div>
+                <h3 style="font-size:16px; color:var(--forest-green); margin-bottom:6px;">Free Daily Delivery</h3>
+                <p style="font-size:13px; color:var(--text-mid); line-height:1.5;">Zero doorstep delivery charges on all subscription packages.</p>
+            </div>
+            <div style="text-align:center; padding:16px;">
+                <div class="sub-benefit-icon" style="margin:0 auto 12px;">⏸</div>
+                <h3 style="font-size:16px; color:var(--forest-green); margin-bottom:6px;">Pause or Cancel Anytime</h3>
+                <p style="font-size:13px; color:var(--text-mid); line-height:1.5;">Travelling? Pause deliveries with 1-click in your account dashboard.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SUBSCRIPTION PLANS SECTION -->
+<section style="background:var(--light-cream); padding:60px 0 80px;">
+    <div class="container">
+        <div class="section-heading">
+            <span class="section-label">Popular Packages</span>
+            <h2>Choose Your Subscription Plan</h2>
+            <p style="color:var(--text-muted); font-size:14px; margin-top:6px;">Select any curated farm plan to enjoy morning doorstep milk delivery</p>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:28px;" id="subscriptionPlansGrid">
+            <div class="loading" style="grid-column:1/-1;"></div>
+        </div>
+    </div>
+</section>
+
+<!-- SUBSCRIBE & PAY MODAL -->
+<div class="modal-overlay" id="buySubModal">
+    <div class="modal-box" style="max-width:680px; max-height:92vh; overflow-y:auto; padding:28px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1.5px solid var(--border); padding-bottom:14px; margin-bottom:20px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <img id="modalPlanImg" src="../assets/images/products/fresh_cow_milk.jpg" alt="Plan" style="width:52px; height:52px; object-fit:cover; border-radius:8px; border:1px solid var(--border);">
+                <div>
+                    <h3 id="modalPlanTitle" style="font-family:'Playfair Display',serif; font-size:20px; color:var(--forest-green); margin:0;">Subscribe Plan</h3>
+                    <div id="modalPlanSubtitle" style="font-size:12.5px; color:var(--text-muted);">Daily Morning Doorstep Delivery</div>
+                </div>
+            </div>
+            <button onclick="closeBuySubModal()" style="background:none; border:none; font-size:24px; cursor:pointer; color:#666;">✕</button>
+        </div>
+
+        <form id="subscribeForm" onsubmit="handleSubPurchase(event)">
+            <!-- Selected Plan Summary Card -->
+            <div style="background:var(--pale-green); border-radius:10px; padding:14px 18px; margin-bottom:22px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <div style="font-size:12px; color:var(--text-mid);">Plan Time Period: <strong id="modalPlanPeriod">Daily Morning (30 Days)</strong></div>
+                    <div style="font-size:12px; color:var(--forest-green); font-weight:700; margin-top:2px;">✓ Zero Delivery Charges &bull; Morning Delivery before 7:00 AM</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:11.5px; color:var(--text-mid);">Total Subscription Price</div>
+                    <div id="modalPlanPrice" style="font-size:24px; font-weight:800; color:var(--forest-green); font-family:'Playfair Display',serif;">₹1,320</div>
+                </div>
+            </div>
+
+            <!-- Customer & Delivery Fields -->
+            <h4 style="font-size:15px; color:var(--forest-green); margin-bottom:14px; border-left:3px solid var(--forest-green); padding-left:8px;">
+                1. Delivery &amp; Contact Details
+            </h4>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:16px;">
+                <div class="form-field">
+                    <label style="font-weight:700; font-size:12.5px; color:var(--forest-green); margin-bottom:4px; display:block;">Full Name *</label>
+                    <input type="text" id="subCustName" required placeholder="Your full name" style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13.5px;">
+                </div>
+                <div class="form-field">
+                    <label style="font-weight:700; font-size:12.5px; color:var(--forest-green); margin-bottom:4px; display:block;">Mobile Number *</label>
+                    <input type="tel" id="subCustPhone" required placeholder="10-digit mobile number" style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13.5px;">
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:14px;">
+                <div class="form-field">
+                    <label style="font-weight:700; font-size:12.5px; color:var(--forest-green); margin-bottom:4px; display:block;">Available Delivery Area *</label>
+                    <select id="subCustLocation" onchange="onSubLocationChange(this.value)" required style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13.5px;">
+                        <option value="">Select your delivery area...</option>
+                        <option value="Oragadam" data-pin="603109">📍 Oragadam (603109)</option>
+                        <option value="Padapai" data-pin="601301">📍 Padapai (601301)</option>
+                        <option value="Sriperumbudur" data-pin="602105">📍 Sriperumbudur (602105)</option>
+                        <option value="Valasaravakkam" data-pin="600087">📍 Valasaravakkam (600087)</option>
+                        <option value="Porur" data-pin="600116">📍 Porur (600116)</option>
+                        <option value="Virugambakkam" data-pin="600092">📍 Virugambakkam (600092)</option>
+                        <option value="Vadapalani" data-pin="600026">📍 Vadapalani (600026)</option>
+                        <option value="Koyambedu" data-pin="600107">📍 Koyambedu (600107)</option>
+                        <option value="KK Nagar" data-pin="600078">📍 KK Nagar (600078)</option>
+                        <option value="Alapakkam" data-pin="600116">📍 Alapakkam (600116)</option>
+                        <option value="Maduravoyal" data-pin="600095">📍 Maduravoyal (600095)</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label style="font-weight:700; font-size:12.5px; color:var(--forest-green); margin-bottom:4px; display:block;">PIN Code *</label>
+                    <input type="text" id="subCustPincode" required value="603109" placeholder="PIN code" style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13.5px;">
+                </div>
+            </div>
+
+            <div class="form-field" style="margin-bottom:16px;">
+                <label style="font-weight:700; font-size:12.5px; color:var(--forest-green); margin-bottom:4px; display:block;">Street / Door Address *</label>
+                <input type="text" id="subCustAddress" required placeholder="Flat / Door no, Apartment / Street name" style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13.5px;">
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:24px;">
+                <div class="form-field">
+                    <label style="font-weight:700; font-size:12.5px; color:var(--forest-green); margin-bottom:4px; display:block;">Delivery Start Date *</label>
+                    <input type="date" id="subCustStartDate" required style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13.5px;">
+                </div>
+                <div class="form-field">
+                    <label style="font-weight:700; font-size:12.5px; color:var(--forest-green); margin-bottom:4px; display:block;">Morning Delivery Slot *</label>
+                    <select id="subCustSlot" style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13.5px;">
+                        <option value="6:00 AM - 7:00 AM">⏰ Early Morning (6:00 AM - 7:00 AM)</option>
+                        <option value="7:00 AM - 8:00 AM">⏰ Morning (7:00 AM - 8:00 AM)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- PROMO CODE SECTION -->
+            <div style="background:#f4f9f2; border:1px solid #c8dbbf; border-radius:8px; padding:12px 14px; margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <label style="font-size:12.5px; font-weight:700; color:var(--forest-green); margin:0;">
+                        🎟️ Have a Promo Code / Coupon?
+                    </label>
+                    <span style="font-size:11px; color:#2e7d32; font-weight:600;">(e.g. FARM10, PUREMILK)</span>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="subModalPromoCode" placeholder="Enter coupon code" style="text-transform:uppercase; font-family:monospace; font-weight:700; flex:1; font-size:13px; padding:7px 10px; border:1px solid var(--border); border-radius:4px;" oninput="this.value = this.value.toUpperCase()">
+                    <button type="button" class="btn btn-outline" onclick="applySubPagePromo()" style="padding:6px 14px; font-size:12px; font-weight:700; background:white;">Apply</button>
+                </div>
+                <div id="subModalPromoStatus" style="font-size:12px; margin-top:5px; display:none;"></div>
+            </div>
+
+            <!-- PAYMENT GATEWAY SECTION MATCHING THULIRVA THEME -->
+            <h4 style="font-size:15px; color:var(--forest-green); margin-bottom:14px; border-left:3px solid var(--forest-green); padding-left:8px;">
+                2. Payment Gateway &bull; UPI QR Transfer
+            </h4>
+
+            <div class="themed-qr-card">
+                <div style="display:inline-block; background:var(--forest-green); color:#e5c97a; font-weight:700; font-size:11px; padding:3px 12px; border-radius:20px; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">
+                    Scan &amp; Pay via Any UPI App
+                </div>
+                <div style="font-size:13px; color:var(--text-mid); margin-bottom:6px;">
+                    Google Pay &bull; PhonePe &bull; Paytm &bull; BHIM &bull; Cred &bull; Any Bank UPI
+                </div>
+
+                <!-- Forest green and gold themed QR frame -->
+                <div class="themed-qr-wrapper">
+                    <img src="../assets/images/payment_qr.jpg" alt="THULIRVA Official Payment QR Code" class="themed-qr-img">
+                </div>
+
+                <div class="upi-box">
+                    <span style="font-size:12px; color:#555;">UPI ID:</span>
+                    <span class="upi-id-text" id="upiIdSubText">7904880944@superyes</span>
+                    <button type="button" class="copy-upi-btn" onclick="copyUpiId('7904880944@superyes')">📋 Copy</button>
+                </div>
+                <div style="font-size:12px; color:var(--text-muted);">
+                    Pay exact amount: <strong id="modalPayExact" style="color:var(--forest-green); font-size:14px;">₹1,320</strong>
+                </div>
+            </div>
+
+            <!-- Transaction ID & Screenshot Proof -->
+            <div style="background:#fafbf9; border:1.5px solid var(--border); border-radius:10px; padding:18px; margin-bottom:24px;">
+                <div class="form-field" style="margin-bottom:16px;">
+                    <label style="font-weight:700; font-size:13px; color:var(--forest-green); margin-bottom:6px; display:block;">
+                        Enter UPI Transaction ID / UTR Number *
+                    </label>
+                    <input type="text" id="subUpiTransactionId" required placeholder="e.g. 12-digit UPI Reference / UTR Number (e.g. 429302194821)" style="width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:6px; font-size:14px; font-family:monospace;">
+                    <small style="color:var(--text-muted); font-size:11.5px; display:block; margin-top:4px;">
+                        Found in your UPI app payment receipt after completing the transaction.
+                    </small>
+                </div>
+
+                <div class="form-field">
+                    <label style="font-weight:700; font-size:13px; color:var(--forest-green); margin-bottom:6px; display:block;">
+                        Upload Payment Screenshot Proof *
+                    </label>
+                    <input type="file" id="subPaymentProofFile" accept="image/*" required onchange="handleProofPreview(event)" style="width:100%; padding:8px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px; background:white;">
+                    
+                    <!-- Preview Box -->
+                    <div class="proof-preview-box" id="proofPreviewBox">
+                        <img id="proofPreviewImg" src="" alt="Proof Preview" class="proof-preview-img">
+                        <div>
+                            <div id="proofFileName" style="font-size:12px; font-weight:700; color:var(--forest-green);">screenshot.jpg</div>
+                            <small style="color:#2e7d32;">✓ Screenshot ready for verification</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-outline" onclick="closeBuySubModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-lg" id="subSubmitBtn" style="padding:12px 32px; font-size:15px;">
+                    🥛 Confirm &amp; Activate Subscription &rarr;
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- SUBSCRIPTION SUCCESS & INVOICE MODAL -->
+<div class="modal-overlay" id="confirmSubModal">
+    <div class="modal-box" style="max-width:560px; text-align:center; padding:32px;">
+        <div style="font-size:56px; margin-bottom:12px;">🎉</div>
+        <h2 style="font-family:'Playfair Display',serif; color:var(--forest-green); font-size:24px; margin-bottom:8px;">Subscription Confirmed!</h2>
+        <p style="font-size:13.5px; color:var(--text-mid); margin-bottom:18px;">
+            Thank you! Your farm doorstep subscription has been activated. Our dawn dispatch team will deliver fresh before 7:00 AM.
+        </p>
+
+        <div style="background:#f4f7f2; border-radius:10px; padding:16px; text-align:left; font-size:13px; line-height:1.7; margin-bottom:22px; border:1px solid #c8dbbf;" id="confirmModalDetails">
+            <!-- Injected details -->
+        </div>
+
+        <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="generateAndPrintInvoice()">
+                🧾 Download / Print Tax Invoice (PDF)
+            </button>
+            <a href="account.html" class="btn btn-outline">Go to My Account &rarr;</a>
+        </div>
+    </div>
+</div>
+
+<!-- PRINTABLE TAX INVOICE MODAL -->
+<div class="modal-overlay" id="invoiceModal" onclick="if(event.target === this) closeInvoiceModal()">
+    <div class="modal-box" style="max-width:700px; padding:0; overflow:hidden;">
+        <div style="background:var(--forest-green); color:white; padding:14px 20px; display:flex; justify-content:space-between; align-items:center;" class="no-print">
+            <h3 style="margin:0; font-size:16px; font-family:'Playfair Display',serif; color:#e5c97a;">Tax Invoice Preview</h3>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-primary btn-sm" onclick="window.print()" style="background:#c8a84b; color:#1a4a2e; border:none; font-weight:700;">
+                    🖨️ Print / Save as PDF
+                </button>
+                <button onclick="closeInvoiceModal()" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">✕</button>
+            </div>
+        </div>
+        <div class="modal-body invoice-box" id="invoicePrintArea" style="padding:28px; background:white; font-family:'DM Sans',sans-serif; color:#333; line-height:1.4;">
+            <!-- Dynamic Invoice Content -->
+        </div>
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="footer-top">
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <div class="brand-logo-wrap">
+                    <img src="../assets/images/logo/logo.jpg" alt="THULIRVA" class="brand-logo-img">
+                    <div class="brand-text">
+                        <span class="brand-name" style="color:#e5c97a;">THULIRVA</span>
+                        <span class="brand-tagline" style="color:#c8dbbf;">ROOTED IN NATURE</span>
+                    </div>
+                </div>
+                <p class="footer-tagline">Pure, ethical dairy and agro products delivered direct from our organic certified farm to your home.</p>
+                <p style="font-size:12.5px; color:#e5c97a; margin-top:8px;">
+                    📍 Farm: No 1, Mayana Salai, Thimmarajampettai, Kanchipuram - 631601, Tamil Nadu
+                </p>
+            </div>
+            <div class="footer-column">
+                <h3>Explore</h3>
+                <a href="../index.html">Home</a>
+                <a href="shop.html">Shop All</a>
+                <a href="subscriptions.html">Subscriptions</a>
+                <a href="about.html">About Us</a>
+                <a href="farms.html">Our Farms</a>
+            </div>
+            <div class="footer-column">
+                <h3>Customer Support</h3>
+                <a href="contact.html">Contact Us</a>
+                <a href="account.html">My Account</a>
+                <p style="font-size:12.5px; margin-top:10px; color:#c8dbbf;">📞 93606 71533</p>
+                <p style="font-size:12.5px; color:#c8dbbf;">✉ support@thulirva.com</p>
+            </div>
+            <div class="footer-newsletter">
+                <h3>Newsletter</h3>
+                <p>Stay updated with farm stories and exclusive subscriber offers.</p>
+                <div class="newsletter-form">
+                    <input type="email" placeholder="Email Address" class="newsletter-input">
+                    <button class="newsletter-btn">Subscribe</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div class="container footer-bottom-content">
+            <p>© 2026 THULIRVA. All rights reserved. Pure by Nature, Made for You!</p>
+        </div>
+    </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="../js/main.js"></script>
+<script>
+let availablePlans = [];
+let selectedPlan = null;
+let currentProofBase64 = "";
+let latestSubscriptionData = null;
+
+async function loadPlans() {
+    try {
+        const res = await fetch("/api/subscriptions/plans");
+        const data = await res.json();
+        availablePlans = data.plans || [];
+    } catch {
+        availablePlans = [
+            { id: 1, product_name: "Fresh Cow Milk (500ml)", product_image: "/assets/images/products/fresh_cow_milk.jpg", time_period: "Daily Morning (30 Days)", frequency: "Daily", price: 1320, original_price: 1500, badge: "Most Popular", description: "Pure farm fresh cow milk delivered to your doorstep every morning before 7:00 AM." },
+            { id: 2, product_name: "Fresh Cow Milk (1 Litre)", product_image: "/assets/images/products/fresh_cow_milk.jpg", time_period: "Daily Morning (30 Days)", frequency: "Daily", price: 2460, original_price: 2700, badge: "Family Pack", description: "1 Litre family pack chilled cow milk delivered every single morning." },
+            { id: 3, product_name: "Fresh Artisanal Paneer (200g)", product_image: "/assets/images/products/fresh_paneer.jpg", time_period: "Twice a Week (8 Deliveries)", frequency: "Twice Weekly", price: 656, original_price: 760, badge: "Fresh Batch", description: "Ultra-soft chemical-free cottage cheese delivered fresh twice a week." },
+            { id: 4, product_name: "Pure Bilona Cow Ghee (500ml)", product_image: "/assets/images/products/pure_cow_ghee.jpg", time_period: "Monthly Delivery (1 Jar/Month)", frequency: "Monthly", price: 499, original_price: 600, badge: "Pure Bilona", description: "A fresh 500ml jar of fragrant Bilona churned golden ghee dispatched once a month." }
+        ];
+    }
+    renderPlansGrid(availablePlans.filter(p => p.status !== 'inactive'));
+}
+
+function renderPlansGrid(plans) {
+    const grid = document.getElementById("subscriptionPlansGrid");
+    if (!grid) return;
+    grid.innerHTML = "";
+
+    if (!plans.length) {
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px;">Plans loading...</div>`;
+        return;
+    }
+
+    plans.forEach(p => {
+        const card = document.createElement("div");
+        card.className = "sub-plan-card";
+        const img = p.product_image || "/assets/images/products/fresh_cow_milk.jpg";
+        card.innerHTML = `
+            ${p.badge ? `<span class="sub-plan-badge">${p.badge}</span>` : ""}
+            <img src="${img}" alt="${p.product_name}" class="sub-plan-img">
+            <div class="sub-plan-body">
+                <div style="font-size:12px; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">
+                    ${p.frequency || 'Daily Morning Plan'}
+                </div>
+                <h3 style="font-family:'Playfair Display',serif; font-size:20px; color:var(--forest-green); margin-bottom:6px;">
+                    ${p.product_name}
+                </h3>
+                <div style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
+                    📅 <strong>Time Period:</strong> ${p.time_period}
+                </div>
+                <p style="font-size:13px; color:var(--text-mid); line-height:1.5; margin-bottom:18px; flex:1;">
+                    ${p.description || 'Ethically sourced farm-fresh goodness delivered every morning.'}
+                </p>
+                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-light); padding-top:14px; margin-bottom:16px;">
+                    <div>
+                        <span style="font-size:22px; font-weight:800; color:var(--forest-green);">₹${p.price}</span>
+                        ${p.original_price ? `<del style="font-size:13px; color:var(--text-muted); margin-left:6px;">₹${p.original_price}</del>` : ""}
+                    </div>
+                    <span style="font-size:11.5px; color:#2e7d32; font-weight:700; background:#e8f5e9; padding:3px 8px; border-radius:12px;">
+                        ✓ Free Doorstep Delivery
+                    </span>
+                </div>
+                <button class="btn btn-primary" style="width:100%; text-align:center;" onclick="openBuySubModal(${p.id})">
+                    🥛 Buy This Subscription &rarr;
+                </button>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function openBuySubModal(planId) {
+    selectedPlan = availablePlans.find(p => p.id === planId) || availablePlans[0];
+    if (!selectedPlan) return;
+
+    // Fill plan summary
+    const img = selectedPlan.product_image || "/assets/images/products/fresh_cow_milk.jpg";
+    document.getElementById("modalPlanImg").src = img;
+    document.getElementById("modalPlanTitle").textContent = selectedPlan.product_name;
+    document.getElementById("modalPlanSubtitle").textContent = selectedPlan.frequency || "Daily Morning Plan";
+    document.getElementById("modalPlanPeriod").textContent = selectedPlan.time_period || "Daily (30 Days)";
+    document.getElementById("modalPlanPrice").textContent = `₹${selectedPlan.price.toLocaleString()}`;
+    document.getElementById("modalPayExact").textContent = `₹${selectedPlan.price.toLocaleString()}`;
+
+    // Prefill user data if logged in
+    const user = JSON.parse(localStorage.getItem("thulirva_user") || "null");
+    if (user) {
+        if (user.name) document.getElementById("subCustName").value = user.name;
+        if (user.phone) document.getElementById("subCustPhone").value = user.phone;
+        if (user.address) document.getElementById("subCustAddress").value = user.address;
+    }
+
+    // Set tomorrow as default start date
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const yyyy = tomorrow.getFullYear();
+    const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const dd = String(tomorrow.getDate()).padStart(2, '0');
+    const minDate = `${yyyy}-${mm}-${dd}`;
+    const dateInput = document.getElementById("subCustStartDate");
+    dateInput.min = minDate;
+    if (!dateInput.value) dateInput.value = minDate;
+
+    // Reset upload preview
+    currentProofBase64 = "";
+    subPageDiscount = 0;
+    appliedSubPagePromo = null;
+    document.getElementById("subUpiTransactionId").value = "";
+    document.getElementById("subPaymentProofFile").value = "";
+    document.getElementById("proofPreviewBox").style.display = "none";
+    const promoInp = document.getElementById("subModalPromoCode");
+    if (promoInp) promoInp.value = "";
+    const promoStat = document.getElementById("subModalPromoStatus");
+    if (promoStat) promoStat.style.display = "none";
+
+    document.getElementById("buySubModal").classList.add("active");
+}
+
+let subPageDiscount = 0;
+let appliedSubPagePromo = null;
+
+async function applySubPagePromo() {
+    if (!selectedPlan) return;
+    const code = (document.getElementById("subModalPromoCode")?.value || "").trim().toUpperCase();
+    const statusEl = document.getElementById("subModalPromoStatus");
+    if (!code) {
+        if (statusEl) {
+            statusEl.style.display = "block";
+            statusEl.style.color = "#c0392b";
+            statusEl.textContent = "Please enter a promo code.";
+        }
+        return;
+    }
+
+    try {
+        const res = await fetch("/api/coupons/validate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code, total: selectedPlan.price })
+        });
+        const data = await res.json();
+        if (data.valid) {
+            appliedSubPagePromo = data.code;
+            subPageDiscount = data.discount;
+            const newTotal = Math.max(0, selectedPlan.price - subPageDiscount);
+            document.getElementById("modalPlanPrice").textContent = `₹${newTotal.toLocaleString()}`;
+            document.getElementById("modalPayExact").textContent = `₹${newTotal.toLocaleString()}`;
+            if (statusEl) {
+                statusEl.style.display = "block";
+                statusEl.style.color = "#2e7d32";
+                statusEl.textContent = `✓ Promo ${data.code} applied! Saved ₹${data.discount}. Total: ₹${newTotal}.`;
+            }
+            showToast(`✓ Promo code ${data.code} applied! Saved ₹${data.discount}`, "success");
+        } else {
+            subPageDiscount = 0;
+            appliedSubPagePromo = null;
+            document.getElementById("modalPlanPrice").textContent = `₹${selectedPlan.price.toLocaleString()}`;
+            document.getElementById("modalPayExact").textContent = `₹${selectedPlan.price.toLocaleString()}`;
+            if (statusEl) {
+                statusEl.style.display = "block";
+                statusEl.style.color = "#c0392b";
+                statusEl.textContent = data.message || "Invalid or expired promo code.";
+            }
+        }
+    } catch {
+        subPageDiscount = 0;
+        appliedSubPagePromo = null;
+    }
+}
+
+function closeBuySubModal() {
+    document.getElementById("buySubModal").classList.remove("active");
+}
+
+function copyUpiId(upiId) {
+    navigator.clipboard.writeText(upiId).then(() => {
+        showToast(`✓ UPI ID ${upiId} copied to clipboard!`);
+    }).catch(() => {
+        showToast(`UPI ID: ${upiId}`);
+    });
+}
+
+function handleProofPreview(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        currentProofBase64 = evt.target.result;
+        document.getElementById("proofPreviewImg").src = currentProofBase64;
+        document.getElementById("proofFileName").textContent = file.name;
+        document.getElementById("proofPreviewBox").style.display = "flex";
+        showToast("✓ Payment screenshot proof attached!");
+    };
+    reader.readAsDataURL(file);
+}
+
+let subDeliveryLocations = [];
+
+async function loadSubLocations() {
+    try {
+        const res = await fetch("/api/locations");
+        if (res.ok) {
+            const data = await res.json();
+            if (data.locations && data.locations.length > 0) {
+                subDeliveryLocations = data.locations.filter(l => l.status === "active" || !l.status);
+            }
+        }
+    } catch {}
+
+    if (!subDeliveryLocations || subDeliveryLocations.length === 0) {
+        subDeliveryLocations = [
+            { name: "Oragadam", pincode: "603109" },
+            { name: "Padapai", pincode: "601301" },
+            { name: "Sriperumbudur", pincode: "602105" },
+            { name: "Valasaravakkam", pincode: "600087" },
+            { name: "Porur", pincode: "600116" },
+            { name: "Virugambakkam", pincode: "600092" },
+            { name: "Vadapalani", pincode: "600026" },
+            { name: "Koyambedu", pincode: "600107" },
+            { name: "KK Nagar", pincode: "600078" },
+            { name: "Alapakkam", pincode: "600116" },
+            { name: "Maduravoyal", pincode: "600095" }
+        ];
+    }
+
+    const selectEl = document.getElementById("subCustLocation");
+    if (!selectEl) return;
+    let html = `<option value="">Select your delivery area...</option>`;
+    subDeliveryLocations.forEach(loc => {
+        html += `<option value="${loc.name}" data-pin="${loc.pincode || ''}">📍 ${loc.name} ${loc.pincode ? '(' + loc.pincode + ')' : ''}</option>`;
+    });
+    selectEl.innerHTML = html;
+}
+
+function onSubLocationChange(locName) {
+    if (!locName) return;
+    const loc = subDeliveryLocations.find(l => l.name.toLowerCase() === locName.toLowerCase());
+    const pinEl = document.getElementById("subCustPincode");
+    if (loc && loc.pincode && pinEl) {
+        pinEl.value = loc.pincode;
+    }
+}
+
+async function handleSubPurchase(e) {
+    e.preventDefault();
+    if (!selectedPlan) return;
+
+    const custName = document.getElementById("subCustName").value.trim();
+    const custPhone = document.getElementById("subCustPhone").value.trim();
+    const locName = document.getElementById("subCustLocation")?.value?.trim() || "";
+    const addr = document.getElementById("subCustAddress").value.trim();
+    const pincode = document.getElementById("subCustPincode").value.trim();
+    const startDate = document.getElementById("subCustStartDate").value;
+    const slot = document.getElementById("subCustSlot").value;
+    const transactionId = document.getElementById("subUpiTransactionId").value.trim();
+
+    if (!custName) { showToast("Please enter your name", "error"); return; }
+    if (!custPhone || custPhone.replace(/\D/g, '').length < 10) { showToast("Please enter a valid 10-digit mobile number", "error"); return; }
+    if (!locName) { showToast("Please select your delivery area", "error"); return; }
+    if (!addr) { showToast("Please enter your street address", "error"); return; }
+    if (!transactionId) { showToast("Please enter UPI Transaction ID / UTR", "error"); return; }
+    if (!currentProofBase64) { showToast("Please upload payment screenshot proof", "error"); return; }
+
+    const submitBtn = document.getElementById("subSubmitBtn");
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = "Activating Subscription... 🥛";
+
+    const savedUser = JSON.parse(localStorage.getItem("thulirva_user") || "{}");
+    const fullDeliveryAddress = `${addr}, ${locName}`;
+
+    const payload = {
+        user_id: savedUser.id || null,
+        customer_name: custName,
+        customer_phone: custPhone,
+        customer_email: savedUser.email || "",
+        plan_id: selectedPlan.id,
+        product_name: selectedPlan.product_name,
+        product_image: selectedPlan.product_image || "/assets/images/products/fresh_cow_milk.jpg",
+        time_period: selectedPlan.time_period || "Daily (30 Days)",
+        frequency: selectedPlan.frequency || "Daily",
+        quantity: 1,
+        delivery_slot: slot,
+        price_per_delivery: Math.round((selectedPlan.price - subPageDiscount) / 30),
+        total_price: Math.max(0, selectedPlan.price - subPageDiscount),
+        start_date: startDate,
+        address: fullDeliveryAddress,
+        delivery_location: locName,
+        pincode: pincode,
+        payment_method: "UPI QR (7904880944@superyes)",
+        transaction_id: transactionId,
+        payment_proof: currentProofBase64,
+        promo_code: appliedSubPagePromo || null,
+        discount_amount: subPageDiscount
+    };
+
+    let subId = "SUB-" + Math.floor(1000 + Math.random() * 9000);
+
+    try {
+        const res = await fetch("/api/subscriptions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.subscription && data.subscription.id) {
+            subId = data.subscription.id;
+        }
+    } catch {
+        // offline fallback
+    }
+
+    latestSubscriptionData = {
+        id: subId,
+        user_id: savedUser.id || null,
+        userId: savedUser.id || null,
+        product_name: selectedPlan.product_name,
+        productName: selectedPlan.product_name,
+        product_image: selectedPlan.product_image,
+        productImage: selectedPlan.product_image,
+        customer_name: custName,
+        customerName: custName,
+        customer_phone: custPhone,
+        customerPhone: custPhone,
+        customer_email: savedUser.email || "",
+        customerEmail: savedUser.email || "",
+        time_period: selectedPlan.time_period,
+        timePeriod: selectedPlan.time_period,
+        frequency: selectedPlan.frequency,
+        quantity: 1,
+        delivery_slot: slot,
+        deliverySlot: slot,
+        start_date: startDate,
+        startDate: startDate,
+        address: `${fullDeliveryAddress} - ${pincode}`,
+        delivery_location: locName,
+        total_price: selectedPlan.price,
+        totalPrice: selectedPlan.price,
+        total: selectedPlan.price,
+        transaction_id: transactionId,
+        transactionId: transactionId,
+        payment_proof: currentProofBase64,
+        paymentProof: currentProofBase64,
+        status: "Active",
+        createdAt: new Date().toLocaleDateString('en-IN')
+    };
+
+    // Save to user's localStorage subscriptions
+    const existingSubs = JSON.parse(localStorage.getItem("thulirva_subscriptions") || "[]");
+    existingSubs.unshift(latestSubscriptionData);
+    localStorage.setItem("thulirva_subscriptions", JSON.stringify(existingSubs));
+
+    closeBuySubModal();
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = "🥛 Confirm &amp; Activate Subscription &rarr;";
+
+    // Populate confirmation modal
+    document.getElementById("confirmModalDetails").innerHTML = `
+        <div><strong>Subscription ID:</strong> #${subId}</div>
+        <div><strong>Plan:</strong> ${selectedPlan.product_name}</div>
+        <div><strong>Time Period:</strong> ${selectedPlan.time_period}</div>
+        <div><strong>Morning Slot:</strong> ${slot}</div>
+        <div><strong>Starts On:</strong> ${startDate}</div>
+        <div><strong>Delivery Address:</strong> ${addr} (${pincode})</div>
+        <div><strong>UPI Transaction ID (UTR):</strong> <span style="font-family:monospace; color:#1a4a2e; font-weight:700;">${transactionId}</span></div>
+        <div style="font-weight:700; color:var(--forest-green); font-size:15px; margin-top:6px;"><strong>Amount Paid:</strong> ₹${selectedPlan.price.toLocaleString()}</div>
+    `;
+
+    document.getElementById("confirmSubModal").classList.add("active");
+}
+
+function generateAndPrintInvoice() {
+    if (!latestSubscriptionData) return;
+    const s = latestSubscriptionData;
+
+    const printArea = document.getElementById("invoicePrintArea");
+    printArea.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #1a4a2e; padding-bottom:16px; margin-bottom:20px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <img src="../assets/images/logo/logo.jpg" alt="THULIRVA" style="width:60px; height:60px; border-radius:50%; object-fit:cover; border:2px solid #c8a84b;">
+                <div>
+                    <h2 style="font-family:'Playfair Display',serif; color:#1a4a2e; margin:0; font-size:24px; letter-spacing:1px;">THULIRVA</h2>
+                    <div style="font-size:10px; color:#9a7a30; font-weight:700; letter-spacing:2px;">ROOTED IN NATURE</div>
+                    <div style="font-size:11px; color:#666; margin-top:3px;">Pure Agro &amp; Dairy Farm Subscriptions</div>
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <span style="background:#eaf2e4; color:#1a4a2e; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; display:inline-block; margin-bottom:4px;">OFFICIAL SUBSCRIPTION TAX INVOICE</span>
+                <div style="font-size:13px; font-weight:700; color:#1a4a2e;">Invoice #: SUB-INV-${s.id}</div>
+                <div style="font-size:12px; color:#666;">Date: ${s.createdAt}</div>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; font-size:12.5px;">
+            <div style="background:#fcfbf7; border:1px solid #ede8db; padding:14px; border-radius:8px;">
+                <div style="font-size:11px; font-weight:700; color:#9a7a30; text-transform:uppercase; margin-bottom:4px;">Farm &amp; Dispatched From</div>
+                <div style="font-weight:700; color:#1a4a2e;">THULIRVA AGRO FARMS</div>
+                <div style="color:#555; line-height:1.4;">
+                    No 1, Mayana Salai, Thimmarajampettai,<br>
+                    Kanchipuram - 631601, Tamil Nadu<br>
+                    Phone: +91 93606 71533<br>
+                    UPI ID: 7904880944@superyes
+                </div>
+            </div>
+            <div style="background:#fcfbf7; border:1px solid #ede8db; padding:14px; border-radius:8px;">
+                <div style="font-size:11px; font-weight:700; color:#9a7a30; text-transform:uppercase; margin-bottom:4px;">Subscriber &amp; Doorstep Delivery To</div>
+                <div style="font-weight:700; color:#1a4a2e;">${s.customerName}</div>
+                <div style="color:#555; line-height:1.4;">
+                    ${s.address}<br>
+                    Phone: ${s.customerPhone}<br>
+                    Slot: <strong>${s.deliverySlot}</strong> &bull; Starts: <strong>${s.startDate}</strong><br>
+                    Payment: <strong style="color:#2e7d32;">PAID via UPI QR (UTR: ${s.transactionId})</strong>
+                </div>
+            </div>
+        </div>
+
+        <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:20px;">
+            <thead>
+                <tr style="background:#eaf2e4; color:#1a4a2e; text-align:left; font-size:12px;">
+                    <th style="padding:10px; border-bottom:1.5px solid #1a4a2e;">Subscription Item</th>
+                    <th style="padding:10px; text-align:center; border-bottom:1.5px solid #1a4a2e;">Schedule &amp; Period</th>
+                    <th style="padding:10px; text-align:center; border-bottom:1.5px solid #1a4a2e;">Daily Qty</th>
+                    <th style="padding:10px; text-align:right; border-bottom:1.5px solid #1a4a2e;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom:1px solid #eee;">
+                    <td style="padding:12px 10px; font-weight:700; color:#1a4a2e;">
+                        ${s.productName}<br>
+                        <small style="font-weight:normal; color:#666;">Glass-bottle dawn doorstep delivery before 7:00 AM</small>
+                    </td>
+                    <td style="padding:12px 10px; text-align:center;">${s.timePeriod}</td>
+                    <td style="padding:12px 10px; text-align:center;">${s.quantity} Unit / day</td>
+                    <td style="padding:12px 10px; text-align:right; font-weight:700;">₹${s.totalPrice.toLocaleString()}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="display:flex; justify-content:flex-end; margin-bottom:24px;">
+            <div style="width:280px; font-size:13px;">
+                <div style="display:flex; justify-content:space-between; padding:4px 0; color:#666;">
+                    <span>Subscription Plan Total:</span>
+                    <span>₹${s.totalPrice.toLocaleString()}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:4px 0; color:#666;">
+                    <span>Doorstep Morning Delivery:</span>
+                    <span><strong style="color:#2e7d32">FREE (₹0.00)</strong></span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:8px 0; border-top:1.5px solid #1a4a2e; margin-top:6px; font-size:16px; font-weight:700; color:#1a4a2e;">
+                    <span>Total Amount Paid:</span>
+                    <span>₹${s.totalPrice.toLocaleString()}</span>
+                </div>
+                <div style="font-size:11px; color:#2e7d32; text-align:right; font-weight:700; margin-top:2px;">
+                    ✓ Payment Verified &bull; Active Subscription
+                </div>
+            </div>
+        </div>
+
+        <div style="border-top:1px dashed #ccc; padding-top:14px; text-align:center; font-size:11.5px; color:#777;">
+            🌿 <strong>Pure by Nature, Made for You!</strong> Thank you for welcoming THULIRVA farm freshness into your home.<br>
+            For delivery slot adjustments or pauses, log in to your account dashboard or WhatsApp <strong>+91 93606 71533</strong>.
+        </div>
+    `;
+
+    document.getElementById("invoiceModal").classList.add("active");
+}
+
+function closeInvoiceModal() {
+    document.getElementById("invoiceModal").classList.remove("active");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadPlans();
+    loadSubLocations();
+});
+</script>
+</body>
+</html>

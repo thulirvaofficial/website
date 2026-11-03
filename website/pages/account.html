@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account | THULIRVA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .invoice-box {
+            font-family: 'DM Sans', sans-serif;
+            color: #333;
+            line-height: 1.4;
+        }
+        @media print {
+            body * { visibility: hidden; }
+            #invoiceModal, #invoiceModal * { visibility: visible; }
+            #invoiceModal { position: absolute; left: 0; top: 0; width: 100%; display: block !important; background: white; padding: 0; }
+            .no-print { display: none !important; }
+        }
+        .themed-qr-card {
+            background: linear-gradient(135deg, #f7faf5 0%, #ffffff 100%);
+            border: 2px solid #1a4a2e;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            margin-top: 10px;
+            box-shadow: 0 4px 16px rgba(26, 74, 46, 0.08);
+        }
+        .themed-qr-wrapper {
+            display: inline-block;
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px dashed #c8a84b;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            margin: 8px 0;
+        }
+        .themed-qr-img {
+            width: 170px;
+            height: 170px;
+            object-fit: contain;
+            display: block;
+            border-radius: 6px;
+        }
+        .upi-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #eaf2e4;
+            padding: 6px 12px;
+            border-radius: 6px;
+            margin: 6px auto;
+            max-width: 320px;
+            border: 1px solid #c8dbbf;
+        }
+        .upi-id-text {
+            font-family: monospace;
+            font-weight: 700;
+            color: #1a4a2e;
+            font-size: 13px;
+            letter-spacing: .5px;
+        }
+        .copy-upi-btn {
+            background: #1a4a2e;
+            color: white;
+            border: none;
+            padding: 4px 9px;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .proof-preview-box {
+            display: none;
+            margin-top: 8px;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+        .proof-preview-img {
+            width: 46px;
+            height: 46px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+
+<div class="announcement-bar">
+    <div class="container announcement-content">
+        <span>🌿 Pure by Nature, Made for You!</span>
+        <span>🚚 Morning Doorstep Delivery</span>
+        <span>📞 93606 71533</span>
+        <span>📍 Kanchipuram Farm Fresh</span>
+    </div>
+</div>
+
+<header class="site-header">
+    <div class="container header-container">
+        <a href="../index.html" class="brand">
+            <div class="brand-logo-wrap">
+                <img src="../assets/images/logo/logo.jpg" alt="THULIRVA" class="brand-logo-img">
+                <div class="brand-text">
+                    <span class="brand-name">THULIRVA</span>
+                    <span class="brand-tagline">ROOTED IN NATURE</span>
+                </div>
+            </div>
+        </a>
+        <nav class="main-navigation">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="shop.html" class="nav-link">Shop</a>
+            <a href="subscriptions.html" class="nav-link">Subscriptions</a>
+            <a href="about.html" class="nav-link">About Us</a>
+            <a href="farms.html" class="nav-link">Our Farms</a>
+            <a href="recipes.html" class="nav-link">Recipes</a>
+            <a href="contact.html" class="nav-link">Contact</a>
+        </nav>
+        <div class="header-actions">
+            <a href="account.html" class="header-icon active" title="Account">👤</a>
+            <a href="cart.html" class="cart-button" title="Cart">
+                🛒<span class="cart-count" id="cartCount">0</span>
+            </a>
+            <button class="mobile-menu-button" id="mobileMenuButton">☰</button>
+        </div>
+    </div>
+    <nav class="mobile-navigation" id="mobileNavigation">
+        <a href="../index.html">Home</a>
+        <a href="shop.html">Shop</a>
+        <a href="subscriptions.html">Subscriptions</a>
+        <a href="about.html">About Us</a>
+        <a href="farms.html">Our Farms</a>
+        <a href="recipes.html">Recipes</a>
+        <a href="contact.html">Contact</a>
+    </nav>
+</header>
+
+<div class="page-hero">
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">Home</a>
+            <span>&rsaquo;</span>
+            <span>My Account</span>
+        </div>
+        <h1 id="userGreeting">My Farm Account</h1>
+        <p>Manage your doorstep orders, milk subscriptions, and delivery addresses</p>
+    </div>
+</div>
+
+<section style="background:var(--light-cream); padding:50px 0 80px;">
+    <div class="container">
+        <div class="cart-layout" style="grid-template-columns: 260px 1fr; gap:32px; align-items:start;">
+            <!-- Sidebar Navigation -->
+            <div style="background:white; border-radius:var(--radius-lg); border:1px solid var(--border); padding:20px; box-shadow:var(--shadow-sm);">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border-light);">
+                    <img src="../assets/images/logo/logo.jpg" alt="User" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid var(--gold);">
+                    <div>
+                        <div id="userNameDisplay" style="font-weight:700; color:var(--forest-green); font-size:15px;">Customer</div>
+                        <div id="userContactDisplay" style="font-size:12px; color:var(--text-muted);">Farm Member</div>
+                        <div id="userIdDisplay" style="display:inline-block; font-size:11px; font-weight:700; background:#eaf2e4; color:#1a4a2e; padding:2px 8px; border-radius:12px; margin-top:3px; border:1px solid #c8dbbf;">User ID: #USR-1001</div>
+                    </div>
+                </div>
+                
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                    <button class="btn btn-outline" style="justify-content:flex-start; width:100%; border:none; background:var(--pale-green); font-weight:700; color:var(--forest-green); padding:10px 14px; border-radius:var(--radius-sm);" onclick="switchUserTab('orders', this)">
+                        📦 My Farm Orders
+                    </button>
+                    <button class="btn btn-outline" style="justify-content:flex-start; width:100%; border:none; padding:10px 14px; border-radius:var(--radius-sm);" onclick="switchUserTab('subscriptions', this)">
+                        🥛 Daily Milk Subscription
+                    </button>
+                    <button class="btn btn-outline" style="justify-content:flex-start; width:100%; border:none; padding:10px 14px; border-radius:var(--radius-sm);" onclick="switchUserTab('addresses', this)">
+                        📍 Saved Addresses
+                    </button>
+                    <button class="btn btn-outline" style="justify-content:flex-start; width:100%; border:none; padding:10px 14px; border-radius:var(--radius-sm);" onclick="switchUserTab('profile', this)">
+                        👤 Profile Settings
+                    </button>
+                    <button class="btn btn-outline" style="justify-content:flex-start; width:100%; border:none; color:#C0392B; padding:10px 14px; border-radius:var(--radius-sm); margin-top:14px; border-top:1px solid var(--border-light);" onclick="userLogout()">
+                        🚪 Sign Out
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div>
+                <!-- Tab 1: Orders -->
+                <div id="tabOrders" class="account-tab-content">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+                        <h2 style="font-family:'Playfair Display',serif; font-size:24px; color:var(--forest-green);">My Farm Orders</h2>
+                        <a href="shop.html" class="btn btn-primary btn-sm">Shop Fresh Produce &rarr;</a>
+                    </div>
+                    <div id="userOrdersList">
+                        <!-- Injected via JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Tab 2: Subscriptions -->
+                <div id="tabSubscriptions" class="account-tab-content" style="display:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <h2 style="font-family:'Playfair Display',serif; font-size:24px; color:var(--forest-green);">Daily Morning Milk Subscription</h2>
+                            <p style="font-size:13px; color:var(--text-muted); margin:0;">Delivered fresh to your doorstep before 7:00 AM every morning</p>
+                        </div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <a href="subscriptions.html" class="btn btn-outline btn-sm">Explore All Subscription Plans &rarr;</a>
+                            <button class="btn btn-primary btn-sm" onclick="openSubscriptionModal()">＋ Start New Subscription</button>
+                        </div>
+                    </div>
+                    <div id="userSubscriptionsList">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Tab 3: Addresses -->
+                <div id="tabAddresses" class="account-tab-content" style="display:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+                        <h2 style="font-family:'Playfair Display',serif; font-size:24px; color:var(--forest-green);">Saved Delivery Addresses</h2>
+                        <button class="btn btn-primary btn-sm" onclick="openAddressModal()">＋ Add New Address</button>
+                    </div>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px;" id="addressesGrid">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Tab 4: Profile -->
+                <div id="tabProfile" class="account-tab-content" style="display:none;">
+                    <h2 style="font-family:'Playfair Display',serif; font-size:24px; color:var(--forest-green); margin-bottom:20px;">Profile Information</h2>
+                    <div class="contact-form-card" style="box-shadow:none; border:1px solid var(--border); border-radius:var(--radius-lg); background:white; padding:30px;">
+                        <form onsubmit="handleProfileUpdate(event)">
+                            <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                                <div class="form-field">
+                                    <label>Full Name</label>
+                                    <input type="text" id="profileName" required placeholder="Your full name">
+                                </div>
+                                <div class="form-field">
+                                    <label>Mobile Number</label>
+                                    <input type="tel" id="profilePhone" required placeholder="10-digit mobile number">
+                                </div>
+                            </div>
+                            <div class="form-field" style="margin-bottom:20px;">
+                                <label>Email Address</label>
+                                <input type="email" id="profileEmail" placeholder="yourname@example.com">
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="saveProfileBtn">
+                                💾 Save Changes
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ADD ADDRESS MODAL -->
+<div class="modal-overlay" id="addressModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>Add Delivery Address</h3>
+            <button class="modal-close" onclick="closeAddressModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <form onsubmit="handleSaveAddress(event)">
+                <div class="form-field">
+                    <label>Address Label (e.g. Home, Office, Farmhouse) *</label>
+                    <input type="text" id="addrLabel" required placeholder="Home">
+                </div>
+                <div class="form-field">
+                    <label>House No. / Flat / Apartment / Street Address *</label>
+                    <input type="text" id="addrStreet" required placeholder="Door 12, Gandhi Street, Thimmarajampettai">
+                </div>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>City / Town *</label>
+                        <input type="text" id="addrCity" required value="Kanchipuram">
+                    </div>
+                    <div class="form-field">
+                        <label>PIN Code *</label>
+                        <input type="text" id="addrPincode" required placeholder="631601">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeAddressModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Address</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- START MILK SUBSCRIPTION MODAL (WITH FULL THEMED UPI PAYMENT & PROMO CODE) -->
+<div class="modal-overlay" id="subscriptionModal">
+    <div class="modal-box" style="max-width:620px; max-height:92vh; overflow-y:auto; padding:24px;">
+        <div class="modal-header" style="border-bottom:1.5px solid var(--border); padding-bottom:12px; margin-bottom:16px;">
+            <div>
+                <h3 style="margin:0; font-family:'Playfair Display',serif; font-size:20px; color:var(--forest-green);">
+                    🥛 Start Daily Milk Subscription
+                </h3>
+                <small style="color:var(--text-muted); font-size:12px;">Doorstep morning dispatch before 7:00 AM</small>
+            </div>
+            <button class="modal-close" onclick="closeSubscriptionModal()">✕</button>
+        </div>
+
+        <!-- Step Indicator in Modal -->
+        <div style="display:flex; align-items:center; justify-content:space-between; background:#f9faf8; padding:10px 16px; border-radius:8px; border:1px solid var(--border); margin-bottom:16px;">
+            <div id="subStepTab1" style="display:flex; align-items:center; gap:8px; cursor:pointer;" onclick="backToSubDetails()">
+                <div id="subStepDot1" style="width:24px; height:24px; border-radius:50%; background:var(--forest-green); color:white; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;">1</div>
+                <strong id="subStepLabel1" style="font-size:13px; color:var(--forest-green);">1. Plan &amp; Address</strong>
+            </div>
+            <div style="flex:1; height:2px; background:#e0e0e0; margin:0 10px; position:relative;">
+                <div id="subStepLine" style="width:0%; height:100%; background:var(--forest-green); transition:width 0.3s;"></div>
+            </div>
+            <div id="subStepTab2" style="display:flex; align-items:center; gap:8px; opacity:0.6;">
+                <div id="subStepDot2" style="width:24px; height:24px; border-radius:50%; background:#e0e0e0; color:#555; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;">2</div>
+                <strong id="subStepLabel2" style="font-size:13px; color:#555;">2. UPI QR Payment</strong>
+            </div>
+        </div>
+
+        <!-- STEP 1: Details & Address & Promo Code -->
+        <div id="subModalStep1">
+            <div class="form-field">
+                <label>Select Fresh Cow Milk Variant *</label>
+                <select id="subProduct" onchange="calculateSubCost()">
+                    <option value="Fresh Cow Milk (500ml)|44|500 ml">🥛 Fresh Cow Milk — 500 ml (₹44/day)</option>
+                    <option value="Fresh Cow Milk (1 Litre)|82|1000 ml">🥛 Fresh Cow Milk — 1 Litre (₹82/day)</option>
+                    <option value="Natural Thick Set Curd (500g)|48|500 g">🫙 Natural Thick Set Curd — 500 g (₹48/day)</option>
+                </select>
+            </div>
+            <div class="form-grid">
+                <div class="form-field">
+                    <label>Daily Quantity *</label>
+                    <select id="subQty" onchange="calculateSubCost()">
+                        <option value="1">1 Unit (Daily)</option>
+                        <option value="2">2 Units (Daily)</option>
+                        <option value="3">3 Units (Daily)</option>
+                        <option value="4">4 Units (Daily)</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label>Delivery Frequency *</label>
+                    <select id="subFreq" onchange="calculateSubCost()">
+                        <option value="Daily">Every Morning (Daily - 30 Days)</option>
+                        <option value="Alternate">Alternate Days (15 Days)</option>
+                        <option value="Weekdays">Weekdays Only (Mon-Fri - 22 Days)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="form-field">
+                    <label>Morning Delivery Slot *</label>
+                    <input type="text" value="6:00 AM - 7:00 AM" readonly style="background:#f4f7f2;">
+                </div>
+                <div class="form-field">
+                    <label>Start Date *</label>
+                    <input type="date" id="subStartDate" required>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="form-field">
+                    <label>Available Delivery Area *</label>
+                    <select id="subAreaSelect" onchange="onSubAreaChange(this.value)">
+                        <option value="">Select your delivery area...</option>
+                        <option value="Oragadam" data-pin="603109">📍 Oragadam (603109)</option>
+                        <option value="Padapai" data-pin="601301">📍 Padapai (601301)</option>
+                        <option value="Sriperumbudur" data-pin="602105">📍 Sriperumbudur (602105)</option>
+                        <option value="Valasaravakkam" data-pin="600087">📍 Valasaravakkam (600087)</option>
+                        <option value="Porur" data-pin="600116">📍 Porur (600116)</option>
+                        <option value="Virugambakkam" data-pin="600092">📍 Virugambakkam (600092)</option>
+                        <option value="Vadapalani" data-pin="600026">📍 Vadapalani (600026)</option>
+                        <option value="Koyambedu" data-pin="600107">📍 Koyambedu (600107)</option>
+                        <option value="KK Nagar" data-pin="600078">📍 KK Nagar (600078)</option>
+                        <option value="Alapakkam" data-pin="600116">📍 Alapakkam (600116)</option>
+                        <option value="Maduravoyal" data-pin="600095">📍 Maduravoyal (600095)</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label>PIN Code *</label>
+                    <input type="text" id="subPincode" placeholder="6-digit PIN code" value="603109">
+                </div>
+            </div>
+            <div class="form-field">
+                <label>Doorstep Delivery Address *</label>
+                <input type="text" id="subAddress" required placeholder="Flat / Door no., Apartment / Building, Street name">
+            </div>
+
+            <!-- PROMO CODE BOX -->
+            <div style="background:#f4f9f2; border:1px solid #c8dbbf; border-radius:8px; padding:12px 14px; margin-top:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <label style="font-size:12px; font-weight:700; color:var(--forest-green); margin:0;">
+                        🎟️ Have a Promo Code / Coupon?
+                    </label>
+                    <span style="font-size:11px; color:#2e7d32; font-weight:600;">(Try FARM10 or PUREMILK)</span>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="subPromoCode" placeholder="Enter coupon code" style="text-transform:uppercase; font-family:monospace; font-weight:700; flex:1; font-size:13px; padding:6px 10px; border:1px solid var(--border); border-radius:4px;" oninput="this.value = this.value.toUpperCase()">
+                    <button type="button" class="btn btn-outline" onclick="applySubPromoCode()" style="padding:6px 14px; font-size:12px; font-weight:700; background:white;">Apply</button>
+                </div>
+                <div id="subPromoStatus" style="font-size:12px; margin-top:5px; display:none;"></div>
+            </div>
+
+            <!-- PRICING SUMMARY -->
+            <div style="background:#eaf2e4; border:1px solid #c8dbbf; border-radius:8px; padding:14px 16px; margin-top:12px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text-mid); margin-bottom:4px;">
+                    <span>Subscription Plan Total:</span>
+                    <span id="subBaseTotal" style="font-weight:700;">₹1,320</span>
+                </div>
+                <div id="subDiscountRow" style="display:none; justify-content:space-between; font-size:13px; color:#2E7D32; font-weight:700; margin-bottom:4px;">
+                    <span id="subDiscountLabel">Promo Discount:</span>
+                    <span id="subDiscountAmount">- ₹0</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:15px; font-weight:800; color:var(--forest-green); padding-top:6px; border-top:1px dashed #b7cba7;">
+                    <span>Total Amount Payable:</span>
+                    <span id="subFinalPayable">₹1,320 / month</span>
+                </div>
+                <div style="font-size:11.5px; color:var(--text-mid); margin-top:6px;">
+                    ✓ Zero delivery fee &bull; Free morning doorstep dispatch &bull; Pause or cancel anytime
+                </div>
+            </div>
+
+            <div class="modal-footer" style="margin-top:18px; padding-top:12px; border-top:1px solid var(--border-light); display:flex; justify-content:space-between;">
+                <button type="button" class="btn btn-outline" onclick="closeSubscriptionModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="proceedToSubPayment()">Proceed to UPI Payment &rarr;</button>
+            </div>
+        </div>
+
+        <!-- STEP 2: Themed UPI Payment Gateway -->
+        <div id="subModalStep2" style="display:none;">
+            <!-- Summary Review Banner -->
+            <div style="background:#eaf2e4; border:1px solid #c8dbbf; border-radius:8px; padding:10px 14px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                <div>
+                    <span style="font-size:11.5px; font-weight:700; color:#1a4a2e; text-transform:uppercase;">📍 Subscribed Plan &amp; Address:</span>
+                    <div id="subStep2Summary" style="font-size:12.5px; color:#1a4a2e; font-weight:600;">Fresh Cow Milk • 30 Days</div>
+                </div>
+                <button type="button" onclick="backToSubDetails()" style="background:white; border:1px solid #1a4a2e; color:#1a4a2e; border-radius:4px; padding:3px 8px; font-size:11.5px; font-weight:700; cursor:pointer;">
+                    ✏ Edit
+                </button>
+            </div>
+
+            <!-- Themed QR Card -->
+            <div class="themed-qr-card">
+                <div style="display:inline-block; background:var(--forest-green); color:#e5c97a; font-weight:700; font-size:10.5px; padding:3px 12px; border-radius:20px; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">
+                    Scan &amp; Pay via Any UPI App
+                </div>
+                <div style="font-size:12px; color:var(--text-mid); margin-bottom:4px;">
+                    Google Pay &bull; PhonePe &bull; Paytm &bull; BHIM &bull; Cred &bull; Any Bank UPI
+                </div>
+
+                <div class="themed-qr-wrapper">
+                    <img src="../assets/images/payment_qr.jpg" alt="THULIRVA Official Payment QR Code" class="themed-qr-img">
+                </div>
+
+                <div class="upi-box">
+                    <span style="font-size:11.5px; color:#555;">UPI ID:</span>
+                    <span class="upi-id-text">7904880944@superyes</span>
+                    <button type="button" class="copy-upi-btn" onclick="copySubUpiId()">📋 Copy</button>
+                </div>
+
+                <div style="font-size:12px; color:var(--text-mid); margin-top:4px;">
+                    Total Amount to Pay: <strong id="subQrTotalDisplay" style="color:var(--forest-green); font-size:16px;">₹1,320</strong>
+                </div>
+            </div>
+
+            <!-- Verification Fields -->
+            <div style="background:#f9faf8; border:1px solid var(--border); border-radius:8px; padding:14px; margin-top:12px;">
+                <div class="form-field" style="margin-bottom:12px;">
+                    <label style="font-weight:700; color:var(--forest-green); font-size:12.5px;">
+                        UPI Transaction ID / UTR Number *
+                    </label>
+                    <input type="text" id="subTransactionId" placeholder="e.g. 12-digit UTR (e.g. 429302194821)" required style="font-family:monospace; font-size:13.5px; padding:8px 10px;">
+                    <small style="color:var(--text-muted); font-size:11px; display:block; margin-top:3px;">
+                        Enter the 12-digit UTR/reference number from your UPI payment receipt.
+                    </small>
+                </div>
+
+                <div class="form-field">
+                    <label style="font-weight:700; color:var(--forest-green); font-size:12.5px;">
+                        Upload Payment Screenshot Proof *
+                    </label>
+                    <input type="file" id="subProofFile" accept="image/*" required onchange="handleSubProofFile(event)" style="background:white; padding:6px 10px; font-size:12px;">
+                    
+                    <div class="proof-preview-box" id="subProofPreviewBox">
+                        <img id="subProofPreviewImg" src="" alt="Proof Preview" class="proof-preview-img">
+                        <div>
+                            <div id="subProofFileName" style="font-size:11.5px; font-weight:700; color:var(--forest-green);">screenshot.jpg</div>
+                            <small style="color:#2e7d32;">✓ Screenshot attached for verification</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border-light); display:flex; justify-content:space-between;">
+                <button type="button" class="btn btn-outline" onclick="backToSubDetails()">&larr; Back to Details</button>
+                <button type="button" class="btn btn-primary" id="confirmSubBtn" onclick="handleConfirmSubscriptionPayment()">
+                    🥛 Confirm &amp; Activate Subscription &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TAX INVOICE MODAL -->
+<div class="modal-overlay" id="invoiceModal">
+    <div class="modal-box" style="max-width:680px;">
+        <div class="modal-header no-print">
+            <h3>Customer Tax Invoice</h3>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print / Download PDF</button>
+                <button class="modal-close" onclick="closeInvoiceModal()">✕</button>
+            </div>
+        </div>
+        <div class="modal-body invoice-box" id="invoicePrintArea" style="padding:28px; background:white;">
+            <!-- Injected via JavaScript -->
+        </div>
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="footer-top">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="brand-logo-wrap">
+                        <img src="../assets/images/logo/logo.jpg" alt="THULIRVA" class="brand-logo-img">
+                        <div class="brand-text">
+                            <span class="brand-name">THULIRVA</span>
+                            <span class="brand-tagline">ROOTED IN NATURE</span>
+                        </div>
+                    </div>
+                    <p class="footer-tagline">Pure, unadulterated dairy and agro products delivered direct from our organic certified farm to your home.</p>
+                    <p style="font-size:12.5px; color:#e5c97a; margin-top:8px;">
+                        📍 Farm: No 1, Mayana Salai, Thimmarajampettai, Kanchipuram - 631601, Tamil Nadu
+                    </p>
+                </div>
+                <div class="footer-column">
+                    <h3>Explore</h3>
+                    <a href="../index.html">Home</a>
+                    <a href="shop.html">Shop All</a>
+                    <a href="about.html">About Us</a>
+                    <a href="farms.html">Our Farms</a>
+                    <a href="recipes.html">Recipes</a>
+                </div>
+                <div class="footer-column">
+                    <h3>Customer Support</h3>
+                    <a href="contact.html">Contact Us</a>
+                    <a href="cart.html">View Cart</a>
+                    <a href="account.html">My Account</a>
+                    <p style="font-size:12.5px; margin-top:10px; color:#c8dbbf;">📞 93606 71533</p>
+                    <p style="font-size:12.5px; color:#c8dbbf;">✉ support@thulirva.com</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div class="container footer-bottom-content">
+            <p>© 2026 THULIRVA. All rights reserved. Pure by Nature, Made for You!</p>
+            <div class="footer-bottom-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms &amp; Conditions</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="../js/main.js"></script>
+<script>
+let currentUser = JSON.parse(localStorage.getItem('thulirva_user') || 'null');
+if (!currentUser || (!currentUser.email && !currentUser.phone)) {
+    window.location.href = "login.html";
+}
+
+let savedAddresses = JSON.parse(localStorage.getItem('thulirva_addresses') || '[]');
+let savedSubscriptions = [];
+let currentOrdersList = [];
+
+function isOrderForCurrentUser(o) {
+    if (!currentUser || !o) return false;
+    const myUid = (currentUser.id || "").toString().toLowerCase().trim();
+    const myEmail = (currentUser.email || "").toLowerCase().trim();
+    const myPhone = (currentUser.phone || "").replace(/\D/g, "");
+
+    const oUid = (o.user_id || o.userId || "").toString().toLowerCase().trim();
+    const oEmail = (o.customer_email || o.customerEmail || "").toLowerCase().trim();
+    const oPhone = (o.customer_phone || o.customerPhone || "").replace(/\D/g, "");
+
+    if (myUid && oUid && oUid === myUid) return true;
+    if (myEmail && oEmail && oEmail === myEmail) return true;
+    if (myPhone && oPhone && (oPhone === myPhone || oPhone.endsWith(myPhone) || myPhone.endsWith(oPhone))) return true;
+    return false;
+}
+
+function isSubForCurrentUser(s) {
+    if (!currentUser || !s) return false;
+    const myUid = (currentUser.id || "").toString().toLowerCase().trim();
+    const myEmail = (currentUser.email || "").toLowerCase().trim();
+    const myPhone = (currentUser.phone || "").replace(/\D/g, "");
+
+    const sUid = (s.user_id || s.userId || "").toString().toLowerCase().trim();
+    const sEmail = (s.customer_email || s.customerEmail || "").toLowerCase().trim();
+    const sPhone = (s.customer_phone || s.customerPhone || "").replace(/\D/g, "");
+
+    if (myUid && sUid && sUid === myUid) return true;
+    if (myEmail && sEmail && sEmail === myEmail) return true;
+    if (myPhone && sPhone && (sPhone === myPhone || sPhone.endsWith(myPhone) || myPhone.endsWith(sPhone))) return true;
+    return false;
+}
+
+async function initAccount() {
+    // Ensure user has a distinct User ID
+    const userId = currentUser.id ? (String(currentUser.id).startsWith("USR-") ? currentUser.id : "USR-" + currentUser.id) : ("USR-" + Math.floor(1000 + Math.random() * 9000));
+    currentUser.id = userId;
+    localStorage.setItem('thulirva_user', JSON.stringify(currentUser));
+
+    document.getElementById("userGreeting").textContent = `Welcome, ${currentUser.name || 'Customer'}`;
+    document.getElementById("userNameDisplay").textContent = currentUser.name || "Customer";
+    document.getElementById("userContactDisplay").textContent = currentUser.phone || currentUser.email || "Farm Member";
+    if (document.getElementById("userIdDisplay")) {
+        document.getElementById("userIdDisplay").textContent = `User ID: #${userId}`;
+    }
+
+    // Profile inputs
+    const pName = document.getElementById("profileName");
+    const pPhone = document.getElementById("profilePhone");
+    const pEmail = document.getElementById("profileEmail");
+    if (pName) pName.value = currentUser.name || "";
+    if (pPhone) pPhone.value = currentUser.phone || "";
+    if (pEmail) pEmail.value = currentUser.email || "";
+
+    // Load local subscriptions strictly for THIS current user only
+    const allLocalSubs = JSON.parse(localStorage.getItem('thulirva_subscriptions') || '[]');
+    savedSubscriptions = allLocalSubs.filter(isSubForCurrentUser);
+
+    // Sync live subscriptions from server for THIS USER ONLY to capture admin cancellations
+    try {
+        const ident = currentUser.id || currentUser.email || currentUser.phone;
+        const res = await fetch(`/api/subscriptions/user/${encodeURIComponent(ident)}`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data.subscriptions && data.subscriptions.length) {
+                data.subscriptions.forEach(remoteSub => {
+                    if (!isSubForCurrentUser(remoteSub)) return;
+                    const match = savedSubscriptions.find(s => s.id == remoteSub.id);
+                    if (match) {
+                        match.status = remoteSub.status;
+                    } else {
+                        savedSubscriptions.unshift(remoteSub);
+                    }
+                });
+            }
+        }
+    } catch {}
+
+    renderUserOrders();
+    renderUserSubscriptions();
+    renderUserAddresses();
+
+    // Default subscription start date to tomorrow
+    const tom = new Date();
+    tom.setDate(tom.getDate() + 1);
+    const subDate = document.getElementById("subStartDate");
+    if (subDate) subDate.value = tom.toISOString().split("T")[0];
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("orderSuccess") === "true") {
+        const orderId = urlParams.get("orderId");
+        showToast(`🎉 Order #${orderId || ''} placed successfully! Thank you for choosing THULIRVA.`, "success");
+    }
+    if (urlParams.get("tab") === "orders") {
+        const orderNavBtn = document.querySelectorAll('.cart-layout button')[0];
+        if (orderNavBtn) switchUserTab('orders', orderNavBtn);
+    }
+    if (urlParams.get("openSub") === "true") {
+        const subNavBtn = document.querySelectorAll('.cart-layout button')[1];
+        if (subNavBtn) switchUserTab('subscriptions', subNavBtn);
+        openSubscriptionModal();
+    }
+}
+
+function switchUserTab(tab, btn) {
+    document.querySelectorAll('.account-tab-content').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.cart-layout button').forEach(b => {
+        b.style.background = 'transparent';
+        b.style.fontWeight = 'normal';
+        b.style.color = 'inherit';
+    });
+
+    btn.style.background = 'var(--pale-green)';
+    btn.style.fontWeight = '700';
+    btn.style.color = 'var(--forest-green)';
+
+    if (tab === 'orders') document.getElementById('tabOrders').style.display = 'block';
+    if (tab === 'subscriptions') document.getElementById('tabSubscriptions').style.display = 'block';
+    if (tab === 'addresses') document.getElementById('tabAddresses').style.display = 'block';
+    if (tab === 'profile') document.getElementById('tabProfile').style.display = 'block';
+}
+
+async function renderUserOrders() {
+    const list = document.getElementById("userOrdersList");
+    const allLocalOrders = JSON.parse(localStorage.getItem('thulirva_my_orders') || '[]');
+    let orders = allLocalOrders.filter(isOrderForCurrentUser);
+    
+    if (currentUser.id || currentUser.email || currentUser.phone) {
+        try {
+            const ident = currentUser.id || currentUser.email || currentUser.phone;
+            const res = await fetch(`/api/orders/user/${encodeURIComponent(ident)}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.orders && data.orders.length) {
+                    data.orders.forEach(ro => {
+                        if (!isOrderForCurrentUser(ro)) return;
+                        const match = orders.find(mo => mo.id == ro.id);
+                        if (match) {
+                            if (ro.order_status) match.order_status = ro.order_status;
+                        } else {
+                            orders.unshift(ro);
+                        }
+                    });
+                }
+            }
+        } catch {}
+    }
+
+    currentOrdersList = orders;
+
+    if (!orders || !orders.length) {
+        list.innerHTML = `
+            <div class="empty-state" style="background:white; border-radius:var(--radius-lg); border:1px solid var(--border); padding:40px; text-align:center;">
+                <div style="font-size:44px; margin-bottom:12px;">📦</div>
+                <h3 style="color:var(--forest-green); font-size:18px; margin-bottom:6px;">No orders placed yet</h3>
+                <p style="color:var(--text-muted); font-size:13px; max-width:400px; margin:0 auto 16px;">
+                    Your doorstep order history will appear here once you place an order.
+                </p>
+                <a href="shop.html" class="btn btn-primary btn-sm">Shop Farm Fresh Products &rarr;</a>
+            </div>
+        `;
+        return;
+    }
+
+    list.innerHTML = "";
+    orders.forEach(o => {
+        const status = (o.order_status || 'pending').toLowerCase();
+        let step = 1;
+        let stepLabel = "Order Confirmed & Received";
+        if (status === 'processing' || status === 'confirmed') { step = 2; stepLabel = "Harvested & Quality Checked at Farm"; }
+        else if (status === 'shipped') { step = 3; stepLabel = "Out for Morning Doorstep Delivery"; }
+        else if (status === 'delivered') { step = 4; stepLabel = "Successfully Delivered"; }
+
+        const badgeClass = status === 'pending' ? 'badge-pending' : (status === 'shipped' ? 'badge-shipped' : (status === 'cancelled' ? 'badge-cancelled' : 'badge-delivered'));
+        const itemsHtml = (o.items || []).map(i => `
+            <div style="display:flex; justify-content:space-between; font-size:13px; padding:8px 0; border-bottom:1px solid var(--border-light);">
+                <span>${i.name || i.product_name || 'Farm Item'} <strong>&times; ${i.quantity || 1}</strong></span>
+                <span style="font-weight:600;">₹${(Number(i.price || 0) * Number(i.quantity || 1)).toFixed(2)}</span>
+            </div>
+        `).join("");
+
+        list.innerHTML += `
+            <div style="background:white; border:1px solid var(--border); border-radius:var(--radius-lg); padding:22px; margin-bottom:20px; box-shadow:var(--shadow-sm);">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-light); padding-bottom:14px; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+                    <div>
+                        <span style="font-weight:700; color:var(--forest-green); font-size:17px;">Order #${o.id}</span>
+                        <span style="font-size:12px; color:var(--text-muted); margin-left:10px;">Placed: ${o.created_at || 'Recent'}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="badge ${badgeClass}" style="text-transform:capitalize;">${o.order_status}</span>
+                    </div>
+                </div>
+
+                <!-- LIVE ORDER TRACKING TIMELINE -->
+                <div style="background:#f9fbf8; border:1px solid var(--border-light); border-radius:12px; padding:16px; margin-bottom:18px;">
+                    <div style="font-size:12.5px; font-weight:700; color:var(--forest-green); margin-bottom:12px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;">
+                        <span>🚚 Live Delivery Status: <strong style="color:#2E7D32;">${stepLabel}</strong></span>
+                        <span style="color:var(--text-muted); font-weight:500;">Slot: 6:00 AM – 7:30 AM Morning</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; position:relative;">
+                        <div style="text-align:center;">
+                            <div style="width:26px; height:26px; border-radius:50%; background:${step >= 1 ? 'var(--forest-green)' : '#ddd'}; color:white; font-size:12px; display:flex; align-items:center; justify-content:center; margin:0 auto 6px; font-weight:bold;">${step > 1 ? '✓' : '1'}</div>
+                            <div style="font-size:11px; font-weight:${step === 1 ? '700' : '500'}; color:${step >= 1 ? 'var(--forest-green)' : 'var(--text-muted)'};">Order Placed</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="width:26px; height:26px; border-radius:50%; background:${step >= 2 ? 'var(--forest-green)' : '#ddd'}; color:white; font-size:12px; display:flex; align-items:center; justify-content:center; margin:0 auto 6px; font-weight:bold;">${step > 2 ? '✓' : '2'}</div>
+                            <div style="font-size:11px; font-weight:${step === 2 ? '700' : '500'}; color:${step >= 2 ? 'var(--forest-green)' : 'var(--text-muted)'};">Farm Packed</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="width:26px; height:26px; border-radius:50%; background:${step >= 3 ? 'var(--forest-green)' : '#ddd'}; color:white; font-size:12px; display:flex; align-items:center; justify-content:center; margin:0 auto 6px; font-weight:bold;">${step > 3 ? '✓' : '3'}</div>
+                            <div style="font-size:11px; font-weight:${step === 3 ? '700' : '500'}; color:${step >= 3 ? 'var(--forest-green)' : 'var(--text-muted)'};">Out for Delivery</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="width:26px; height:26px; border-radius:50%; background:${step >= 4 ? '#2E7D32' : '#ddd'}; color:white; font-size:12px; display:flex; align-items:center; justify-content:center; margin:0 auto 6px; font-weight:bold;">${step >= 4 ? '✓' : '4'}</div>
+                            <div style="font-size:11px; font-weight:${step === 4 ? '700' : '500'}; color:${step >= 4 ? '#2E7D32' : 'var(--text-muted)'};">Delivered</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    ${itemsHtml || '<p style="font-size:13px; color:var(--text-muted);">Fresh Farm Produce Assortment</p>'}
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding-top:14px; border-top:1px solid var(--border-light); font-size:14px; flex-wrap:wrap; gap:10px;">
+                    <span>Payment: <strong>${o.payment_method || 'Direct Farm Confirmation'}</strong> &bull; Total: <strong style="font-size:17px; color:var(--forest-green);">₹${o.total}</strong></span>
+                    <button class="btn btn-outline btn-sm" onclick="downloadInvoice(${o.id})">
+                        🧾 Download Tax Invoice
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function renderUserAddresses() {
+    const grid = document.getElementById("addressesGrid");
+    grid.innerHTML = "";
+    if (!savedAddresses.length) {
+        grid.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1; background:white; border:1px solid var(--border); border-radius:var(--radius-lg); padding:36px; text-align:center;">
+                <div style="font-size:40px; margin-bottom:10px;">📍</div>
+                <h3 style="color:var(--forest-green); font-size:18px; margin-bottom:6px;">No saved delivery addresses</h3>
+                <p style="color:var(--text-muted); font-size:13px; max-width:380px; margin:0 auto 16px;">
+                    Save your doorstep delivery address for quick one-click orders and morning deliveries.
+                </p>
+                <button class="btn btn-primary btn-sm" onclick="openAddressModal()">＋ Add First Address</button>
+            </div>
+        `;
+        return;
+    }
+    savedAddresses.forEach(a => {
+        grid.innerHTML += `
+            <div style="background:white; border:1.5px solid ${a.isDefault ? 'var(--forest-green)' : 'var(--border)'}; border-radius:var(--radius-lg); padding:20px; position:relative; box-shadow:var(--shadow-sm);">
+                ${a.isDefault ? `<span style="position:absolute; top:12px; right:12px; background:#e8f5e9; color:#2e7d32; font-size:10px; font-weight:700; padding:2px 8px; border-radius:12px; text-transform:uppercase;">Default</span>` : ""}
+                <h4 style="font-size:15px; color:var(--forest-green); margin-bottom:6px;">📍 ${a.label}</h4>
+                <p style="font-size:13px; color:var(--text-mid); line-height:1.5; margin-bottom:16px;">
+                    ${a.street}<br>${a.city} - ${a.pincode}
+                </p>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-outline btn-sm" onclick="deleteAddress(${a.id})" style="color:#C0392B;">Delete</button>
+                    ${!a.isDefault ? `<button class="btn btn-outline btn-sm" onclick="setDefaultAddress(${a.id})">Set Default</button>` : ""}
+                </div>
+            </div>
+        `;
+    });
+}
+
+function openAddressModal() {
+    const modal = document.getElementById("addressModal");
+    if (modal) modal.classList.add("active");
+}
+function closeAddressModal() {
+    const modal = document.getElementById("addressModal");
+    if (modal) modal.classList.remove("active");
+}
+
+function handleSaveAddress(e) {
+    e.preventDefault();
+    const label = document.getElementById("addrLabel").value.trim();
+    const street = document.getElementById("addrStreet").value.trim();
+    const city = document.getElementById("addrCity").value.trim();
+    const pincode = document.getElementById("addrPincode").value.trim();
+
+    const newAddr = {
+        id: Date.now(),
+        label: label || "Home",
+        street,
+        city: city || "Kanchipuram",
+        pincode: pincode || "631601",
+        isDefault: savedAddresses.length === 0
+    };
+    savedAddresses.push(newAddr);
+    localStorage.setItem('thulirva_addresses', JSON.stringify(savedAddresses));
+    
+    // Also update currentUser address
+    currentUser.address = `${street}, ${city} - ${pincode}`;
+    localStorage.setItem('thulirva_user', JSON.stringify(currentUser));
+
+    closeAddressModal();
+    renderUserAddresses();
+    showToast("✓ Delivery address saved successfully!", "success");
+}
+
+function deleteAddress(id) {
+    savedAddresses = savedAddresses.filter(a => a.id !== id);
+    localStorage.setItem('thulirva_addresses', JSON.stringify(savedAddresses));
+    renderUserAddresses();
+    showToast("Address deleted", "info");
+}
+
+function setDefaultAddress(id) {
+    savedAddresses.forEach(a => a.isDefault = (a.id === id));
+    localStorage.setItem('thulirva_addresses', JSON.stringify(savedAddresses));
+    renderUserAddresses();
+    showToast("✓ Default delivery address updated", "success");
+}
+
+/* =========================================================
+   MILK SUBSCRIPTION LOGIC (WITH FULL THEMED PAYMENT GATEWAY & PROMO CODE)
+========================================================= */
+let currentSubProofBase64 = "";
+let subPromoDiscount = 0;
+let appliedSubPromo = null;
+let isSubmittingSub = false;
+
+const DEFAULT_SUB_LOCATIONS = [
+    { name: "Oragadam", pincode: "603109" },
+    { name: "Padapai", pincode: "601301" },
+    { name: "Sriperumbudur", pincode: "602105" },
+    { name: "Valasaravakkam", pincode: "600087" },
+    { name: "Porur", pincode: "600116" },
+    { name: "Virugambakkam", pincode: "600092" },
+    { name: "Vadapalani", pincode: "600026" },
+    { name: "Koyambedu", pincode: "600107" },
+    { name: "KK Nagar", pincode: "600078" },
+    { name: "Alapakkam", pincode: "600116" },
+    { name: "Maduravoyal", pincode: "600095" }
+];
+
+function onSubAreaChange(area) {
+    if (!area) return;
+    const match = DEFAULT_SUB_LOCATIONS.find(l => l.name.toLowerCase() === area.toLowerCase());
+    const pinEl = document.getElementById("subPincode");
+    if (match && pinEl) {
+        pinEl.value = match.pincode;
+    }
+}
+
+function openSubscriptionModal() {
+    currentSubProofBase64 = "";
+    subPromoDiscount = 0;
+    appliedSubPromo = null;
+    isSubmittingSub = false;
+
+    backToSubDetails();
+
+    const proofBox = document.getElementById("subProofPreviewBox");
+    if (proofBox) proofBox.style.display = "none";
+    const txnInput = document.getElementById("subTransactionId");
+    if (txnInput) txnInput.value = "";
+    const proofFile = document.getElementById("subProofFile");
+    if (proofFile) proofFile.value = "";
+    const promoInp = document.getElementById("subPromoCode");
+    if (promoInp) promoInp.value = "";
+    const promoStatus = document.getElementById("subPromoStatus");
+    if (promoStatus) promoStatus.style.display = "none";
+
+    const subAddr = document.getElementById("subAddress");
+    const subPin = document.getElementById("subPincode");
+
+    if (subAddr) {
+        const def = savedAddresses.find(a => a.isDefault) || savedAddresses[0];
+        if (def) {
+            subAddr.value = def.street;
+            if (subPin) subPin.value = def.pincode || "603109";
+        } else if (currentUser.address) {
+            subAddr.value = currentUser.address;
+        }
+    }
+
+    calculateSubCost();
+    document.getElementById("subscriptionModal").classList.add("active");
+}
+
+function closeSubscriptionModal() {
+    document.getElementById("subscriptionModal").classList.remove("active");
+}
+
+function calculateSubCost() {
+    const pVal = document.getElementById("subProduct").value;
+    const price = Number(pVal.split("|")[1]) || 44;
+    const qty = Number(document.getElementById("subQty").value) || 1;
+    const freq = document.getElementById("subFreq").value;
+
+    const daysPerMonth = freq === "Daily" ? 30 : (freq === "Alternate" ? 15 : 22);
+    const baseTotal = price * qty * daysPerMonth;
+
+    const baseEl = document.getElementById("subBaseTotal");
+    if (baseEl) baseEl.textContent = `₹${baseTotal.toLocaleString()}`;
+
+    const discountRow = document.getElementById("subDiscountRow");
+    const discountAmtEl = document.getElementById("subDiscountAmount");
+    const finalPayableEl = document.getElementById("subFinalPayable");
+    const qrTotalEl = document.getElementById("subQrTotalDisplay");
+
+    const finalAmount = Math.max(0, baseTotal - subPromoDiscount);
+
+    if (subPromoDiscount > 0) {
+        if (discountRow) discountRow.style.display = "flex";
+        if (discountAmtEl) discountAmtEl.textContent = `- ₹${subPromoDiscount.toLocaleString()}`;
+    } else {
+        if (discountRow) discountRow.style.display = "none";
+    }
+
+    if (finalPayableEl) finalPayableEl.textContent = `₹${finalAmount.toLocaleString()} / month`;
+    if (qrTotalEl) qrTotalEl.textContent = `₹${finalAmount.toLocaleString()}`;
+
+    return { baseTotal, finalAmount, daysPerMonth, price, qty, freq };
+}
+
+async function applySubPromoCode() {
+    const code = (document.getElementById("subPromoCode")?.value || "").trim().toUpperCase();
+    const statusEl = document.getElementById("subPromoStatus");
+    if (!code) {
+        if (statusEl) {
+            statusEl.style.display = "block";
+            statusEl.style.color = "#c0392b";
+            statusEl.textContent = "Please enter a promo code.";
+        }
+        return;
+    }
+
+    const { baseTotal } = calculateSubCost();
+
+    try {
+        const res = await fetch("/api/coupons/validate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code, total: baseTotal })
+        });
+        const data = await res.json();
+        if (data.valid) {
+            appliedSubPromo = data.code;
+            subPromoDiscount = data.discount;
+            calculateSubCost();
+            if (statusEl) {
+                statusEl.style.display = "block";
+                statusEl.style.color = "#2e7d32";
+                statusEl.textContent = data.message || `✓ Promo code ${data.code} applied! Saved ₹${data.discount}.`;
+            }
+            showToast(`✓ Promo code ${data.code} applied! Saved ₹${data.discount}`, "success");
+        } else {
+            subPromoDiscount = 0;
+            appliedSubPromo = null;
+            calculateSubCost();
+            if (statusEl) {
+                statusEl.style.display = "block";
+                statusEl.style.color = "#c0392b";
+                statusEl.textContent = data.message || "Invalid or expired promo code.";
+            }
+        }
+    } catch {
+        if (code === "FARM10" || code === "WELCOME10") {
+            subPromoDiscount = Math.round(baseTotal * 0.1);
+            appliedSubPromo = code;
+        } else if (code === "PUREMILK" || code === "THULIRVA50") {
+            subPromoDiscount = code === "PUREMILK" ? 100 : 50;
+            appliedSubPromo = code;
+        } else {
+            subPromoDiscount = 0;
+            appliedSubPromo = null;
+        }
+        calculateSubCost();
+        if (statusEl) {
+            statusEl.style.display = "block";
+            statusEl.style.color = appliedSubPromo ? "#2e7d32" : "#c0392b";
+            statusEl.textContent = appliedSubPromo ? `✓ Promo code ${appliedSubPromo} applied! Saved ₹${subPromoDiscount}.` : "Invalid promo code.";
+        }
+    }
+}
+
+function proceedToSubPayment() {
+    const area = (document.getElementById("subAreaSelect")?.value || "").trim();
+    const address = (document.getElementById("subAddress")?.value || "").trim();
+    const startDate = (document.getElementById("subStartDate")?.value || "").trim();
+    const pincode = (document.getElementById("subPincode")?.value || "").trim();
+
+    if (!area) {
+        showToast("Please select your delivery area", "error");
+        document.getElementById("subAreaSelect")?.focus();
+        return;
+    }
+    if (!address) {
+        showToast("Please enter your doorstep street address", "error");
+        document.getElementById("subAddress")?.focus();
+        return;
+    }
+    if (!startDate) {
+        showToast("Please choose a start date", "error");
+        document.getElementById("subStartDate")?.focus();
+        return;
+    }
+    if (!pincode || pincode.replace(/\D/g, '').length < 6) {
+        showToast("Please enter a valid 6-digit PIN code", "error");
+        document.getElementById("subPincode")?.focus();
+        return;
+    }
+
+    const { finalAmount, daysPerMonth, freq } = calculateSubCost();
+    const pVal = document.getElementById("subProduct").value;
+    const pName = pVal.split("|")[0];
+
+    document.getElementById("subModalStep1").style.display = "none";
+    document.getElementById("subModalStep2").style.display = "block";
+
+    document.getElementById("subStepDot1").innerHTML = "✓";
+    document.getElementById("subStepDot1").style.background = "#2e7d32";
+    document.getElementById("subStepLine").style.width = "100%";
+    document.getElementById("subStepTab2").style.opacity = "1";
+    document.getElementById("subStepDot2").style.background = "var(--forest-green)";
+    document.getElementById("subStepDot2").style.color = "white";
+    document.getElementById("subStepLabel2").style.color = "var(--forest-green)";
+
+    document.getElementById("subStep2Summary").textContent = `${pName} • ${freq} (${daysPerMonth} days) • Delivering to: ${currentUser.name || 'Customer'}, ${area} (${pincode})`;
+    document.getElementById("subQrTotalDisplay").textContent = `₹${finalAmount.toLocaleString()}`;
+
+    const modalBox = document.querySelector("#subscriptionModal .modal-box");
+    if (modalBox) modalBox.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function backToSubDetails() {
+    document.getElementById("subModalStep1").style.display = "block";
+    document.getElementById("subModalStep2").style.display = "none";
+
+    document.getElementById("subStepDot1").innerHTML = "1";
+    document.getElementById("subStepDot1").style.background = "var(--forest-green)";
+    document.getElementById("subStepLine").style.width = "0%";
+    document.getElementById("subStepTab2").style.opacity = "0.6";
+    document.getElementById("subStepDot2").style.background = "#e0e0e0";
+    document.getElementById("subStepDot2").style.color = "#555";
+    document.getElementById("subStepLabel2").style.color = "#555";
+}
+
+function copySubUpiId() {
+    const upi = "7904880944@superyes";
+    navigator.clipboard.writeText(upi).then(() => {
+        showToast("✓ UPI ID copied to clipboard: " + upi);
+    }).catch(() => {
+        showToast("UPI ID: " + upi);
+    });
+}
+
+function handleSubProofFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        currentSubProofBase64 = evt.target.result;
+        const box = document.getElementById("subProofPreviewBox");
+        const img = document.getElementById("subProofPreviewImg");
+        const nameEl = document.getElementById("subProofFileName");
+        if (box && img) {
+            img.src = currentSubProofBase64;
+            if (nameEl) nameEl.textContent = file.name;
+            box.style.display = "flex";
+        }
+        showToast("✓ Screenshot proof selected!");
+    };
+    reader.readAsDataURL(file);
+}
+
+async function handleConfirmSubscriptionPayment() {
+    if (isSubmittingSub) return;
+
+    const txnId = (document.getElementById("subTransactionId")?.value || "").trim();
+    if (!txnId) {
+        showToast("Please enter the UPI Transaction ID / UTR Number", "error");
+        document.getElementById("subTransactionId")?.focus();
+        return;
+    }
+    if (!currentSubProofBase64) {
+        showToast("Please upload payment screenshot proof", "error");
+        document.getElementById("subProofFile")?.focus();
+        return;
+    }
+
+    const area = (document.getElementById("subAreaSelect")?.value || "").trim();
+    const streetAddress = (document.getElementById("subAddress")?.value || "").trim();
+    const pincode = (document.getElementById("subPincode")?.value || "").trim();
+    const startDate = (document.getElementById("subStartDate")?.value || "").trim();
+    const pVal = document.getElementById("subProduct").value;
+    const [pName, pPrice, pWeight] = pVal.split("|");
+    const { finalAmount, daysPerMonth, freq, qty } = calculateSubCost();
+
+    const fullAddress = `${streetAddress}, ${area}, ${pincode}`;
+
+    isSubmittingSub = true;
+    const confirmBtn = document.getElementById("confirmSubBtn");
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = "Verifying &amp; Activating Subscription... 🌿";
+    }
+
+    const subId = "SUB-" + Math.floor(1000 + Math.random() * 9000);
+    const subPayload = {
+        id: subId,
+        user_id: currentUser.id || null,
+        userId: currentUser.id || null,
+        customer_name: currentUser.name || "Valued Customer",
+        customerName: currentUser.name || "Valued Customer",
+        customer_phone: currentUser.phone || "",
+        customerPhone: currentUser.phone || "",
+        customer_email: currentUser.email || "",
+        customerEmail: currentUser.email || "",
+        product_name: pName,
+        productName: pName,
+        weight: pWeight,
+        time_period: `${freq} (${daysPerMonth} Days)`,
+        timePeriod: `${freq} (${daysPerMonth} Days)`,
+        frequency: freq,
+        quantity: qty,
+        delivery_slot: "6:00 AM - 7:00 AM",
+        deliverySlot: "6:00 AM - 7:00 AM",
+        price_per_delivery: Number(pPrice),
+        pricePerUnit: Number(pPrice),
+        total_price: finalAmount,
+        totalPrice: finalAmount,
+        start_date: startDate,
+        startDate: startDate,
+        delivery_location: area,
+        address: fullAddress,
+        payment_method: "UPI QR (7904880944@superyes)",
+        transaction_id: txnId,
+        transactionId: txnId,
+        payment_proof: currentSubProofBase64,
+        paymentProof: currentSubProofBase64,
+        promo_code: appliedSubPromo || null,
+        discount_amount: subPromoDiscount,
+        status: "Active",
+        created_at: new Date().toLocaleDateString('en-IN')
+    };
+
+    try {
+        await fetch("/api/subscriptions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(subPayload)
+        });
+    } catch {}
+
+    savedSubscriptions.unshift(subPayload);
+    const allStorageSubs = JSON.parse(localStorage.getItem('thulirva_subscriptions') || '[]');
+    allStorageSubs.unshift(subPayload);
+    localStorage.setItem('thulirva_subscriptions', JSON.stringify(allStorageSubs));
+
+    closeSubscriptionModal();
+    renderUserSubscriptions();
+    showToast("🎉 Daily morning milk subscription verified & activated!", "success");
+
+    isSubmittingSub = false;
+    if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = "🥛 Confirm &amp; Activate Subscription &rarr;";
+    }
+}
+
+function renderUserSubscriptions() {
+    const list = document.getElementById("userSubscriptionsList");
+    if (!savedSubscriptions.length) {
+        list.innerHTML = `
+            <div style="background:white; border:1px solid var(--border); border-radius:var(--radius-lg); padding:40px; text-align:center;">
+                <div style="font-size:44px; margin-bottom:12px;">🥛</div>
+                <h4 style="font-size:18px; color:var(--forest-green); margin-bottom:6px;">No Active Milk Subscriptions</h4>
+                <p style="font-size:13px; color:var(--text-muted); max-width:440px; margin:0 auto 18px;">
+                    Enjoy unadulterated farm fresh cow milk delivered to your doorstep every morning before 7:00 AM.
+                </p>
+                <button class="btn btn-primary btn-sm" onclick="openSubscriptionModal()">Start Morning Milk Plan &rarr;</button>
+            </div>
+        `;
+        return;
+    }
+
+    list.innerHTML = savedSubscriptions.map(s => {
+        const pName = s.productName || s.product_name || "Fresh Cow Milk";
+        const weight = s.weight || (pName.includes("1 Litre") ? "1 Litre" : "500 ml");
+        const slot = s.timeSlot || s.delivery_slot || "6:00 AM - 7:00 AM";
+        const freq = s.frequency || s.time_period || "Daily";
+        const start = s.startDate || s.start_date || "Active";
+        const unitPrice = s.pricePerUnit || s.price_per_delivery || (s.total_price ? Math.round(s.total_price / 30) : 44);
+
+        return `
+        <div style="background:white; border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:22px; margin-bottom:16px; box-shadow:var(--shadow-sm);">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-light); padding-bottom:12px; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+                <div>
+                    <span style="font-weight:700; color:var(--forest-green); font-size:16px;">🥛 ${pName}</span>
+                    <span style="font-size:12px; color:var(--text-muted); margin-left:8px;">ID: #${s.id}</span>
+                </div>
+                <div>
+                    <span style="background:${s.status === 'Active' ? '#e8f5e9' : (s.status === 'Paused' ? '#fff3e0' : '#fde8e8')}; color:${s.status === 'Active' ? '#2e7d32' : (s.status === 'Paused' ? '#e65100' : '#9b1c1c')}; font-size:11px; font-weight:700; padding:4px 10px; border-radius:12px; text-transform:uppercase;">
+                        ● ${s.status}
+                    </span>
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; font-size:13px; margin-bottom:16px;">
+                <div><span style="color:var(--text-muted);">Daily Qty:</span> <strong>${s.quantity || 1} unit (${weight})</strong></div>
+                <div><span style="color:var(--text-muted);">Delivery Slot:</span> <strong>${slot}</strong></div>
+                <div><span style="color:var(--text-muted);">Frequency:</span> <strong>${freq}</strong></div>
+                <div><span style="color:var(--text-muted);">Start Date:</span> <strong>${start}</strong></div>
+            </div>
+            <div style="font-size:12.5px; color:var(--text-mid); background:#f9faf8; padding:10px 14px; border-radius:8px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>📍 <strong>Delivery Address:</strong> ${s.address}</div>
+                <div style="font-size:11.5px; color:#1a4a2e; font-weight:700; background:#eaf2e4; padding:3px 8px; border-radius:4px; font-family:monospace;">
+                    UTR: ${s.transaction_id || s.transactionId || 'Verified'}
+                </div>
+            </div>
+            ${s.promo_code ? `<div style="font-size:12px; color:#2E7D32; font-weight:700; margin-bottom:12px; background:#f4f9f2; padding:4px 10px; border-radius:6px; display:inline-block;">🏷️ Promo Code: ${s.promo_code} (-₹${s.discount_amount || 0} Saved)</div>` : ''}
+            <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px solid var(--border-light); flex-wrap:wrap; gap:10px;">
+                <div style="font-size:13px; color:var(--forest-green); font-weight:700;">
+                    ₹${(unitPrice * (s.quantity || 1)).toFixed(2)} / delivery
+                    ${s.total_price ? `<span style="font-weight:normal; color:var(--text-muted); font-size:12px;"> (Plan Total: ₹${s.total_price})</span>` : ""}
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                    <button class="btn btn-outline btn-sm" onclick="downloadSubscriptionInvoice('${s.id}')">
+                        🧾 Download Tax Invoice
+                    </button>
+                    ${s.status !== 'Cancelled' ? `
+                    <button class="btn btn-outline btn-sm" onclick="toggleSubPause('${s.id}')">
+                        ${s.status === 'Active' ? '⏸ Pause Delivery' : '▶ Resume Delivery'}
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="cancelSub('${s.id}')" style="color:#C0392B;">
+                        ✕ Cancel Plan
+                    </button>
+                    ` : `<span style="font-size:12px; color:#C0392B; font-weight:700; background:#fde8e8; padding:4px 10px; border-radius:6px;">✕ Cancelled</span>`}
+                </div>
+            </div>
+        </div>
+        `;
+    }).join("");
+}
+
+function updateSubInGlobalStorage(id, newStatus) {
+    try {
+        const allSubs = JSON.parse(localStorage.getItem('thulirva_subscriptions') || '[]');
+        const match = allSubs.find(item => item.id == id);
+        if (match) {
+            match.status = newStatus;
+            localStorage.setItem('thulirva_subscriptions', JSON.stringify(allSubs));
+        }
+    } catch {}
+}
+
+async function toggleSubPause(id) {
+    const s = savedSubscriptions.find(item => item.id === id);
+    if (s) {
+        const newStatus = s.status === 'Active' ? 'Paused' : 'Active';
+        s.status = newStatus;
+        try {
+            await fetch(`/api/subscriptions/${id}/status`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: newStatus })
+            });
+        } catch {}
+        updateSubInGlobalStorage(id, newStatus);
+        renderUserSubscriptions();
+        showToast(s.status === 'Active' ? "✓ Subscription resumed" : "⏸ Subscription paused", "info");
+    }
+}
+
+async function cancelSub(id) {
+    if (!confirm("Are you sure you want to cancel this milk subscription?")) return;
+    const s = savedSubscriptions.find(item => item.id === id);
+    if (s) {
+        s.status = 'Cancelled';
+        try {
+            await fetch(`/api/subscriptions/${id}/status`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: 'Cancelled' })
+            });
+        } catch {}
+        updateSubInGlobalStorage(id, 'Cancelled');
+        renderUserSubscriptions();
+        showToast("✓ Subscription cancelled successfully", "info");
+    }
+}
+
+/* =========================================================
+   TAX INVOICE GENERATOR & DOWNLOAD
+========================================================= */
+function downloadInvoice(orderId) {
+    const order = currentOrdersList.find(o => o.id == orderId);
+    if (!order) {
+        showToast("Invoice details not found", "error");
+        return;
+    }
+
+    const modal = document.getElementById("invoiceModal");
+    const printArea = document.getElementById("invoicePrintArea");
+
+    const itemsRows = (order.items || []).map(i => `
+        <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:10px 0; font-weight:600; color:#1a4a2e;">${i.name || i.product_name || 'Dairy Produce'}</td>
+            <td style="padding:10px 0; text-align:center;">${i.weight || '500 ml'}</td>
+            <td style="padding:10px 0; text-align:center;">₹${Number(i.price || 0).toFixed(2)}</td>
+            <td style="padding:10px 0; text-align:center;">${i.quantity || 1}</td>
+            <td style="padding:10px 0; text-align:right; font-weight:700;">₹${(Number(i.price || 0) * Number(i.quantity || 1)).toFixed(2)}</td>
+        </tr>
+    `).join("");
+
+    printArea.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #1a4a2e; padding-bottom:16px; margin-bottom:20px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <img src="../assets/images/logo/logo.jpg" alt="THULIRVA" style="width:60px; height:60px; border-radius:50%; object-fit:cover; border:2px solid #c8a84b;">
+                <div>
+                    <h2 style="font-family:'Playfair Display',serif; color:#1a4a2e; margin:0; font-size:24px; letter-spacing:1px;">THULIRVA</h2>
+                    <div style="font-size:10px; color:#9a7a30; font-weight:700; letter-spacing:2px;">ROOTED IN NATURE</div>
+                    <div style="font-size:11px; color:#666; margin-top:3px;">Pure Agro &amp; Dairy Products</div>
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <span style="background:#eaf2e4; color:#1a4a2e; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; display:inline-block; margin-bottom:4px;">TAX INVOICE</span>
+                <div style="font-size:13px; font-weight:700; color:#1a4a2e;">Invoice #: INV-2026-${order.id}</div>
+                <div style="font-size:12px; color:#666;">Date: ${order.created_at || 'Recent'}</div>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; font-size:12.5px;">
+            <div style="background:#fcfbf7; border:1px solid #ede8db; padding:14px; border-radius:8px;">
+                <div style="font-size:11px; font-weight:700; color:#9a7a30; text-transform:uppercase; margin-bottom:4px;">Farm &amp; Registered Office</div>
+                <div style="font-weight:700; color:#1a4a2e;">THULIRVA AGRO FARMS</div>
+                <div style="color:#555; line-height:1.4;">
+                    No 1, Mayana Salai, Thimmarajampettai,<br>
+                    Kanchipuram - 631601, Tamil Nadu<br>
+                    Phone: +91 93606 71533<br>
+                    Email: support@thulirva.com
+                </div>
+            </div>
+            <div style="background:#fcfbf7; border:1px solid #ede8db; padding:14px; border-radius:8px;">
+                <div style="font-size:11px; font-weight:700; color:#9a7a30; text-transform:uppercase; margin-bottom:4px;">Billed / Delivered To</div>
+                <div style="font-weight:700; color:#1a4a2e;">${order.customer_name || currentUser.name || 'Valued Customer'}</div>
+                <div style="color:#555; line-height:1.4;">
+                    ${order.address || 'Doorstep Address'}${order.city ? ', ' + order.city : ''}${order.pincode ? ' - ' + order.pincode : ''}<br>
+                    Phone: ${order.customer_phone || currentUser.phone || '—'}<br>
+                    Payment: <strong>Razorpay Online (PAID)</strong>
+                </div>
+            </div>
+        </div>
+
+        <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:20px;">
+            <thead>
+                <tr style="background:#eaf2e4; color:#1a4a2e; text-align:left; font-size:12px;">
+                    <th style="padding:10px 0; border-bottom:1.5px solid #1a4a2e;">Item Description</th>
+                    <th style="padding:10px 0; text-align:center; border-bottom:1.5px solid #1a4a2e;">Weight / Vol</th>
+                    <th style="padding:10px 0; text-align:center; border-bottom:1.5px solid #1a4a2e;">Price</th>
+                    <th style="padding:10px 0; text-align:center; border-bottom:1.5px solid #1a4a2e;">Qty</th>
+                    <th style="padding:10px 0; text-align:right; border-bottom:1.5px solid #1a4a2e;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${itemsRows || `<tr><td colspan="5" style="padding:12px 0;">Farm Fresh Dairy Assortment</td></tr>`}
+            </tbody>
+        </table>
+
+        <div style="display:flex; justify-content:flex-end; margin-bottom:24px;">
+            <div style="width:260px; font-size:13px;">
+                <div style="display:flex; justify-content:space-between; padding:4px 0; color:#666;">
+                    <span>Subtotal:</span>
+                    <span>₹${Number(order.subtotal || order.total).toFixed(2)}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:4px 0; color:#666;">
+                    <span>Doorstep Delivery:</span>
+                    <span>${order.delivery_charge === 0 ? '<strong style="color:#2e7d32">FREE</strong>' : '₹' + (order.delivery_charge || 0).toFixed(2)}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:8px 0; border-top:1.5px solid #1a4a2e; margin-top:6px; font-size:16px; font-weight:700; color:#1a4a2e;">
+                    <span>Total Paid:</span>
+                    <span>₹${Number(order.total).toFixed(2)}</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="border-top:1px dashed #ccc; padding-top:14px; text-align:center; font-size:11.5px; color:#777;">
+            🌿 <strong>Pure by Nature, Made for You!</strong> Thank you for choosing organic pasture goodness.<br>
+            For delivery inquiries or support, WhatsApp us at <strong>+91 93606 71533</strong>.
+        </div>
+    `;
+
+    modal.classList.add("active");
+}
+
+function downloadSubscriptionInvoice(subId) {
+    const s = savedSubscriptions.find(item => item.id == subId);
+    if (!s) {
+        showToast("Subscription invoice not found", "error");
+        return;
+    }
+
+    const modal = document.getElementById("invoiceModal");
+    const printArea = document.getElementById("invoicePrintArea");
+
+    const pName = s.productName || s.product_name || "Fresh Cow Milk";
+    const slot = s.timeSlot || s.delivery_slot || "6:00 AM - 7:00 AM";
+    const freq = s.frequency || s.time_period || "Daily (30 Days)";
+    const start = s.startDate || s.start_date || "Active";
+    const total = Number(s.totalPrice || s.total_price || 1320);
+    const utr = s.transactionId || s.transaction_id || "PAID";
+
+    printArea.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #1a4a2e; padding-bottom:16px; margin-bottom:20px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <img src="../assets/images/logo/logo.jpg" alt="THULIRVA" style="width:60px; height:60px; border-radius:50%; object-fit:cover; border:2px solid #c8a84b;">
+                <div>
+                    <h2 style="font-family:'Playfair Display',serif; color:#1a4a2e; margin:0; font-size:24px; letter-spacing:1px;">THULIRVA</h2>
+                    <div style="font-size:10px; color:#9a7a30; font-weight:700; letter-spacing:2px;">ROOTED IN NATURE</div>
+                    <div style="font-size:11px; color:#666; margin-top:3px;">Pure Agro &amp; Dairy Farm Subscriptions</div>
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <span style="background:#eaf2e4; color:#1a4a2e; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; display:inline-block; margin-bottom:4px;">OFFICIAL SUBSCRIPTION TAX INVOICE</span>
+                <div style="font-size:13px; font-weight:700; color:#1a4a2e;">Invoice #: SUB-INV-${s.id}</div>
+                <div style="font-size:12px; color:#666;">Date: ${s.createdAt || 'Current'}</div>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; font-size:12.5px;">
+            <div style="background:#fcfbf7; border:1px solid #ede8db; padding:14px; border-radius:8px;">
+                <div style="font-size:11px; font-weight:700; color:#9a7a30; text-transform:uppercase; margin-bottom:4px;">Farm &amp; Dispatched From</div>
+                <div style="font-weight:700; color:#1a4a2e;">THULIRVA AGRO FARMS</div>
+                <div style="color:#555; line-height:1.4;">
+                    No 1, Mayana Salai, Thimmarajampettai,<br>
+                    Kanchipuram - 631601, Tamil Nadu<br>
+                    Phone: +91 93606 71533<br>
+                    UPI ID: 7904880944@superyes
+                </div>
+            </div>
+            <div style="background:#fcfbf7; border:1px solid #ede8db; padding:14px; border-radius:8px;">
+                <div style="font-size:11px; font-weight:700; color:#9a7a30; text-transform:uppercase; margin-bottom:4px;">Subscriber &amp; Doorstep Delivery To</div>
+                <div style="font-weight:700; color:#1a4a2e;">${s.customerName || currentUser.name || 'Valued Subscriber'}</div>
+                <div style="color:#555; line-height:1.4;">
+                    ${s.address || currentUser.address || 'Doorstep Address'}<br>
+                    Phone: ${s.customerPhone || currentUser.phone || '—'}<br>
+                    Slot: <strong>${slot}</strong> &bull; Starts: <strong>${start}</strong><br>
+                    Payment: <strong style="color:#2e7d32;">PAID via UPI QR (UTR: ${utr})</strong>
+                </div>
+            </div>
+        </div>
+
+        <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:20px;">
+            <thead>
+                <tr style="background:#eaf2e4; color:#1a4a2e; text-align:left; font-size:12px;">
+                    <th style="padding:10px; border-bottom:1.5px solid #1a4a2e;">Subscription Item</th>
+                    <th style="padding:10px; text-align:center; border-bottom:1.5px solid #1a4a2e;">Schedule &amp; Period</th>
+                    <th style="padding:10px; text-align:center; border-bottom:1.5px solid #1a4a2e;">Daily Qty</th>
+                    <th style="padding:10px; text-align:right; border-bottom:1.5px solid #1a4a2e;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom:1px solid #eee;">
+                    <td style="padding:12px 10px; font-weight:700; color:#1a4a2e;">
+                        ${pName}<br>
+                        <small style="font-weight:normal; color:#666;">Chilled morning doorstep delivery before 7:00 AM</small>
+                    </td>
+                    <td style="padding:12px 10px; text-align:center;">${freq}</td>
+                    <td style="padding:12px 10px; text-align:center;">${s.quantity || 1} Unit / day</td>
+                    <td style="padding:12px 10px; text-align:right; font-weight:700;">₹${total.toLocaleString()}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="display:flex; justify-content:flex-end; margin-bottom:24px;">
+            <div style="width:280px; font-size:13px;">
+                <div style="display:flex; justify-content:space-between; padding:4px 0; color:#666;">
+                    <span>Subscription Plan Total:</span>
+                    <span>₹${total.toLocaleString()}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:4px 0; color:#666;">
+                    <span>Morning Doorstep Delivery:</span>
+                    <span><strong style="color:#2e7d32">FREE (₹0.00)</strong></span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:8px 0; border-top:1.5px solid #1a4a2e; margin-top:6px; font-size:16px; font-weight:700; color:#1a4a2e;">
+                    <span>Total Amount Paid:</span>
+                    <span>₹${total.toLocaleString()}</span>
+                </div>
+                <div style="font-size:11px; color:#2e7d32; text-align:right; font-weight:700; margin-top:2px;">
+                    ✓ Payment Verified &bull; Active Subscription
+                </div>
+            </div>
+        </div>
+
+        <div style="border-top:1px dashed #ccc; padding-top:14px; text-align:center; font-size:11.5px; color:#777;">
+            🌿 <strong>Pure by Nature, Made for You!</strong> Thank you for choosing THULIRVA farm doorstep freshness.<br>
+            For delivery slot adjustments or pauses, log in to your account dashboard or WhatsApp <strong>+91 93606 71533</strong>.
+        </div>
+    `;
+
+    modal.classList.add("active");
+}
+
+function closeInvoiceModal() {
+    document.getElementById("invoiceModal").classList.remove("active");
+}
+
+/* =========================================================
+   USER PROFILE UPDATE
+========================================================= */
+function handleProfileUpdate(e) {
+    e.preventDefault();
+    const btn = document.getElementById("saveProfileBtn");
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = "Saving...";
+    }
+
+    currentUser.name = document.getElementById("profileName").value.trim();
+    currentUser.phone = document.getElementById("profilePhone").value.trim();
+    currentUser.email = document.getElementById("profileEmail").value.trim();
+
+    localStorage.setItem('thulirva_user', JSON.stringify(currentUser));
+    
+    document.getElementById("userGreeting").textContent = `Welcome, ${currentUser.name || 'Valued Customer'}`;
+    document.getElementById("userNameDisplay").textContent = currentUser.name || "Customer";
+    document.getElementById("userContactDisplay").textContent = currentUser.phone || currentUser.email || "Farm Member";
+
+    setTimeout(() => {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = "💾 Save Changes";
+        }
+        showToast("✓ Profile information updated successfully! 🌿", "success");
+    }, 300);
+}
+
+function userLogout() {
+    localStorage.removeItem("thulirva_user");
+    window.location.href = "login.html";
+}
+
+document.addEventListener("DOMContentLoaded", initAccount);
+</script>
+</body>
+</html>

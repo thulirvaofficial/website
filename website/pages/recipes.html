@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farm Fresh Recipes | THULIRVA — Wholesome Goodness</title>
+    <meta name="description" content="Discover nourishing, authentic recipes created with THULIRVA farm-fresh milk, organic paneer, bilona desi ghee, and wild honey.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="announcement-bar">
+    <div class="container announcement-content">
+        <span>🌿 Pure by Nature, Made for You!</span>
+        <span>🌾 Farm Fresh</span>
+        <span>✕ No Preservatives</span>
+        <span>🚚 Home Delivery</span>
+        <span>📞 93606 71533</span>
+    </div>
+</div>
+
+<header class="site-header">
+    <div class="container header-container">
+        <a href="../index.html" class="brand">
+            <div class="brand-logo-wrap">
+                <img src="../assets/images/logo/logo.jpg" alt="THULIRVA" class="brand-logo-img">
+                <div class="brand-text">
+                    <span class="brand-name">THULIRVA</span>
+                    <span class="brand-tagline">ROOTED IN NATURE</span>
+                </div>
+            </div>
+        </a>
+        <nav class="main-navigation">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="shop.html" class="nav-link">Shop</a>
+            <a href="about.html" class="nav-link">About Us</a>
+            <a href="farms.html" class="nav-link">Our Farms</a>
+            <a href="recipes.html" class="nav-link active">Recipes</a>
+            <a href="contact.html" class="nav-link">Contact</a>
+        </nav>
+        <div class="header-actions">
+            <a href="login.html" class="header-icon" title="Account">👤</a>
+            <a href="cart.html" class="cart-button" title="Cart">
+                🛒<span class="cart-count" id="cartCount">0</span>
+            </a>
+            <button class="mobile-menu-button" id="mobileMenuButton">☰</button>
+        </div>
+    </div>
+    <nav class="mobile-navigation" id="mobileNavigation">
+        <a href="../index.html">Home</a>
+        <a href="shop.html">Shop</a>
+        <a href="about.html">About Us</a>
+        <a href="farms.html">Our Farms</a>
+        <a href="recipes.html">Recipes</a>
+        <a href="contact.html">Contact</a>
+    </nav>
+</header>
+
+<div class="page-hero">
+    <div class="container">
+        <span class="section-label">Farm to Kitchen</span>
+        <h1>Nutritious Recipes</h1>
+        <p>Celebrate pure ingredients with time-honored dishes that nourish body and soul.</p>
+        <div class="breadcrumb">
+            <a href="../index.html">Home</a>
+            <span>/</span>
+            <span>Recipes</span>
+        </div>
+    </div>
+</div>
+
+<section>
+    <div class="container">
+        <div class="recipes-filter-bar">
+            <button class="recipe-filter-btn active" onclick="filterRecipes('all', this)">All Recipes (6)</button>
+            <button class="recipe-filter-btn" onclick="filterRecipes('curry', this)">Curries &amp; Mains</button>
+            <button class="recipe-filter-btn" onclick="filterRecipes('beverage', this)">Nourishing Beverages</button>
+            <button class="recipe-filter-btn" onclick="filterRecipes('sweet', this)">Traditional Sweets</button>
+            <button class="recipe-filter-btn" onclick="filterRecipes('breakfast', this)">Wholesome Breakfast</button>
+        </div>
+
+        <div class="recipes-grid" id="recipesGrid">
+            <!-- Recipe 1 -->
+            <div class="recipe-card" data-category="curry">
+                <div class="recipe-img-wrap">
+                    <img src="../assets/images/fresh_paneer.jpg" alt="Rich Malai Shahi Paneer">
+                    <span class="recipe-tag">Curries &amp; Mains</span>
+                </div>
+                <div class="recipe-content">
+                    <div class="recipe-meta-row">
+                        <span class="recipe-meta-item">⏱️ 30 Mins</span>
+                        <span class="recipe-meta-item">👨‍🍳 Medium</span>
+                        <span class="recipe-meta-item">🍽️ 4 Servings</span>
+                    </div>
+                    <h3 class="recipe-title">Shahi Paneer with Malai Gravy</h3>
+                    <p class="recipe-desc">Soft cubes of fresh THULIRVA artisanal paneer simmered in a velvety cashew, melon seed, and fresh cream gravy scented with cardamom and saffron.</p>
+                    <div class="recipe-ingredients-badge">
+                        <span>🥛 Key: THULIRVA Artisanal Paneer &amp; Desi Ghee</span>
+                    </div>
+                    <div class="recipe-actions">
+                        <button class="btn btn-primary" style="flex: 1;" onclick="addRecipeIngredient('Fresh Artisanal Paneer', 120, '../assets/images/fresh_paneer.jpg')">Add Paneer to Cart</button>
+                        <a href="product.html?id=1" class="btn btn-outline" style="padding: 10px 14px;">View Item</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recipe 2 -->
+            <div class="recipe-card" data-category="breakfast">
+                <div class="recipe-img-wrap">
+                    <img src="../assets/images/hero_products.jpg" alt="Bilona Desi Ghee Pongal">
+                    <span class="recipe-tag">Wholesome Breakfast</span>
+                </div>
+                <div class="recipe-content">
+                    <div class="recipe-meta-row">
+                        <span class="recipe-meta-item">⏱️ 20 Mins</span>
+                        <span class="recipe-meta-item">👨‍🍳 Easy</span>
+                        <span class="recipe-meta-item">🍽️ 3 Servings</span>
+                    </div>
+                    <h3 class="recipe-title">Aromatic Ghee Pongal</h3>
+                    <p class="recipe-desc">Traditional South Indian rice and moong dal tempered with crushed black pepper, fiery ginger, crunchy roasted cashews, and generous spoonfuls of golden A2 Cow Ghee.</p>
+                    <div class="recipe-ingredients-badge">
+                        <span>✨ Key: THULIRVA Pure Bilona Desi Ghee</span>
+                    </div>
+                    <div class="recipe-actions">
+                        <button class="btn btn-primary" style="flex: 1;" onclick="addRecipeIngredient('Pure Cow Ghee (Bilona)', 650, '../assets/images/hero_products.jpg')">Add Ghee to Cart</button>
+                        <a href="product.html?id=2" class="btn btn-outline" style="padding: 10px 14px;">View Item</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recipe 3 -->
+            <div class="recipe-card" data-category="beverage">
+                <div class="recipe-img-wrap">
+                    <img src="../assets/images/dairy_products.jpg" alt="Golden Kesar Badam Milk">
+                    <span class="recipe-tag">Nourishing Beverages</span>
+                </div>
+                <div class="recipe-content">
+                    <div class="recipe-meta-row">
+                        <span class="recipe-meta-item">⏱️ 15 Mins</span>
+                        <span class="recipe-meta-item">👨‍🍳 Easy</span>
+                        <span class="recipe-meta-item">🍽️ 2 Servings</span>
+                    </div>
+                    <h3 class="recipe-title">Golden Kesar Badam Milk</h3>
+                    <p class="recipe-desc">Warm farm-fresh whole milk infused with freshly crushed Kashmiri saffron threads, slivered almonds, nutmeg, and sweetened with raw forest honey.</p>
+                    <div class="recipe-ingredients-badge">
+                        <span>🌿 Key: THULIRVA Farm Fresh Milk &amp; Raw Honey</span>
+                    </div>
+                    <div class="recipe-actions">
+                        <button class="btn btn-primary" style="flex: 1;" onclick="addRecipeIngredient('Farm Fresh Whole Milk', 60, '../assets/images/dairy_products.jpg')">Add Milk to Cart</button>
+                        <a href="product.html?id=3" class="btn btn-outline" style="padding: 10px 14px;">View Item</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recipe 4 -->
+            <div class="recipe-card" data-category="sweet">
+                <div class="recipe-img-wrap">
+                    <img src="../assets/images/fresh_paneer.jpg" alt="Kesar Pista Shrikhand">
+                    <span class="recipe-tag">Traditional Sweets</span>
+                </div>
+                <div class="recipe-content">
+                    <div class="recipe-meta-row">
+                        <span class="recipe-meta-item">⏱️ 25 Mins</span>
+                        <span class="recipe-meta-item">👨‍🍳 Easy</span>
+                        <span class="recipe-meta-item">🍽️ 4 Servings</span>
+                    </div>
+                    <h3 class="recipe-title">Velvety Mango Shrikhand</h3>
+                    <p class="recipe-desc">Strain THULIRVA thick probiotic curd in muslin cloth to create chakka, whipped with ripe Alphonso pulp, green cardamom, and toasted pistachios.</p>
+                    <div class="recipe-ingredients-badge">
+                        <span>🥣 Key: THULIRVA Natural Thick Set Curd</span>
+                    </div>
+                    <div class="recipe-actions">
+                        <button class="btn btn-primary" style="flex: 1;" onclick="addRecipeIngredient('Natural Thick Set Curd', 45, '../assets/images/fresh_paneer.jpg')">Add Curd to Cart</button>
+                        <a href="product.html?id=4" class="btn btn-outline" style="padding: 10px 14px;">View Item</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recipe 5 -->
+            <div class="recipe-card" data-category="curry">
+                <div class="recipe-img-wrap">
+                    <img src="../assets/images/fresh_paneer.jpg" alt="Tandoori Paneer Tikka">
+                    <span class="recipe-tag">Curries &amp; Mains</span>
+                </div>
+                <div class="recipe-content">
+                    <div class="recipe-meta-row">
+                        <span class="recipe-meta-item">⏱️ 35 Mins</span>
+                        <span class="recipe-meta-item">👨‍🍳 Medium</span>
+                        <span class="recipe-meta-item">🍽️ 4 Servings</span>
+                    </div>
+                    <h3 class="recipe-title">Clay-Oven Paneer Tikka</h3>
+                    <p class="recipe-desc">Thick, pillowy cuts of farm-fresh paneer marinated in roasted gram flour, hung curd, mustard oil, Kashmiri chili, and carom seeds, skewered with bell peppers.</p>
+                    <div class="recipe-ingredients-badge">
+                        <span>🧀 Key: THULIRVA Paneer &amp; Fresh Curd</span>
+                    </div>
+                    <div class="recipe-actions">
+                        <button class="btn btn-primary" style="flex: 1;" onclick="addRecipeIngredient('Fresh Artisanal Paneer', 120, '../assets/images/fresh_paneer.jpg')">Add Paneer to Cart</button>
+                        <a href="product.html?id=1" class="btn btn-outline" style="padding: 10px 14px;">View Item</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recipe 6 -->
+            <div class="recipe-card" data-category="beverage">
+                <div class="recipe-img-wrap">
+                    <img src="../assets/images/dairy_products.jpg" alt="Refreshing Masala Chaas">
+                    <span class="recipe-tag">Nourishing Beverages</span>
+                </div>
+                <div class="recipe-content">
+                    <div class="recipe-meta-row">
+                        <span class="recipe-meta-item">⏱️ 10 Mins</span>
+                        <span class="recipe-meta-item">👨‍🍳 Easy</span>
+                        <span class="recipe-meta-item">🍽️ 2 Servings</span>
+                    </div>
+                    <h3 class="recipe-title">Cooling Coastal Masala Chaas</h3>
+                    <p class="recipe-desc">Wholesome buttermilk churned from fresh curd, blended with roasted cumin, rock salt, ginger, curry leaves, and a squeeze of fresh lemon. Ultimate digestive.</p>
+                    <div class="recipe-ingredients-badge">
+                        <span>🌿 Key: THULIRVA Natural Set Curd / Churned Butter</span>
+                    </div>
+                    <div class="recipe-actions">
+                        <button class="btn btn-primary" style="flex: 1;" onclick="addRecipeIngredient('Natural Thick Set Curd', 45, '../assets/images/dairy_products.jpg')">Add Curd to Cart</button>
+                        <a href="product.html?id=4" class="btn btn-outline" style="padding: 10px 14px;">View Item</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="site-footer">
+    <div class="footer-top">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="brand-logo-wrap">
+                        <img src="../assets/images/logo/logo.jpg" alt="THULIRVA" class="brand-logo-img">
+                        <div class="brand-text">
+                            <span class="brand-name" style="color:#e5c97a;">THULIRVA</span>
+                            <span class="brand-tagline" style="color:#c8dbbf;">ROOTED IN NATURE</span>
+                        </div>
+                    </div>
+                    <p class="footer-tagline">Pure, unadulterated dairy and agro products delivered direct from organic certified farms to your home.</p>
+                    <p style="font-size:12px; color:#c8dbbf; margin-top:8px;">
+                        📍 Farm: No 1, Mayana Salai, Thimmarajampettai, Kanchipuram - 631601, Tamil Nadu
+                    </p>
+                    <div class="footer-social">
+                        <a href="#" class="social-icon" title="Instagram">📷</a>
+                        <a href="#" class="social-icon" title="Facebook">📘</a>
+                        <a href="#" class="social-icon" title="WhatsApp">💬</a>
+                        <a href="#" class="social-icon" title="YouTube">📺</a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Explore</h3>
+                    <a href="../index.html">Home</a>
+                    <a href="shop.html">Shop All</a>
+                    <a href="about.html">About Us</a>
+                    <a href="farms.html">Our Farms</a>
+                    <a href="recipes.html">Recipes</a>
+                </div>
+                <div class="footer-column">
+                    <h3>Products</h3>
+                    <a href="shop.html?category=milk">Farm Fresh Milk</a>
+                    <a href="shop.html?category=ghee">Desi Cow Ghee</a>
+                    <a href="shop.html?category=paneer">Artisanal Paneer</a>
+                    <a href="shop.html?category=curd">Set Curd &amp; Butter</a>
+                    <a href="shop.html?category=honey">Raw Wild Honey</a>
+                </div>
+                <div class="footer-column">
+                    <h3>Support</h3>
+                    <a href="contact.html">Contact Us</a>
+                    <a href="cart.html">View Cart</a>
+                    <a href="checkout.html">Checkout</a>
+                    <a href="account.html">My Account</a>
+                </div>
+                <div class="footer-newsletter">
+                    <h3>Stay Connected</h3>
+                    <p>Subscribe for exclusive harvest updates, healthy recipes, and doorstep discounts.</p>
+                    <form class="newsletter-form" onsubmit="event.preventDefault(); alert('Thank you for subscribing to THULIRVA farm updates!');">
+                        <input type="email" placeholder="Your email address" class="newsletter-input" required>
+                        <button type="submit" class="newsletter-btn">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div class="container footer-bottom-content">
+            <p>&copy; 2026 THULIRVA Agro &amp; Dairy. All Rights Reserved.</p>
+            <div class="footer-bottom-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Shipping &amp; Returns</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<div class="toast" id="toast">Item added to cart!</div>
+
+<script src="../js/main.js"></script>
+<script>
+function filterRecipes(cat, btn) {
+    document.querySelectorAll('.recipe-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    const cards = document.querySelectorAll('.recipe-card');
+    cards.forEach(card => {
+        if (cat === 'all' || card.dataset.category === cat) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function addRecipeIngredient(name, price, img) {
+    const cart = JSON.parse(localStorage.getItem('thulirva_cart') || '[]');
+    const existing = cart.find(i => i.name === name);
+    if (existing) {
+        existing.quantity += 1;
+    } else {
+        cart.push({
+            id: 'rec-' + Date.now(),
+            name: name,
+            price: price,
+            weight: 'Standard Pack',
+            image: img,
+            quantity: 1
+        });
+    }
+    localStorage.setItem('thulirva_cart', JSON.stringify(cart));
+    
+    // Update badge count
+    const cartCount = document.getElementById('cartCount');
+    if (cartCount) {
+        const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+        cartCount.textContent = total;
+    }
+    
+    // Show toast
+    const toast = document.getElementById('toast');
+    if (toast) {
+        toast.textContent = `${name} added to your cart! 🌿`;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2600);
+    }
+}
+
+function loadDynamicRecipes() {
+    const grid = document.getElementById('recipesGrid');
+    if (!grid) return;
+
+    let recipes = [];
+    const stored = localStorage.getItem('thulirva_custom_recipes');
+    if (stored) {
+        try { recipes = JSON.parse(stored); } catch (e) {}
+    }
+
+    if (!recipes || !recipes.length) {
+        recipes = [
+            {
+                id: 1,
+                title: "Shahi Paneer with Malai Gravy",
+                category: "curry",
+                categoryName: "Curries & Mains",
+                time: "30 Mins",
+                difficulty: "Medium",
+                servings: "4 Servings",
+                ingredient: "THULIRVA Artisanal Paneer & Desi Ghee",
+                desc: "Soft cubes of fresh THULIRVA artisanal paneer simmered in a velvety cashew, melon seed, and fresh cream gravy scented with cardamom and saffron.",
+                image: "../assets/images/fresh_paneer.jpg"
+            },
+            {
+                id: 2,
+                title: "Aromatic Ghee Pongal",
+                category: "breakfast",
+                categoryName: "Wholesome Breakfast",
+                time: "20 Mins",
+                difficulty: "Easy",
+                servings: "3 Servings",
+                ingredient: "THULIRVA Pure Bilona Desi Ghee",
+                desc: "Traditional South Indian rice and moong dal tempered with crushed black pepper, fiery ginger, crunchy roasted cashews, and generous spoonfuls of golden A2 Cow Ghee.",
+                image: "../assets/images/hero_products.jpg"
+            },
+            {
+                id: 3,
+                title: "Golden Kesar Badam Milk",
+                category: "beverage",
+                categoryName: "Nourishing Beverages",
+                time: "15 Mins",
+                difficulty: "Easy",
+                servings: "2 Servings",
+                ingredient: "THULIRVA Farm Fresh Milk & Raw Honey",
+                desc: "Warm farm-fresh whole milk infused with freshly crushed Kashmiri saffron threads, slivered almonds, nutmeg, and sweetened with raw forest honey.",
+                image: "../assets/images/dairy_products.jpg"
+            },
+            {
+                id: 4,
+                title: "Traditional Mysore Pak",
+                category: "sweet",
+                categoryName: "Traditional Sweets",
+                time: "35 Mins",
+                difficulty: "Medium",
+                servings: "6 Servings",
+                ingredient: "THULIRVA Cultured Desi Cow Ghee",
+                desc: "Melt-in-the-mouth heritage delicacy crafted from roasted gram flour, organic raw sugar, and abundant fragrant Bilona Cow Ghee.",
+                image: "../assets/images/dairy_products.jpg"
+            },
+            {
+                id: 5,
+                title: "Masala Chai with Farm Milk",
+                category: "beverage",
+                categoryName: "Nourishing Beverages",
+                time: "10 Mins",
+                difficulty: "Easy",
+                servings: "2 Servings",
+                ingredient: "THULIRVA Fresh A2 Cow Milk",
+                desc: "Rich, creamy whole cow milk simmered with fresh ginger, crushed green cardamom pods, cinnamon bark, and premium estate Assam black tea.",
+                image: "../assets/images/fresh_cow_milk.jpg"
+            },
+            {
+                id: 6,
+                title: "Classic Palak Paneer",
+                category: "curry",
+                categoryName: "Curries & Mains",
+                time: "25 Mins",
+                difficulty: "Easy",
+                servings: "4 Servings",
+                ingredient: "THULIRVA Fresh Paneer & Butter",
+                desc: "Nutritious garden spinach purée gently tempered with cumin, garlic, and green chilies, studded with tender cubes of farm paneer and finished with white butter.",
+                image: "../assets/images/fresh_paneer.jpg"
+            }
+        ];
+        localStorage.setItem('thulirva_custom_recipes', JSON.stringify(recipes));
+    }
+
+    grid.innerHTML = "";
+    recipes.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'recipe-card';
+        card.dataset.category = r.category;
+        
+        let imgSrc = r.image || '../assets/images/fresh_paneer.jpg';
+        if (imgSrc.startsWith('assets/')) imgSrc = '../' + imgSrc;
+
+        card.innerHTML = `
+            <div class="recipe-img-wrap">
+                <img src="${imgSrc}" alt="${r.title}">
+                <span class="recipe-tag">${r.categoryName || r.category}</span>
+            </div>
+            <div class="recipe-content">
+                <div class="recipe-meta-row">
+                    <span class="recipe-meta-item">⏱️ ${r.time}</span>
+                    <span class="recipe-meta-item">👨‍🍳 ${r.difficulty}</span>
+                    <span class="recipe-meta-item">🍽️ ${r.servings}</span>
+                </div>
+                <h3 class="recipe-title">${r.title}</h3>
+                <p class="recipe-desc">${r.desc}</p>
+                <div class="recipe-ingredients-badge">
+                    <span>✨ Key: ${r.ingredient}</span>
+                </div>
+                <div class="recipe-actions">
+                    <button class="btn btn-primary" style="flex: 1;" onclick="addRecipeIngredient('${r.ingredient.split('&')[0].trim()}', 120, '${imgSrc}')">Add to Cart</button>
+                    <a href="shop.html" class="btn btn-outline" style="padding: 10px 14px;">Shop Farm Dairy</a>
+                </div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+
+    const allBtn = document.querySelector('.recipe-filter-btn');
+    if (allBtn) allBtn.textContent = `All Recipes (${recipes.length})`;
+}
+
+document.addEventListener('DOMContentLoaded', loadDynamicRecipes);
+</script>
+</body>
+</html>

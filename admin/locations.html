@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THULIRVA Admin — Delivery Locations & Coverage</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        .badge-active {
+            background: #E8F5E9;
+            color: #2E7D32;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .badge-inactive {
+            background: #FFEBEE;
+            color: #C62828;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .stat-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card-item {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .stat-card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: #F4F6F0;
+            color: #2E7D32;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <img src="images/logo.jpg" alt="THULIRVA Logo" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 1.5px solid #d4af37; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+            <div style="font-family:'Playfair Display',serif; color:#E9EBD9; font-size:18px; font-weight:700; letter-spacing:1.5px;">THULIRVA</div>
+            <span>ADMIN CONSOLE</span>
+        </div>
+
+        <a href="dashboard.html">📊 Dashboard</a>
+        <a href="products.html">🛍 Products</a>
+        <a href="categories.html">🏷 Categories</a>
+        <a href="subscriptions.html">🔄 Subscriptions</a>
+        <a href="orders.html">📦 Orders</a>
+        <a href="customers.html">👥 Customers</a>
+        <a href="locations.html" class="active">📍 Delivery Locations</a>
+        <a href="coupons.html">🎟️ Promo Codes</a>
+        <a href="recipes.html">🍳 Recipes</a>
+        <a href="/" target="_blank">🌐 View Website ↗</a>
+
+        <div style="margin-top: auto; padding: 20px 0;">
+            <button class="logout-btn" style="width:100%" onclick="logout()">Logout</button>
+        </div>
+    </aside>
+
+    <main class="admin-main">
+        <div class="admin-header">
+            <div>
+                <h1 style="font-family:'Playfair Display',serif; font-size: 26px;">Delivery Locations & Coverage</h1>
+                <p>Manage available doorstep delivery areas for daily milk subscription & direct orders.</p>
+            </div>
+            <div style="display:flex; gap:12px; align-items:center;">
+                <button class="add-btn" onclick="openAddModal()">＋ Add New Location</button>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- STAT CARDS -->
+        <div class="stat-cards-grid">
+            <div class="stat-card-item">
+                <div class="stat-card-icon">📍</div>
+                <div>
+                    <div style="font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase;">Total Locations</div>
+                    <div id="statTotalLocations" style="font-size:22px; font-weight:700; color:var(--text); margin-top:2px;">11</div>
+                </div>
+            </div>
+            <div class="stat-card-item">
+                <div class="stat-card-icon" style="background:#E8F5E9; color:#2E7D32;">✅</div>
+                <div>
+                    <div style="font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase;">Active Service Areas</div>
+                    <div id="statActiveLocations" style="font-size:22px; font-weight:700; color:#2E7D32; margin-top:2px;">11</div>
+                </div>
+            </div>
+            <div class="stat-card-item">
+                <div class="stat-card-icon" style="background:#FFF3E0; color:#E65100;">🚚</div>
+                <div>
+                    <div style="font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase;">Daily Morning Slot</div>
+                    <div style="font-size:16px; font-weight:700; color:var(--text); margin-top:2px;">5:30 AM - 7:30 AM</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap:wrap; gap:10px;">
+                <h2>Configured Delivery Areas (<span id="totalLocationsCount">0</span>)</h2>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="searchInput" placeholder="Search area or pincode..." onkeyup="filterLocations()" style="padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px; min-width:240px;">
+                </div>
+            </div>
+
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;"># ID</th>
+                        <th>Delivery Area / Location</th>
+                        <th>Pincode</th>
+                        <th>Coverage Status</th>
+                        <th>Slot Available</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="locationsTable">
+                    <!-- Dynamic Rows -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<!-- ADD / EDIT LOCATION MODAL -->
+<div class="modal-overlay" id="locationModal">
+    <div class="modal-box" style="max-width: 480px;">
+        <div class="modal-header">
+            <h3 id="modalTitle">Add New Delivery Location</h3>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <form id="locationForm" onsubmit="handleLocationSubmit(event)">
+                <input type="hidden" id="locId">
+                <div class="form-grid">
+                    <div class="form-field full">
+                        <label>Location / Area Name * <small style="color:var(--muted);">(e.g. Oragadam, Porur, Maduravoyal)</small></label>
+                        <input type="text" id="locName" required placeholder="Enter area name">
+                    </div>
+                    <div class="form-field">
+                        <label>Postal Pincode</label>
+                        <input type="text" id="locPincode" placeholder="e.g. 600116" maxlength="6">
+                    </div>
+                    <div class="form-field">
+                        <label>Status</label>
+                        <select id="locStatus">
+                            <option value="active">Active (Available for delivery)</option>
+                            <option value="inactive">Inactive (Temporarily suspended)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer" style="margin-top:20px;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="add-btn" id="modalSubmitBtn">Save Location</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+const token = localStorage.getItem("thulirva_admin_token");
+let locationsList = [];
+
+const DEFAULT_LOCATIONS = [
+    { id: 1, name: "Oragadam", pincode: "603109", status: "active" },
+    { id: 2, name: "Padapai", pincode: "601301", status: "active" },
+    { id: 3, name: "Sriperumbudur", pincode: "602105", status: "active" },
+    { id: 4, name: "Valasaravakkam", pincode: "600087", status: "active" },
+    { id: 5, name: "Porur", pincode: "600116", status: "active" },
+    { id: 6, name: "Virugambakkam", pincode: "600092", status: "active" },
+    { id: 7, name: "Vadapalani", pincode: "600026", status: "active" },
+    { id: 8, name: "Koyambedu", pincode: "600107", status: "active" },
+    { id: 9, name: "KK Nagar", pincode: "600078", status: "active" },
+    { id: 10, name: "Alapakkam", pincode: "600116", status: "active" },
+    { id: 11, name: "Maduravoyal", pincode: "600095", status: "active" }
+];
+
+async function loadLocations() {
+    try {
+        const res = await fetch("/api/locations");
+        if (res.ok) {
+            const data = await res.json();
+            if (data.locations && data.locations.length > 0) {
+                locationsList = data.locations;
+            } else {
+                locationsList = getStoredOrDefaults();
+            }
+        } else {
+            locationsList = getStoredOrDefaults();
+        }
+    } catch (err) {
+        console.warn("Could not fetch remote locations, using fallback:", err);
+        locationsList = getStoredOrDefaults();
+    }
+
+    saveToStorage(locationsList);
+    updateStats();
+    renderLocations(locationsList);
+}
+
+function getStoredOrDefaults() {
+    try {
+        const stored = localStorage.getItem("thulirva_delivery_locations");
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+    } catch (e) {}
+    return [...DEFAULT_LOCATIONS];
+}
+
+function saveToStorage(list) {
+    try {
+        localStorage.setItem("thulirva_delivery_locations", JSON.stringify(list));
+    } catch (e) {}
+}
+
+function updateStats() {
+    const total = locationsList.length;
+    const active = locationsList.filter(l => l.status === "active").length;
+    
+    document.getElementById("statTotalLocations").innerText = total;
+    document.getElementById("statActiveLocations").innerText = active;
+    document.getElementById("totalLocationsCount").innerText = total;
+}
+
+function renderLocations(list) {
+    const tbody = document.getElementById("locationsTable");
+    if (!tbody) return;
+
+    if (!list || list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--muted);">No delivery locations found.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = list.map((l, index) => {
+        const isActive = l.status === "active";
+        return `
+            <tr>
+                <td style="font-weight:600; color:var(--muted);">#${l.id || (index + 1)}</td>
+                <td style="font-weight:700; color:var(--text); font-size:14.5px;">
+                    📍 ${l.name}
+                </td>
+                <td style="font-family:monospace; font-size:13px; color:var(--muted);">${l.pincode || "—"}</td>
+                <td>
+                    <span class="${isActive ? 'badge-active' : 'badge-inactive'}">
+                        ● ${isActive ? 'Active' : 'Inactive'}
+                    </span>
+                </td>
+                <td style="font-size:12.5px; color:#555;">Early Morning (5:30 - 7:30 AM)</td>
+                <td style="text-align: right;">
+                    <div style="display:inline-flex; gap:6px; align-items:center;">
+                        <button class="action-btn" style="background:#f4f6f0; color:#2e7d32;" title="Toggle Status" onclick="toggleLocationStatus(${l.id})">
+                            ${isActive ? '⏸ Pause' : '▶ Activate'}
+                        </button>
+                        <button class="action-btn" title="Edit" onclick="openEditModal(${l.id})">✏️ Edit</button>
+                        <button class="action-btn delete-btn" title="Delete" onclick="deleteLocation(${l.id})">🗑 Delete</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+function filterLocations() {
+    const query = (document.getElementById("searchInput").value || "").toLowerCase().trim();
+    if (!query) {
+        renderLocations(locationsList);
+        return;
+    }
+    const filtered = locationsList.filter(l => 
+        (l.name && l.name.toLowerCase().includes(query)) ||
+        (l.pincode && l.pincode.toLowerCase().includes(query))
+    );
+    renderLocations(filtered);
+}
+
+function openAddModal() {
+    document.getElementById("modalTitle").innerText = "Add New Delivery Location";
+    document.getElementById("modalSubmitBtn").innerText = "Add Location";
+    document.getElementById("locId").value = "";
+    document.getElementById("locName").value = "";
+    document.getElementById("locPincode").value = "";
+    document.getElementById("locStatus").value = "active";
+    document.getElementById("locationModal").classList.add("active");
+}
+
+function openEditModal(id) {
+    const loc = locationsList.find(l => l.id == id);
+    if (!loc) return;
+
+    document.getElementById("modalTitle").innerText = "Edit Delivery Location";
+    document.getElementById("modalSubmitBtn").innerText = "Update Location";
+    document.getElementById("locId").value = loc.id;
+    document.getElementById("locName").value = loc.name;
+    document.getElementById("locPincode").value = loc.pincode || "";
+    document.getElementById("locStatus").value = loc.status || "active";
+    document.getElementById("locationModal").classList.add("active");
+}
+
+function closeModal() {
+    document.getElementById("locationModal").classList.remove("active");
+}
+
+async function handleLocationSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById("locId").value;
+    const name = document.getElementById("locName").value.trim();
+    const pincode = document.getElementById("locPincode").value.trim();
+    const status = document.getElementById("locStatus").value;
+
+    if (!name) {
+        alert("Please enter a location name.");
+        return;
+    }
+
+    if (id) {
+        // Edit existing
+        try {
+            await fetch(`/api/locations/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, pincode, status })
+            });
+        } catch (err) {}
+
+        const idx = locationsList.findIndex(l => l.id == id);
+        if (idx !== -1) {
+            locationsList[idx] = { ...locationsList[idx], name, pincode, status };
+        }
+        alert("Location updated successfully!");
+    } else {
+        // Create new
+        let createdLoc = null;
+        try {
+            const res = await fetch("/api/locations", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, pincode, status })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.location) createdLoc = data.location;
+            }
+        } catch (err) {}
+
+        if (!createdLoc) {
+            const newId = locationsList.length ? Math.max(...locationsList.map(l => Number(l.id) || 0)) + 1 : 1;
+            createdLoc = { id: newId, name, pincode, status };
+        }
+        locationsList.push(createdLoc);
+        alert("New delivery location added successfully!");
+    }
+
+    saveToStorage(locationsList);
+    closeModal();
+    updateStats();
+    renderLocations(locationsList);
+}
+
+async function toggleLocationStatus(id) {
+    const loc = locationsList.find(l => l.id == id);
+    if (!loc) return;
+    const newStatus = loc.status === "active" ? "inactive" : "active";
+    loc.status = newStatus;
+
+    try {
+        await fetch(`/api/locations/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: newStatus })
+        });
+    } catch (e) {}
+
+    saveToStorage(locationsList);
+    updateStats();
+    renderLocations(locationsList);
+}
+
+async function deleteLocation(id) {
+    if (!confirm("Are you sure you want to remove this delivery location?")) return;
+
+    try {
+        await fetch(`/api/locations/${id}`, { method: "DELETE" });
+    } catch (e) {}
+
+    locationsList = locationsList.filter(l => l.id != id);
+    saveToStorage(locationsList);
+    updateStats();
+    renderLocations(locationsList);
+}
+
+function logout() {
+    localStorage.removeItem("thulirva_admin_token");
+    window.location.href = "index.html";
+}
+
+document.addEventListener("DOMContentLoaded", loadLocations);
+</script>
+
+</body>
+</html>

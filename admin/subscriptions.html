@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THULIRVA Admin — Subscription Management</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        .tabs-header {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 1.5px solid var(--border);
+            padding-bottom: 12px;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--muted);
+            padding: 8px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .tab-btn.active {
+            background: var(--green);
+            color: white;
+        }
+        .plan-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            margin-bottom: 14px;
+        }
+        .plan-card-img {
+            width: 72px;
+            height: 72px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .proof-thumb {
+            width: 44px;
+            height: 44px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 1.5px solid var(--border);
+            cursor: pointer;
+            transition: transform .15s;
+        }
+        .proof-thumb:hover {
+            transform: scale(1.1);
+            border-color: var(--green);
+        }
+        .proof-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .proof-modal-overlay.active {
+            display: flex;
+        }
+        .proof-modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 580px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 22px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <img src="images/logo.jpg" alt="THULIRVA Logo" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 1.5px solid #d4af37; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+            <div style="font-family:'Playfair Display',serif; color:#E9EBD9; font-size:18px; font-weight:700; letter-spacing:1.5px;">THULIRVA</div>
+            <span>ADMIN CONSOLE</span>
+        </div>
+
+        <a href="dashboard.html">📊 Dashboard</a>
+        <a href="products.html">🛍 Products</a>
+        <a href="categories.html">🏷 Categories</a>
+        <a href="subscriptions.html" class="active">🔄 Subscriptions</a>
+        <a href="orders.html">📦 Orders</a>
+        <a href="customers.html">👥 Customers</a>
+        <a href="locations.html">📍 Delivery Locations</a>
+        <a href="coupons.html">🎟️ Promo Codes</a>
+        <a href="recipes.html">🍳 Recipes</a>
+        <a href="/" target="_blank">🌐 View Website ↗</a>
+
+        <div style="margin-top: auto; padding: 20px 0;">
+            <button class="logout-btn" style="width:100%" onclick="logout()">Logout</button>
+        </div>
+    </aside>
+
+    <main class="admin-main">
+        <div class="admin-header">
+            <div>
+                <h1 style="font-family:'Playfair Display',serif; font-size: 26px;">Subscription Management</h1>
+                <p>Manage subscription packages, real-time subscribers, UPI transaction IDs, and screenshot proof verification.</p>
+            </div>
+            <div style="display:flex; gap:12px; align-items:center;">
+                <button class="add-btn" onclick="openPlanModal()">＋ Add Subscription Plan</button>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- Metric Stat Cards -->
+        <div class="stats-grid" style="margin-bottom: 24px;">
+            <div class="stat-card">
+                <span>ACTIVE SUBSCRIBERS</span>
+                <strong id="activeSubsCount">0</strong>
+                <small style="color:#2E7D32; font-weight:600; font-size:11px;">Morning doorstep delivery</small>
+            </div>
+            <div class="stat-card">
+                <span>AVAILABLE PLANS</span>
+                <strong id="activePlansCount">0</strong>
+                <small style="color:var(--muted); font-size:11px;">Configured packages</small>
+            </div>
+            <div class="stat-card">
+                <span>RECURRING MONTHLY MRR</span>
+                <strong id="mrrRevenue">₹0</strong>
+                <small style="color:#2E7D32; font-weight:600; font-size:11px;">From live subscriptions</small>
+            </div>
+        </div>
+
+        <div class="admin-panel">
+            <div class="tabs-header">
+                <button class="tab-btn active" id="tabBtnPlans" onclick="switchTab('plans')">📦 Subscription Plans &amp; Pricing</button>
+                <button class="tab-btn" id="tabBtnSubs" onclick="switchTab('subs')">👥 Real-time Subscribers (<span id="subsTableCount">0</span>)</button>
+            </div>
+
+            <!-- SECTION 1: SUBSCRIPTION PLANS -->
+            <div id="sectionPlans">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <h2 style="font-size:18px;">Subscription Packages</h2>
+                        <p style="font-size:12px; color:var(--muted);">Product, time period, price, and image visible to customers on the website.</p>
+                    </div>
+                    <button class="add-btn" onclick="openPlanModal()" style="font-size:13px; padding:8px 14px;">＋ Create New Plan</button>
+                </div>
+
+                <div id="plansListContainer">
+                    <!-- Dynamic Plan Cards -->
+                </div>
+            </div>
+
+            <!-- SECTION 2: SUBSCRIBERS (REAL CUSTOMERS) -->
+            <div id="sectionSubs" style="display:none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap:wrap; gap:10px;">
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <input type="text" id="subSearchInput" placeholder="Search customer, phone, product, or UTR..." onkeyup="filterSubscriptions()" style="padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px; width:240px;">
+                        <select id="subStatusFilter" onchange="filterSubscriptions()" style="padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px;">
+                            <option value="All">All Statuses</option>
+                            <option value="Active">🟢 Active</option>
+                            <option value="Paused">⏸ Paused</option>
+                            <option value="Cancelled">🔴 Cancelled</option>
+                        </select>
+                        <select id="subPaymentMonthFilter" onchange="filterSubscriptions()" style="padding: 8px 12px; border: 1.5px solid var(--green); background:#f4f9f2; font-weight:700; color:var(--green); border-radius: 6px; font-size: 13px;">
+                            <option value="All">📅 All Payment Months</option>
+                            <option value="this_month">🟢 Paid This Month (Current)</option>
+                            <option value="last_month">🟡 Paid Last Month</option>
+                            <option value="older">⚪ Older Months</option>
+                        </select>
+                    </div>
+                </div>
+
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Sub ID</th>
+                            <th>Product &amp; Image</th>
+                            <th>Customer Info</th>
+                            <th>Time Period &amp; Qty</th>
+                            <th>Total Price</th>
+                            <th>Payment &amp; UTR</th>
+                            <th>Payment Proof</th>
+                            <th>Slot &amp; Starts</th>
+                            <th>Status</th>
+                            <th style="text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subscriptionsTable">
+                        <!-- Dynamic Subscriptions -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- ADD / EDIT SUBSCRIPTION PLAN MODAL -->
+<div class="modal-overlay" id="planModal">
+    <div class="modal-box" style="max-width: 620px;">
+        <div class="modal-header">
+            <h3 id="planModalTitle">Add Subscription Plan</h3>
+            <button class="modal-close" onclick="closePlanModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <form id="planForm" onsubmit="handlePlanSubmit(event)">
+                <input type="hidden" id="planId">
+                <div class="form-grid">
+                    <div class="form-field full">
+                        <label>Product Name *</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="text" id="planProductName" required placeholder="e.g. Fresh Cow Milk (500ml)" style="flex:1;">
+                            <select onchange="if(this.value){ selectPresetProduct(this.value); }" style="width:160px; font-size:12px; border:1px solid var(--border); border-radius:4px; padding:6px;">
+                                <option value="">Product Presets...</option>
+                                <option value="Fresh Cow Milk (500ml)|/assets/images/products/fresh_cow_milk.jpg|44">🥛 Cow Milk 500ml</option>
+                                <option value="Fresh Cow Milk (1 Litre)|/assets/images/products/fresh_cow_milk.jpg|82">🥛 Cow Milk 1L</option>
+                                <option value="Pure Bilona Cow Ghee (500ml)|/assets/images/products/pure_cow_ghee.jpg|520">🧈 Bilona Ghee 500ml</option>
+                                <option value="Fresh Artisanal Paneer (200g)|/assets/images/products/fresh_paneer.jpg|82">🧀 Fresh Paneer 200g</option>
+                                <option value="Natural Thick Set Curd (500g)|/assets/images/products/product_lineup.jpg|48">🫙 Thick Curd 500g</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Time Period / Duration *</label>
+                        <div style="display:flex; gap:6px;">
+                            <input type="text" id="planTimePeriod" required placeholder="e.g. Daily Morning (30 Days)" style="flex:1;">
+                            <select onchange="if(this.value){document.getElementById('planTimePeriod').value=this.value;}" style="width:125px; font-size:11px; border:1px solid var(--border); border-radius:4px; padding:4px;">
+                                <option value="">Presets...</option>
+                                <option value="Daily Morning (30 Days)">Daily (30 Days)</option>
+                                <option value="Alternate Days (15 Days)">Alternate (15 Days)</option>
+                                <option value="Weekdays (22 Days)">Weekdays (Mon-Fri)</option>
+                                <option value="Weekly (4 Deliveries)">Weekly (1 Month)</option>
+                                <option value="Monthly Delivery (1 Jar/Month)">Monthly (1 Jar)</option>
+                                <option value="Daily Trial (7 Days)">Trial (7 Days)</option>
+                                <option value="Quarterly (90 Days)">Quarterly (90 Days)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Delivery Frequency *</label>
+                        <select id="planFrequency" required>
+                            <option value="Daily">Daily (Every Morning)</option>
+                            <option value="Alternate">Alternate Days</option>
+                            <option value="Weekdays">Weekdays (Mon - Fri)</option>
+                            <option value="Weekly">Weekly (Once a Week)</option>
+                            <option value="Monthly">Monthly</option>
+                        </select>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Plan Price (₹) *</label>
+                        <input type="number" id="planPrice" required min="1" placeholder="e.g. 1320">
+                    </div>
+
+                    <div class="form-field">
+                        <label>Original / Compare Price (₹)</label>
+                        <input type="number" id="planOriginalPrice" placeholder="e.g. 1500">
+                    </div>
+
+                    <div class="form-field">
+                        <label>Badge / Tag</label>
+                        <input type="text" id="planBadge" placeholder="e.g. Most Popular, Best Value, Trial Plan">
+                    </div>
+
+                    <div class="form-field">
+                        <label>Status</label>
+                        <select id="planStatus">
+                            <option value="active">Active (Visible on Website)</option>
+                            <option value="inactive">Inactive (Hidden)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-field full">
+                        <label>Product Image</label>
+                        <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px; flex-wrap:wrap;">
+                            <label class="btn btn-outline" style="cursor:pointer; padding:7px 14px; font-size:12px; font-weight:700; background:#E9EBD9; color:var(--green); border:1px solid var(--border); border-radius:6px;">
+                                📁 Upload Photo from Computer
+                                <input type="file" id="planFileInput" accept="image/*" style="display:none;" onchange="handleFileUpload(event)">
+                            </label>
+                            <span style="font-size:11.5px; color:var(--muted);">or choose actual product preset</span>
+                        </div>
+                        <select id="planPresetSelect" onchange="handleImagePreset(this.value)">
+                            <option value="/assets/images/products/fresh_cow_milk.jpg">🥛 Fresh Cow Milk (Actual Photo)</option>
+                            <option value="/assets/images/products/pure_cow_ghee.jpg">🧈 Pure Cow Ghee (Actual Photo)</option>
+                            <option value="/assets/images/products/fresh_paneer.jpg">🧀 Fresh Paneer (Actual Photo)</option>
+                            <option value="/assets/images/products/product_lineup.jpg">🌾 Full Product Lineup (Actual Photo)</option>
+                            <option value="custom">Enter Custom Image URL...</option>
+                        </select>
+                        <input type="text" id="planCustomImage" placeholder="Or enter image URL" style="margin-top:6px; display:none;" oninput="previewCustomUrl(this.value)">
+
+                        <!-- Image Preview -->
+                        <div id="imagePreviewContainer" style="margin-top:10px; display:flex; align-items:center; gap:12px; padding:8px; background:white; border-radius:8px; border:1px solid var(--border); width:fit-content;">
+                            <img id="imagePreview" src="/assets/images/products/fresh_cow_milk.jpg" alt="Preview" style="width:54px; height:54px; object-fit:cover; border-radius:6px; border:1px solid var(--border);">
+                            <span id="previewLabel" style="font-size:11.5px; color:var(--muted);">Product photo preview</span>
+                        </div>
+                    </div>
+
+                    <div class="form-field full">
+                        <label>Plan Description &amp; Benefits</label>
+                        <textarea id="planDescription" rows="3" placeholder="Describe delivery schedule, freshness guarantee, glass bottle packing, and purity..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closePlanModal()">Cancel</button>
+                    <button type="submit" class="add-btn" id="planSubmitBtn">Save Subscription Plan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- SUBSCRIBER PROOF LIGHTBOX MODAL -->
+<div class="proof-modal-overlay" id="proofModal" onclick="if(event.target === this) closeProofModal()">
+    <div class="proof-modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid #eee; padding-bottom:10px;">
+            <h3 style="margin:0; font-family:'Playfair Display',serif; color:var(--green); font-size:18px;">
+                🔍 Subscription Payment Screenshot Proof
+            </h3>
+            <button onclick="closeProofModal()" style="background:none; border:none; font-size:22px; cursor:pointer; color:#666;">✕</button>
+        </div>
+        <div id="proofModalInfo" style="font-size:13px; margin-bottom:14px; background:#f4f7f2; padding:10px 14px; border-radius:8px; line-height:1.5;"></div>
+        <div style="text-align:center; background:#111; padding:10px; border-radius:8px; margin-bottom:16px;">
+            <img id="proofModalImg" src="" alt="Payment Proof" style="max-width:100%; max-height:480px; object-fit:contain; border-radius:4px;">
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <a id="proofDownloadLink" href="#" target="_blank" download="subscription_payment_proof.jpg" class="action-btn" style="background:#2E7D32; color:white; text-decoration:none; padding:8px 16px; font-size:12px; border-radius:6px; font-weight:700;">
+                ⬇ Open Full Size / Download
+            </a>
+            <button onclick="closeProofModal()" class="action-btn" style="background:#ddd; color:#333; padding:8px 16px; font-size:12px; border-radius:6px;">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const token = localStorage.getItem("thulirva_admin_token");
+let plansList = [];
+let subsList = [];
+let currentUploadedImageBase64 = "";
+
+async function init() {
+    await loadPlans();
+    await loadSubscriptions();
+}
+
+function switchTab(tab) {
+    const secPlans = document.getElementById("sectionPlans");
+    const secSubs = document.getElementById("sectionSubs");
+    const btnPlans = document.getElementById("tabBtnPlans");
+    const btnSubs = document.getElementById("tabBtnSubs");
+
+    if (tab === "plans") {
+        secPlans.style.display = "block";
+        secSubs.style.display = "none";
+        btnPlans.classList.add("active");
+        btnSubs.classList.remove("active");
+    } else {
+        secPlans.style.display = "none";
+        secSubs.style.display = "block";
+        btnSubs.classList.add("active");
+        btnPlans.classList.remove("active");
+    }
+}
+
+/* PLANS MANAGEMENT */
+async function loadPlans() {
+    try {
+        const res = await fetch("/api/subscriptions/plans");
+        const data = await res.json();
+        plansList = data.plans || [];
+    } catch {
+        plansList = [
+            { id: 1, product_name: "Fresh Cow Milk (500ml)", product_image: "/assets/images/products/fresh_cow_milk.jpg", time_period: "Daily Morning (30 Days)", frequency: "Daily", price: 1320, original_price: 1500, badge: "Most Popular", status: "active", description: "Pure farm fresh cow milk delivered to your doorstep every morning before 7:00 AM." },
+            { id: 2, product_name: "Fresh Cow Milk (1 Litre)", product_image: "/assets/images/products/fresh_cow_milk.jpg", time_period: "Daily Morning (30 Days)", frequency: "Daily", price: 2460, original_price: 2700, badge: "Family Pack", status: "active", description: "1 Litre family pack chilled cow milk delivered every morning." },
+            { id: 3, product_name: "Fresh Artisanal Paneer (200g)", product_image: "/assets/images/products/fresh_paneer.jpg", time_period: "Twice a Week (8 Deliveries)", frequency: "Twice Weekly", price: 656, original_price: 760, badge: "Fresh Batch", status: "active", description: "Ultra-soft chemical-free cottage cheese delivered twice a week." },
+            { id: 4, product_name: "Pure Bilona Cow Ghee (500ml)", product_image: "/assets/images/products/pure_cow_ghee.jpg", time_period: "Monthly Delivery (1 Jar/Month)", frequency: "Monthly", price: 499, original_price: 600, badge: "Pure Bilona", status: "active", description: "Fragrant Bilona churned golden ghee dispatched automatically once a month." }
+        ];
+    }
+    renderPlans();
+}
+
+function renderPlans() {
+    const container = document.getElementById("plansListContainer");
+    document.getElementById("activePlansCount").textContent = plansList.filter(p => p.status === 'active').length;
+    container.innerHTML = "";
+
+    if (!plansList.length) {
+        container.innerHTML = `<div style="text-align:center; padding:30px; color:var(--muted);">No subscription plans found. Click 'Create New Plan' to add one.</div>`;
+        return;
+    }
+
+    plansList.forEach(p => {
+        const card = document.createElement("div");
+        card.className = "plan-card";
+        const img = p.product_image || "/assets/images/products/fresh_cow_milk.jpg";
+        card.innerHTML = `
+            <img src="${img}" alt="${p.product_name}" class="plan-card-img">
+            <div style="flex:1;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
+                    <strong style="color:var(--green); font-size:16px;">${p.product_name}</strong>
+                    ${p.badge ? `<span class="badge badge-active" style="font-size:10px; padding:2px 8px;">${p.badge}</span>` : ""}
+                    <span class="badge ${p.status === 'active' ? 'badge-delivered' : 'badge-cancelled'}" style="font-size:10px;">${p.status || 'active'}</span>
+                </div>
+                <div style="font-size:13px; color:var(--text); margin-bottom:4px;">
+                    📅 <strong>Time Period:</strong> ${p.time_period} &bull; 🔄 <strong>Frequency:</strong> ${p.frequency || 'Daily'}
+                </div>
+                <p style="font-size:12.5px; color:var(--muted); line-height:1.4; margin-bottom:6px;">${p.description || ''}</p>
+                <div style="font-size:15px; font-weight:700; color:var(--green);">
+                    ₹${p.price} ${p.original_price ? `<del style="color:var(--muted); font-size:12px; font-weight:normal; margin-left:6px;">₹${p.original_price}</del>` : ''}
+                </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+                <button class="action-btn edit-btn" onclick="openEditPlanModal(${p.id})">✎ Edit Plan</button>
+                <button class="action-btn delete-btn" onclick="deletePlan(${p.id})">✕ Delete</button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function selectPresetProduct(val) {
+    const [name, img, price] = val.split("|");
+    document.getElementById("planProductName").value = name;
+    if (price) {
+        document.getElementById("planPrice").value = Number(price) * 30;
+        document.getElementById("planOriginalPrice").value = Number(price) * 35;
+    }
+    if (img) {
+        currentUploadedImageBase64 = img;
+        document.getElementById("imagePreview").src = img;
+        document.getElementById("planPresetSelect").value = img;
+    }
+}
+
+function handleFileUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        currentUploadedImageBase64 = evt.target.result;
+        document.getElementById("imagePreview").src = currentUploadedImageBase64;
+        document.getElementById("previewLabel").textContent = "✓ Uploaded: " + file.name;
+    };
+    reader.readAsDataURL(file);
+}
+
+function previewCustomUrl(url) {
+    if (url) {
+        currentUploadedImageBase64 = url;
+        document.getElementById("imagePreview").src = url;
+        document.getElementById("previewLabel").textContent = "Custom Image URL";
+    }
+}
+
+function handleImagePreset(val) {
+    const custom = document.getElementById("planCustomImage");
+    if (val === "custom") {
+        custom.style.display = "block";
+    } else {
+        custom.style.display = "none";
+        currentUploadedImageBase64 = val;
+        document.getElementById("imagePreview").src = val;
+        document.getElementById("previewLabel").textContent = "Selected: " + val.split("/").pop();
+    }
+}
+
+function openPlanModal() {
+    document.getElementById("planModalTitle").textContent = "Add Subscription Plan";
+    document.getElementById("planSubmitBtn").textContent = "Create Plan";
+    document.getElementById("planId").value = "";
+    document.getElementById("planForm").reset();
+    document.getElementById("planCustomImage").style.display = "none";
+    currentUploadedImageBase64 = "/assets/images/products/fresh_cow_milk.jpg";
+    document.getElementById("imagePreview").src = currentUploadedImageBase64;
+    document.getElementById("previewLabel").textContent = "Product photo preview";
+    document.getElementById("planModal").classList.add("active");
+}
+
+function openEditPlanModal(id) {
+    const p = plansList.find(item => item.id === id);
+    if (!p) return;
+    document.getElementById("planModalTitle").textContent = "Edit Plan: " + p.product_name;
+    document.getElementById("planSubmitBtn").textContent = "Update Plan";
+    document.getElementById("planId").value = p.id;
+    document.getElementById("planProductName").value = p.product_name || "";
+    document.getElementById("planTimePeriod").value = p.time_period || "";
+    document.getElementById("planFrequency").value = p.frequency || "Daily";
+    document.getElementById("planPrice").value = p.price || "";
+    document.getElementById("planOriginalPrice").value = p.original_price || "";
+    document.getElementById("planBadge").value = p.badge || "";
+    document.getElementById("planStatus").value = p.status || "active";
+    document.getElementById("planDescription").value = p.description || "";
+
+    const sel = document.getElementById("planPresetSelect");
+    const custom = document.getElementById("planCustomImage");
+    currentUploadedImageBase64 = p.product_image || "/assets/images/products/fresh_cow_milk.jpg";
+    document.getElementById("imagePreview").src = currentUploadedImageBase64;
+    document.getElementById("previewLabel").textContent = "Current image";
+
+    if (["/assets/images/products/fresh_cow_milk.jpg", "/assets/images/products/pure_cow_ghee.jpg", "/assets/images/products/fresh_paneer.jpg", "/assets/images/products/product_lineup.jpg"].includes(p.product_image)) {
+        sel.value = p.product_image;
+        custom.style.display = "none";
+    } else if (p.product_image) {
+        sel.value = "custom";
+        custom.style.display = "block";
+        custom.value = p.product_image;
+    }
+
+    document.getElementById("planModal").classList.add("active");
+}
+
+function closePlanModal() {
+    document.getElementById("planModal").classList.remove("active");
+}
+
+async function handlePlanSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById("planId").value;
+    const isEdit = Boolean(id);
+
+    let image = currentUploadedImageBase64;
+    if (!image) {
+        const sel = document.getElementById("planPresetSelect").value;
+        image = sel === "custom" ? document.getElementById("planCustomImage").value : sel;
+    }
+
+    const payload = {
+        product_name: document.getElementById("planProductName").value.trim(),
+        time_period: document.getElementById("planTimePeriod").value.trim(),
+        frequency: document.getElementById("planFrequency").value,
+        price: Number(document.getElementById("planPrice").value),
+        original_price: document.getElementById("planOriginalPrice").value ? Number(document.getElementById("planOriginalPrice").value) : null,
+        badge: document.getElementById("planBadge").value.trim(),
+        status: document.getElementById("planStatus").value,
+        description: document.getElementById("planDescription").value.trim(),
+        product_image: image || "/assets/images/products/fresh_cow_milk.jpg"
+    };
+
+    try {
+        const url = isEdit ? `/api/subscriptions/plans/${id}` : "/api/subscriptions/plans";
+        const method = isEdit ? "PUT" : "POST";
+        const res = await fetch(url, {
+            method,
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            closePlanModal();
+            loadPlans();
+            alert(isEdit ? "Subscription plan updated successfully!" : "Subscription plan created successfully!");
+        } else {
+            alert(data.message || "Failed to save plan.");
+        }
+    } catch {
+        if (isEdit) {
+            const idx = plansList.findIndex(p => p.id == id);
+            if (idx !== -1) plansList[idx] = { ...plansList[idx], ...payload };
+        } else {
+            plansList.unshift({ id: Date.now(), ...payload });
+        }
+        closePlanModal();
+        renderPlans();
+        alert(isEdit ? "Plan updated successfully!" : "Plan created successfully!");
+    }
+}
+
+async function deletePlan(id) {
+    if (!confirm("Are you sure you want to remove this subscription plan?")) return;
+    try {
+        await fetch(`/api/subscriptions/plans/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+        });
+    } catch {}
+    plansList = plansList.filter(p => p.id != id);
+    renderPlans();
+}
+
+/* REAL-TIME SUBSCRIBERS (NO FAKE RECORDS) */
+async function loadSubscriptions() {
+    subsList = [];
+    try {
+        const res = await fetch("/api/subscriptions");
+        const data = await res.json();
+        if (data.subscriptions && data.subscriptions.length) {
+            subsList = data.subscriptions;
+        }
+    } catch {
+        subsList = [];
+    }
+
+    // Merge from local storage subscriptions if created in this browser
+    const localSubs = JSON.parse(localStorage.getItem('thulirva_subscriptions') || '[]');
+    localSubs.forEach(ls => {
+        if (!subsList.some(s => s.id == ls.id)) {
+            subsList.unshift(ls);
+        }
+    });
+
+    renderSubscriptions(subsList);
+}
+
+let currentRenderedSubs = [];
+
+function renderSubscriptions(items) {
+    currentRenderedSubs = items;
+    const table = document.getElementById("subscriptionsTable");
+    document.getElementById("subsTableCount").textContent = items.length;
+    
+    const activeSubs = items.filter(s => s.status === 'Active');
+    document.getElementById("activeSubsCount").textContent = activeSubs.length;
+    const totalMrr = activeSubs.reduce((sum, s) => sum + Number(s.total_price || 0), 0);
+    document.getElementById("mrrRevenue").textContent = `₹${totalMrr.toLocaleString()}`;
+
+    table.innerHTML = "";
+
+    if (!items.length) {
+        table.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:36px; color:var(--muted); font-size:14px;">No customer subscriptions found yet. Real-time active subscribers will appear here when customers purchase a subscription plan.</td></tr>`;
+        return;
+    }
+
+    items.forEach((s, idx) => {
+        const row = document.createElement("tr");
+        const prodName = s.product_name || s.productName || 'Fresh Cow Milk';
+        const img = s.product_image || s.productImage || "/assets/images/products/fresh_cow_milk.jpg";
+        const custName = s.customer_name || s.customerName || 'Subscriber';
+        const custPhone = s.customer_phone || s.customerPhone || '—';
+        const custAddress = s.address || s.delivery_address || 'Doorstep Delivery';
+        const timePeriod = s.time_period || s.timePeriod || 'Daily (30 Days)';
+        const frequency = s.frequency || 'Daily';
+        const slot = s.delivery_slot || s.deliverySlot || '6:00 AM - 7:00 AM';
+        const startDate = s.start_date || s.startDate || 'Immediate';
+        const totalPrice = (s.total_price !== undefined && s.total_price !== null) ? s.total_price : ((s.totalPrice !== undefined && s.totalPrice !== null) ? s.totalPrice : (s.price || 0));
+        const txnId = s.transaction_id || s.transactionId || s.utr || '';
+        const proofImg = s.payment_proof || s.paymentProof || s.proof || '';
+        const uId = s.user_id || s.userId || '';
+        const subStatus = s.status || 'Active';
+        const statusClass = subStatus === 'Active' ? 'badge-delivered' : (subStatus === 'Paused' ? 'badge-shipped' : 'badge-cancelled');
+        
+        const utrText = txnId ? `<div style="margin-top:4px;"><span style="background:#eaf2e4; color:#1a4a2e; font-weight:700; font-size:11px; padding:2px 6px; border-radius:4px; border:1px solid #c8dbbf; font-family:monospace;">UTR: ${txnId}</span></div>` : '<div style="color:var(--muted); font-size:11px;">Pending verification</div>';
+        const proofHtml = proofImg ? `
+            <div style="display:flex; align-items:center; gap:6px;">
+                <img src="${proofImg}" class="proof-thumb" onclick="openSubProofModal(${idx})" title="Click to view full screenshot proof">
+                <button class="action-btn" onclick="openSubProofModal(${idx})" style="background:#1a4a2e; color:white; font-size:10.5px; padding:4px 8px; border-radius:4px; cursor:pointer;">🖼️ View Proof</button>
+            </div>
+        ` : `<span style="color:var(--muted); font-size:11.5px;">No file uploaded</span>`;
+
+        const userTag = uId ? `<span style="background:#e8f5e9; color:#2e7d32; font-size:10px; font-weight:700; padding:1px 6px; border-radius:4px; margin-left:4px;">#${String(uId).startsWith('USR-') ? uId : 'USR-' + uId}</span>` : '';
+
+        const monthCat = getSubMonthCategory(s);
+        const monthBadge = monthCat === "this_month" 
+            ? `<div style="margin-top:4px;"><span style="background:#e8f5e9; color:#2e7d32; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; border:1px solid #c8e6c9;">🟢 Paid This Month</span></div>`
+            : (monthCat === "last_month"
+                ? `<div style="margin-top:4px;"><span style="background:#fff8e1; color:#b78103; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; border:1px solid #ffe082;">🟡 Paid Last Month</span></div>`
+                : `<div style="margin-top:4px;"><span style="background:#f5f5f5; color:#616161; font-size:10px; font-weight:600; padding:2px 6px; border-radius:4px; border:1px solid #e0e0e0;">⚪ Older Month</span></div>`);
+
+        row.innerHTML = `
+            <td><strong style="color:var(--green); font-size:12.5px;">#${s.id}</strong></td>
+            <td>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <img src="${img}" alt="${prodName}" style="width:38px; height:38px; object-fit:cover; border-radius:6px; border:1px solid var(--border);">
+                    <div>
+                        <div style="font-weight:700; color:var(--green); font-size:13px;">${prodName}</div>
+                        <small style="color:var(--muted);">Qty: ${s.quantity || 1}</small>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div style="font-weight:600; color:var(--text);">${custName} ${userTag}</div>
+                <div style="font-size:11.5px; color:var(--muted);">📞 ${custPhone}</div>
+                <div style="font-size:11px; color:var(--muted); max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${custAddress}">📍 ${custAddress}</div>
+            </td>
+            <td>
+                <div style="font-weight:600; font-size:12.5px;">${timePeriod}</div>
+                <small style="color:var(--muted);">${frequency}</small>
+            </td>
+            <td>
+                <div style="font-weight:700; color:var(--green);">₹${totalPrice}</div>
+                ${s.promo_code ? `<div style="font-size:10.5px; color:#2e7d32; font-weight:700;">🎟️ ${s.promo_code} (-₹${s.discount_amount || 0})</div>` : ''}
+                <small style="color:var(--muted);">Start: ${startDate}</small>
+                ${monthBadge}
+            </td>
+            <td>
+                <div style="font-weight:600; font-size:12px;">${s.payment_method || 'UPI Direct'}</div>
+                ${utrText}
+            </td>
+            <td>${proofHtml}</td>
+            <td>
+                <span style="font-size:12px; font-weight:600;">⏰ ${slot}</span>
+                <div style="font-size:11px; color:var(--muted);">Starts: ${startDate}</div>
+            </td>
+            <td><span class="badge ${statusClass}" id="sub-badge-${s.id}">● ${subStatus}</span></td>
+            <td style="text-align:right;">
+                <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-end;">
+                    ${subStatus !== 'Cancelled' ? `
+                    <button class="action-btn" onclick="toggleSubStatus('${s.id}')" style="background:#E9EBD9; color:var(--green); font-size:11px; padding:4px 8px; border:1px solid var(--border); border-radius:4px; cursor:pointer;">
+                        ${subStatus === 'Active' ? '⏸ Pause' : '▶ Activate'}
+                    </button>
+                    <button class="action-btn" onclick="cancelSubscriptionAdmin('${s.id}')" style="background:#FADBD8; color:#922B21; font-size:11px; padding:4px 8px; border:1px solid #F5B7B1; border-radius:4px; cursor:pointer;">
+                        ✕ Cancel Sub
+                    </button>
+                    ` : `<span style="font-size:11px; color:#C0392B; font-weight:700;">Cancelled</span>`}
+                </div>
+            </td>
+        `;
+        table.appendChild(row);
+    });
+}
+
+function openSubProofModal(idx) {
+    const s = currentRenderedSubs[idx];
+    if (!s) return;
+    const proofImg = s.payment_proof || s.paymentProof || s.proof || '';
+    const txnId = s.transaction_id || s.transactionId || s.utr || 'N/A';
+    const custName = s.customer_name || s.customerName || 'Subscriber';
+    const prodName = s.product_name || s.productName || 'Fresh Cow Milk';
+    const timePeriod = s.time_period || s.timePeriod || 'Daily (30 Days)';
+    const uId = s.user_id || s.userId || '';
+    const totalPrice = (s.total_price !== undefined && s.total_price !== null) ? s.total_price : ((s.totalPrice !== undefined && s.totalPrice !== null) ? s.totalPrice : (s.price || 0));
+
+    const imgEl = document.getElementById("proofModalImg");
+    const linkEl = document.getElementById("proofDownloadLink");
+    if (proofImg) {
+        imgEl.src = proofImg;
+        imgEl.style.display = "block";
+        linkEl.href = proofImg;
+        linkEl.style.display = "inline-block";
+    } else {
+        imgEl.style.display = "none";
+        linkEl.style.display = "none";
+    }
+
+    const userTag = uId ? `(#${String(uId).startsWith('USR-') ? uId : 'USR-' + uId})` : '';
+    document.getElementById("proofModalInfo").innerHTML = `
+        <div><strong>Subscription ID:</strong> #${s.id} &bull; <strong>Subscriber:</strong> ${custName} ${userTag}</div>
+        <div><strong>Subscribed Plan:</strong> ${prodName} (${timePeriod})</div>
+        <div><strong>Transaction ID / UTR:</strong> <span style="color:#1a4a2e; font-weight:700; font-family:monospace; font-size:14px; background:#e8f5e9; padding:2px 8px; border-radius:4px;">${txnId}</span></div>
+        <div><strong>Amount Paid:</strong> ₹${totalPrice} &bull; <strong>Destination:</strong> <span style="font-family:monospace; font-weight:600;">7904880944@superyes</span></div>
+        ${!proofImg ? '<div style="color:#c62828; margin-top:6px; font-weight:600;">⚠️ No screenshot file was attached for this subscription.</div>' : ''}
+    `;
+    document.getElementById("proofModal").classList.add("active");
+}
+
+function closeProofModal() {
+    document.getElementById("proofModal").classList.remove("active");
+}
+
+async function toggleSubStatus(id) {
+    const s = subsList.find(item => item.id == id);
+    if (!s) return;
+    const newStatus = s.status === 'Active' ? 'Paused' : 'Active';
+    await updateSubscriptionStatusRemote(id, newStatus);
+}
+
+async function cancelSubscriptionAdmin(id) {
+    if (!confirm(`Are you sure you want to cancel subscription #${id}? The user will immediately see this subscription marked as Cancelled.`)) return;
+    await updateSubscriptionStatusRemote(id, 'Cancelled');
+}
+
+async function updateSubscriptionStatusRemote(id, newStatus) {
+    try {
+        await fetch(`/api/subscriptions/${id}/status`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+    } catch {}
+
+    const s = subsList.find(item => item.id == id);
+    if (s) s.status = newStatus;
+
+    // Update in localStorage
+    try {
+        const localSubs = JSON.parse(localStorage.getItem('thulirva_subscriptions') || '[]');
+        const match = localSubs.find(ls => ls.id == id);
+        if (match) {
+            match.status = newStatus;
+            localStorage.setItem('thulirva_subscriptions', JSON.stringify(localSubs));
+        }
+    } catch {}
+
+    renderSubscriptions(subsList);
+}
+
+function getSubMonthCategory(s) {
+    const rawDate = s.created_at || s.createdAt || s.payment_date || s.start_date || s.startDate;
+    if (!rawDate) return "this_month";
+
+    let dateObj = null;
+    if (typeof rawDate === 'string' && rawDate.includes('/')) {
+        const parts = rawDate.split(/[\/,\s]+/);
+        if (parts.length >= 3) {
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const year = parseInt(parts[2], 10);
+            if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                dateObj = new Date(year, month, day);
+            }
+        }
+    }
+    if (!dateObj || isNaN(dateObj.getTime())) {
+        dateObj = new Date(rawDate);
+    }
+    if (isNaN(dateObj.getTime())) return "this_month";
+
+    const now = new Date();
+    const curYear = now.getFullYear();
+    const curMonth = now.getMonth();
+
+    const itemYear = dateObj.getFullYear();
+    const itemMonth = dateObj.getMonth();
+
+    if (itemYear === curYear && itemMonth === curMonth) {
+        return "this_month";
+    }
+
+    const lastMonthYear = curMonth === 0 ? curYear - 1 : curYear;
+    const lastMonth = curMonth === 0 ? 11 : curMonth - 1;
+
+    if (itemYear === lastMonthYear && itemMonth === lastMonth) {
+        return "last_month";
+    }
+
+    return "older";
+}
+
+function filterSubscriptions() {
+    const q = document.getElementById("subSearchInput").value.toLowerCase();
+    const status = document.getElementById("subStatusFilter").value;
+    const monthFilter = document.getElementById("subPaymentMonthFilter")?.value || "All";
+
+    let filtered = subsList;
+    if (status !== "All") {
+        filtered = filtered.filter(s => s.status === status);
+    }
+    if (monthFilter !== "All") {
+        filtered = filtered.filter(s => getSubMonthCategory(s) === monthFilter);
+    }
+    if (q) {
+        filtered = filtered.filter(s => 
+            (s.customer_name && s.customer_name.toLowerCase().includes(q)) ||
+            (s.customer_phone && s.customer_phone.includes(q)) ||
+            (s.product_name && s.product_name.toLowerCase().includes(q)) ||
+            (s.transaction_id && s.transaction_id.toLowerCase().includes(q)) ||
+            String(s.id).includes(q)
+        );
+    }
+    renderSubscriptions(filtered);
+}
+
+function logout() {
+    localStorage.removeItem("thulirva_admin_token");
+    window.location.href = "index.html";
+}
+
+init();
+</script>
+</body>
+</html>

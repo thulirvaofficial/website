@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THULIRVA Admin — Customer Directory</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="admin-layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <img src="images/logo.jpg" alt="THULIRVA Logo" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 1.5px solid #d4af37; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+            <div style="font-family:'Playfair Display',serif; color:#E9EBD9; font-size:18px; font-weight:700; letter-spacing:1.5px;">THULIRVA</div>
+            <span>ADMIN CONSOLE</span>
+        </div>
+
+        <a href="dashboard.html">📊 Dashboard</a>
+        <a href="products.html">🛍 Products</a>
+        <a href="categories.html">🏷 Categories</a>
+        <a href="subscriptions.html">🔄 Subscriptions</a>
+        <a href="orders.html">📦 Orders</a>
+        <a href="customers.html" class="active">👥 Customers</a>
+        <a href="locations.html">📍 Delivery Locations</a>
+        <a href="coupons.html">🎟️ Promo Codes</a>
+        <a href="recipes.html">🍳 Recipes</a>
+        <a href="/" target="_blank">🌐 View Website ↗</a>
+
+        <div style="margin-top: auto; padding: 20px 0;">
+            <button class="logout-btn" style="width:100%" onclick="logout()">Logout</button>
+        </div>
+    </aside>
+
+    <main class="admin-main">
+        <div class="admin-header">
+            <div>
+                <h1 style="font-family:'Playfair Display',serif; font-size: 26px;">Real-time Customer Directory</h1>
+                <p>Live registered customers, verified doorstep addresses, and verified order history.</p>
+            </div>
+            <div style="display:flex; gap:12px; align-items:center;">
+                <span class="badge badge-active" id="activeCustomersBadge">0 Customers</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="admin-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                <h2>Active Customer Profiles (<span id="totalCustCount">0</span>)</h2>
+                <div>
+                    <input type="text" id="custSearch" placeholder="Search customer, phone, or address..." onkeyup="filterCustomers()" style="padding: 8px 14px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px; width: 260px;">
+                </div>
+            </div>
+
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Customer ID</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Doorstep Delivery Address</th>
+                        <th>Orders / Subs</th>
+                        <th>Total Spent</th>
+                        <th>Last Activity</th>
+                        <th>Contact</th>
+                        <th style="text-align: right;">Admin Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="customersTable">
+                    <!-- Injected dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<!-- RESET PASSWORD MODAL -->
+<div id="resetPassModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:12px; max-width:440px; width:90%; padding:24px; box-shadow:0 8px 30px rgba(0,0,0,0.25);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:8px;">
+            <h3 style="margin:0; font-family:'Playfair Display',serif; color:var(--green); font-size:18px;">🔑 Reset Customer Password</h3>
+            <button onclick="closeResetPassModal()" style="background:none; border:none; font-size:22px; cursor:pointer; color:#666;">✕</button>
+        </div>
+        <p style="font-size:13px; color:var(--muted); margin-bottom:16px;">
+            Set a new login password for <strong id="resetPassUserName">Customer</strong> (<span id="resetPassUserId" style="font-family:monospace; color:var(--green);">#USR-101</span>).
+        </p>
+        <form onsubmit="handleResetPasswordSubmit(event)">
+            <input type="hidden" id="resetPassTargetId">
+            <div style="margin-bottom:18px;">
+                <label style="display:block; font-size:12.5px; font-weight:700; margin-bottom:6px; color:var(--text);">Enter New Password *</label>
+                <input type="text" id="newCustomerPassword" required minlength="4" placeholder="Enter new password (e.g. 123456)" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13.5px; font-family:monospace;">
+                <small style="color:var(--muted); font-size:11px; display:block; margin-top:4px;">Minimum 4 characters. The customer can log in with this new password immediately.</small>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="action-btn" onclick="closeResetPassModal()" style="padding:7px 14px;">Cancel</button>
+                <button type="submit" class="add-btn" style="padding:7px 16px;">Update Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const token = localStorage.getItem("thulirva_admin_token");
+let customersList = [];
+
+async function loadCustomers() {
+    customersList = [];
+    try {
+        const res = await fetch("/api/admin/customers", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.customers && data.customers.length) {
+            customersList = data.customers;
+        }
+    } catch {}
+
+    // Merge active user from localStorage if logged in
+    const activeUser = JSON.parse(localStorage.getItem('thulirva_user') || 'null');
+    if (activeUser && (activeUser.phone || activeUser.email)) {
+        const existing = customersList.find(c => (activeUser.phone && c.phone === activeUser.phone) || (activeUser.email && c.email === activeUser.email));
+        if (!existing) {
+            customersList.push({
+                id: activeUser.id || 'USR-1001',
+                name: activeUser.name || "Customer",
+                phone: activeUser.phone || "—",
+                email: activeUser.email || "—",
+                address: activeUser.address || "Doorstep Address Saved",
+                orders_count: 0,
+                total_spent: 0,
+                last_order: "Active User"
+            });
+        }
+    }
+
+    // Merge registered users from localStorage
+    const regUsers = JSON.parse(localStorage.getItem('thulirva_registered_users') || '[]');
+    regUsers.forEach(u => {
+        const key = u.phone || u.email;
+        if (!key) return;
+        const existing = customersList.find(c => (u.phone && c.phone === u.phone) || (u.email && c.email === u.email));
+        if (!existing) {
+            customersList.push({
+                id: u.id || `USR-${Math.floor(1000 + Math.random() * 9000)}`,
+                name: u.name || "Customer",
+                phone: u.phone || "—",
+                email: u.email || "—",
+                address: u.address || "Doorstep Address Saved",
+                orders_count: 0,
+                total_spent: 0,
+                last_order: u.created_at || "Registered"
+            });
+        }
+    });
+
+    // Merge customer information from placed orders in localStorage
+    const localOrders = JSON.parse(localStorage.getItem('thulirva_my_orders') || '[]');
+    localOrders.forEach(o => {
+        const phone = o.customer_phone || o.customerPhone;
+        const email = o.customer_email || o.customerEmail;
+        const name = o.customer_name || o.customerName || "Valued Customer";
+        const total = (o.total !== undefined && o.total !== null) ? o.total : ((o.total_price !== undefined && o.total_price !== null) ? o.total_price : (o.totalPrice || 0));
+        const uId = o.user_id || o.userId;
+        if (!phone && !email) return;
+
+        const existing = customersList.find(c => (phone && c.phone === phone) || (email && c.email === email));
+        if (existing) {
+            existing.orders_count = (existing.orders_count || 0) + 1;
+            existing.total_spent = (Number(existing.total_spent || 0) + Number(total || 0));
+            if (o.address) existing.address = `${o.address}, ${o.city || 'Kanchipuram'} - ${o.pincode || ''}`;
+            existing.last_order = o.created_at || "Recent Order";
+            if (uId && !existing.id) existing.id = uId;
+        } else {
+            customersList.push({
+                id: uId || (o.id ? `ORD-${o.id}` : `USR-${Math.floor(1000 + Math.random() * 9000)}`),
+                name: name,
+                phone: phone || "—",
+                email: email || "—",
+                address: o.address ? `${o.address}, ${o.city || 'Kanchipuram'} - ${o.pincode || ''}` : "Doorstep Delivery",
+                orders_count: 1,
+                total_spent: Number(total || 0),
+                last_order: o.created_at || "Recent Order"
+            });
+        }
+    });
+
+    // Merge subscriptions from localStorage
+    const localSubs = JSON.parse(localStorage.getItem('thulirva_subscriptions') || '[]');
+    localSubs.forEach(s => {
+        const phone = s.customer_phone || s.customerPhone;
+        const email = s.customer_email || s.customerEmail;
+        const name = s.customer_name || s.customerName || "Subscriber";
+        const totalPrice = (s.total_price !== undefined && s.total_price !== null) ? s.total_price : ((s.totalPrice !== undefined && s.totalPrice !== null) ? s.totalPrice : (s.price || 0));
+        const uId = s.user_id || s.userId;
+        if (!phone && !email) return;
+
+        const existing = customersList.find(c => (phone && c.phone === phone) || (email && c.email === email));
+        if (existing) {
+            existing.orders_count = (existing.orders_count || 0) + 1;
+            existing.total_spent = (Number(existing.total_spent || 0) + Number(totalPrice || 0));
+            if (s.address) existing.address = s.address;
+            existing.last_order = s.start_date || s.startDate || "Subscription Active";
+            if (uId && !existing.id) existing.id = uId;
+        } else {
+            customersList.push({
+                id: uId || s.id || `USR-${Math.floor(1000 + Math.random() * 9000)}`,
+                name: name,
+                phone: phone || "—",
+                email: email || "—",
+                address: s.address || "Doorstep Address",
+                orders_count: 1,
+                total_spent: Number(totalPrice || 0),
+                last_order: s.start_date || s.startDate || "Subscription Active"
+            });
+        }
+    });
+
+    renderCustomers(customersList);
+}
+
+function renderCustomers(list) {
+    const table = document.getElementById("customersTable");
+    document.getElementById("totalCustCount").textContent = list.length;
+    document.getElementById("activeCustomersBadge").textContent = `${list.length} Customers`;
+
+    table.innerHTML = "";
+    if (!list.length) {
+        table.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:36px; color:var(--muted); font-size:14px;">No customer records found yet. Real-time customer profiles will appear here as users register, order farm products, or subscribe to daily milk delivery.</td></tr>`;
+        return;
+    }
+
+    list.forEach(c => {
+        const row = document.createElement("tr");
+        const cleanPhone = (c.phone || "").replace(/\D/g, "");
+        const waLink = cleanPhone ? `https://wa.me/91${cleanPhone.slice(-10)}?text=Hello%20${encodeURIComponent(c.name || 'Customer')},%20greetings%20from%20THULIRVA%20Dairy!` : "#";
+        const userTag = (c.id + '').startsWith('USR-') ? `#${c.id}` : ((c.id + '').startsWith('CUST-') ? `#${c.id}` : `#USR-${c.id || '101'}`);
+        const safeName = (c.name || 'Customer').replace(/'/g, "\\'");
+
+        row.innerHTML = `
+            <td><strong style="color:var(--green); font-family:monospace; font-size:13px;">${userTag}</strong></td>
+            <td>
+                <div style="font-weight:700; color:var(--green);">${c.name || "Customer"}</div>
+            </td>
+            <td><strong>${c.phone || "—"}</strong></td>
+            <td><small style="color:var(--muted);">${c.email || "—"}</small></td>
+            <td style="max-width:240px; font-size:11.5px; line-height:1.4;">
+                ${c.address || "—"}
+            </td>
+            <td><span class="badge badge-shipped">${c.orders_count || 0} orders</span></td>
+            <td><strong>₹${Number(c.total_spent || 0).toLocaleString()}</strong></td>
+            <td><small style="color:var(--muted);">${c.last_order || "Recent"}</small></td>
+            <td>
+                ${cleanPhone ? `<a href="${waLink}" target="_blank" class="action-btn" style="text-decoration:none; display:inline-block; font-size:11px; background:#D4EDDA; color:#155724; padding:4px 8px; border-radius:4px; font-weight:600;">💬 WhatsApp</a>` : '—'}
+            </td>
+            <td style="text-align: right;">
+                <div style="display:inline-flex; gap:6px; align-items:center;">
+                    <button class="action-btn" onclick="openResetPasswordModal('${c.id}', '${safeName}')" style="background:#FFF3CD; color:#856404; font-size:11px; padding:4px 8px; border-radius:4px; font-weight:600;" title="Reset password for this customer">
+                        🔑 Reset Pass
+                    </button>
+                    <button class="action-btn delete-btn" onclick="deleteCustomer('${c.id}', '${safeName}')" style="font-size:11px; padding:4px 8px; border-radius:4px;" title="Delete this customer profile">
+                        🗑 Delete
+                    </button>
+                </div>
+            </td>
+        `;
+        table.appendChild(row);
+    });
+}
+
+function openResetPasswordModal(id, name) {
+    document.getElementById("resetPassTargetId").value = id;
+    document.getElementById("resetPassUserName").textContent = name || "Customer";
+    document.getElementById("resetPassUserId").textContent = String(id).startsWith("USR-") ? `#${id}` : `#USR-${id}`;
+    document.getElementById("newCustomerPassword").value = "";
+    document.getElementById("resetPassModal").style.display = "flex";
+}
+
+function closeResetPassModal() {
+    document.getElementById("resetPassModal").style.display = "none";
+}
+
+async function handleResetPasswordSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById("resetPassTargetId").value;
+    const newPassword = document.getElementById("newCustomerPassword").value.trim();
+    const cust = customersList.find(c => c.id == id);
+    const custName = cust ? cust.name : "Customer";
+
+    if (!newPassword || newPassword.length < 4) {
+        alert("Please enter a valid password (minimum 4 characters).");
+        return;
+    }
+
+    try {
+        await fetch(`/api/admin/customers/${id}/reset-password`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ new_password: newPassword })
+        });
+    } catch {}
+
+    // Update in localStorage registered users
+    try {
+        const regUsers = JSON.parse(localStorage.getItem('thulirva_registered_users') || '[]');
+        const userMatch = regUsers.find(u => u.id == id || (cust && ((u.phone && u.phone === cust.phone) || (u.email && u.email === cust.email))));
+        if (userMatch) {
+            userMatch.password = newPassword;
+            localStorage.setItem('thulirva_registered_users', JSON.stringify(regUsers));
+        }
+    } catch {}
+
+    closeResetPassModal();
+    alert(`✓ Password for ${custName} (${id}) has been updated successfully to: "${newPassword}"!`);
+}
+
+async function deleteCustomer(id, name) {
+    if (!confirm(`Are you sure you want to permanently delete customer "${name}" (${id})?\nThis action cannot be undone.`)) {
+        return;
+    }
+
+    try {
+        await fetch(`/api/admin/customers/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+        });
+    } catch {}
+
+    // Remove from in-memory list
+    const deletedCust = customersList.find(c => c.id == id);
+    customersList = customersList.filter(c => c.id != id);
+
+    // Remove from localStorage registered users
+    try {
+        let regUsers = JSON.parse(localStorage.getItem('thulirva_registered_users') || '[]');
+        regUsers = regUsers.filter(u => u.id != id && (!deletedCust || ((!u.phone || u.phone !== deletedCust.phone) && (!u.email || u.email !== deletedCust.email))));
+        localStorage.setItem('thulirva_registered_users', JSON.stringify(regUsers));
+    } catch {}
+
+    // If currently logged in user in browser is this deleted user, clear user session
+    try {
+        const cur = JSON.parse(localStorage.getItem('thulirva_user') || 'null');
+        if (cur && (cur.id == id || (deletedCust && ((cur.phone && cur.phone === deletedCust.phone) || (cur.email && cur.email === deletedCust.email))))) {
+            localStorage.removeItem('thulirva_user');
+        }
+    } catch {}
+
+    renderCustomers(customersList);
+    alert(`✓ Customer "${name}" has been removed successfully.`);
+}
+
+function filterCustomers() {
+    const q = document.getElementById("custSearch").value.toLowerCase();
+    const filtered = customersList.filter(c => 
+        (c.name && c.name.toLowerCase().includes(q)) ||
+        (c.phone && c.phone.includes(q)) ||
+        (c.email && c.email.toLowerCase().includes(q)) ||
+        (c.address && c.address.toLowerCase().includes(q)) ||
+        (c.id && String(c.id).toLowerCase().includes(q))
+    );
+    renderCustomers(filtered);
+}
+
+function logout() {
+    localStorage.removeItem("thulirva_admin_token");
+    window.location.href = "index.html";
+}
+
+loadCustomers();
+</script>
+</body>
+</html>

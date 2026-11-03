@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fresh Paneer | THULIRVA</title>
+    <meta name="description" content="Buy fresh, soft paneer from THULIRVA. Made from pure cow milk. No preservatives.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="announcement-bar">
+    <div class="container announcement-content">
+        <span>🌿 Pure by Nature, Made for You!</span><span>🌾 Farm Fresh</span>
+        <span>✕ No Preservatives</span><span>🚚 Home Delivery</span><span>📞 93606 71533</span>
+    </div>
+</div>
+<header class="site-header">
+    <div class="container header-container">
+        <a href="../index.html" class="brand">
+            <div class="brand-logo-wrap">
+                <img src="../assets/images/logo/logo.jpg" alt="THULIRVA" class="brand-logo-img">
+                <div class="brand-text">
+                    <span class="brand-name">THULIRVA</span>
+                    <span class="brand-tagline">ROOTED IN NATURE</span>
+                </div>
+            </div>
+        </a>
+        <nav class="main-navigation">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="shop.html" class="nav-link">Shop</a>
+            <a href="subscriptions.html" class="nav-link">Subscriptions</a>
+            <a href="about.html" class="nav-link">About Us</a>
+            <a href="farms.html" class="nav-link">Our Farms</a>
+            <a href="recipes.html" class="nav-link">Recipes</a>
+            <a href="contact.html" class="nav-link">Contact</a>
+        </nav>
+        <div class="header-actions">
+            <button class="header-icon">🔍</button>
+            <a href="account.html" class="header-icon" title="My Account">👤</a>
+            <a href="cart.html" class="cart-button">🛒<span class="cart-count" id="cartCount">0</span></a>
+            <button class="mobile-menu-button" id="mobileMenuButton">☰</button>
+        </div>
+    </div>
+    <nav class="mobile-navigation" id="mobileNavigation">
+        <a href="../index.html">Home</a><a href="shop.html">Shop</a><a href="subscriptions.html">Subscriptions</a><a href="about.html">About Us</a>
+        <a href="farms.html">Our Farms</a><a href="recipes.html">Recipes</a><a href="contact.html">Contact</a>
+    </nav>
+</header>
+
+<section class="product-detail" style="padding-top:40px">
+    <div class="container">
+        <div class="breadcrumb" style="margin-bottom:30px">
+            <a href="../index.html">Home</a><span>&rsaquo;</span>
+            <a href="shop.html">Dairy Products</a><span>&rsaquo;</span>
+            <span id="productBreadcrumb">Fresh Paneer</span>
+        </div>
+        <div class="product-detail-grid" id="productDetailContainer">
+            <div class="loading"></div>
+        </div>
+    </div>
+</section>
+
+<section style="background:var(--cream);padding:60px 0">
+    <div class="container">
+        <div class="section-heading">
+            <span class="section-label">You May Also Like</span>
+            <h2>Related Products</h2>
+        </div>
+        <div class="product-grid" id="relatedProducts">
+            <div class="loading"></div>
+        </div>
+    </div>
+</section>
+
+<footer class="site-footer">
+    <div class="footer-top">
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <div class="brand-logo-wrap">
+                    <img src="../assets/images/logo/logo.jpg" alt="THULIRVA" class="brand-logo-img">
+                    <div class="brand-text">
+                        <span class="brand-name" style="color:#e5c97a;">THULIRVA</span>
+                        <span class="brand-tagline" style="color:#c8dbbf;">ROOTED IN NATURE</span>
+                    </div>
+                </div>
+                <p class="footer-tagline">Pure by Nature, Made for You!</p>
+                <p style="font-size:12px; color:#c8dbbf; margin-top:8px;">
+                    📍 Farm: No 1, Mayana Salai, Thimmarajampettai, Kanchipuram - 631601, Tamil Nadu
+                </p>
+            </div>
+            <div class="footer-column"><h3>Shop</h3><a href="shop.html">Milk</a><a href="shop.html">Curd</a><a href="shop.html">Paneer</a><a href="shop.html">Ghee &amp; Butter</a></div>
+            <div class="footer-column"><h3>Company</h3><a href="about.html">About Us</a><a href="farms.html">Our Farms</a><a href="contact.html">Contact</a></div>
+            <div class="footer-column"><h3>Help</h3><a href="#">Shipping Policy</a><a href="#">Return &amp; Refund</a><a href="#">FAQ</a></div>
+            <div class="footer-newsletter"><h3>Newsletter</h3><p>Stay updated with farm stories.</p>
+                <div class="newsletter-form"><input type="email" placeholder="Email Address" class="newsletter-input"><button class="newsletter-btn">Subscribe</button></div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom"><div class="container footer-bottom-content"><p>© 2026 THULIRVA. Pure by Nature, Made for You!</p></div></div>
+</footer>
+<div class="toast" id="toast"></div>
+<script src="../js/main.js"></script>
+<script src="../js/product-page.js"></script>
+</body></html>
