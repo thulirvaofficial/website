@@ -42,6 +42,7 @@
                 <p>Live registered customers, verified doorstep addresses, and verified order history.</p>
             </div>
             <div style="display:flex; gap:12px; align-items:center;">
+                <button class="add-btn" onclick="openAddCustomerModal()" style="padding: 8px 16px; font-weight:700; cursor:pointer;">＋ Add New Customer</button>
                 <span class="badge badge-active" id="activeCustomersBadge">0 Customers</span>
                 <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
@@ -78,7 +79,88 @@
     </main>
 </div>
 
-<!-- RESET PASSWORD MODAL -->
+<!-- ADD CUSTOMER MODAL -->
+<div id="addCustomerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:12px; max-width:480px; width:92%; padding:24px; box-shadow:0 8px 30px rgba(0,0,0,0.25);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:8px;">
+            <h3 style="margin:0; font-family:'Playfair Display',serif; color:var(--green); font-size:19px;">＋ Add New Customer</h3>
+            <button onclick="closeAddCustomerModal()" style="background:none; border:none; font-size:22px; cursor:pointer; color:#666;">✕</button>
+        </div>
+        <form onsubmit="handleAddCustomerSubmit(event)">
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Full Name *</label>
+                <input type="text" id="addCustName" required placeholder="e.g. Ramesh Kumar" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Phone Number *</label>
+                <input type="tel" id="addCustPhone" required placeholder="e.g. 9876543210" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Email Address</label>
+                <input type="email" id="addCustEmail" placeholder="customer@example.com" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Delivery Address</label>
+                <input type="text" id="addCustAddress" placeholder="Flat No, Street, Landmark, City" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
+            </div>
+            <div style="margin-bottom:18px;">
+                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Preferred Pickup Location</label>
+                <select id="addCustPickup" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
+                    <option value="">None (Doorstep Delivery)</option>
+                    <option value="Thulirva Main Branch (Kanchipuram)">Thulirva Main Branch (Kanchipuram)</option>
+                    <option value="Thulirva Anna Nagar (Chennai)">Thulirva Anna Nagar (Chennai)</option>
+                    <option value="Thulirva Velachery (Chennai)">Thulirva Velachery (Chennai)</option>
+                </select>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="action-btn" onclick="closeAddCustomerModal()" style="padding:7px 14px;">Cancel</button>
+                <button type="submit" class="add-btn" style="padding:7px 18px;">Save Customer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- EDIT CUSTOMER MODAL -->
+<div id="editCustomerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:12px; max-width:480px; width:92%; padding:24px; box-shadow:0 8px 30px rgba(0,0,0,0.25);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:8px;">
+            <h3 style="margin:0; font-family:'Playfair Display',serif; color:var(--green); font-size:19px;">✏️ Edit Customer Profile</h3>
+            <button onclick="closeEditCustomerModal()" style="background:none; border:none; font-size:22px; cursor:pointer; color:#666;">✕</button>
+        </div>
+        <form onsubmit="handleEditCustomerSubmit(event)">
+            <input type="hidden" id="editCustTargetId">
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Full Name *</label>
+                <input type="text" id="editCustName" required style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Phone Number *</label>
+                <input type="tel" id="editCustPhone" required style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Email Address</label>
+                <input type="email" id="editCustEmail" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Delivery Address</label>
+                <input type="text" id="editCustAddress" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
+            </div>
+            <div style="margin-bottom:18px;">
+                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Preferred Pickup Location</label>
+                <select id="editCustPickup" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
+                    <option value="">None (Doorstep Delivery)</option>
+                    <option value="Thulirva Main Branch (Kanchipuram)">Thulirva Main Branch (Kanchipuram)</option>
+                    <option value="Thulirva Anna Nagar (Chennai)">Thulirva Anna Nagar (Chennai)</option>
+                    <option value="Thulirva Velachery (Chennai)">Thulirva Velachery (Chennai)</option>
+                </select>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="action-btn" onclick="closeEditCustomerModal()" style="padding:7px 14px;">Cancel</button>
+                <button type="submit" class="add-btn" style="padding:7px 18px;">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
 <div id="resetPassModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
     <div style="background:white; border-radius:12px; max-width:440px; width:90%; padding:24px; box-shadow:0 8px 30px rgba(0,0,0,0.25);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:8px;">
@@ -258,6 +340,9 @@ function renderCustomers(list) {
             </td>
             <td style="text-align: right;">
                 <div style="display:inline-flex; gap:6px; align-items:center;">
+                    <button class="action-btn" onclick="openEditCustomerModal('${c.id}')" style="background:#E2F0DE; color:#1B4332; font-size:11px; padding:4px 8px; border-radius:4px; font-weight:700;" title="Edit customer details & pickup store">
+                        ✏️ Edit
+                    </button>
                     <button class="action-btn" onclick="openResetPasswordModal('${c.id}', '${safeName}')" style="background:#FFF3CD; color:#856404; font-size:11px; padding:4px 8px; border-radius:4px; font-weight:600;" title="Reset password for this customer">
                         🔑 Reset Pass
                     </button>
@@ -370,6 +455,128 @@ function filterCustomers() {
 function logout() {
     localStorage.removeItem("thulirva_admin_token");
     window.location.href = "index.html";
+}
+
+function openAddCustomerModal() {
+    document.getElementById("addCustName").value = "";
+    document.getElementById("addCustPhone").value = "";
+    document.getElementById("addCustEmail").value = "";
+    document.getElementById("addCustAddress").value = "";
+    document.getElementById("addCustPickup").value = "";
+    document.getElementById("addCustomerModal").style.display = "flex";
+}
+
+function closeAddCustomerModal() {
+    document.getElementById("addCustomerModal").style.display = "none";
+}
+
+async function handleAddCustomerSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById("addCustName").value.trim();
+    const phone = document.getElementById("addCustPhone").value.trim();
+    const email = document.getElementById("addCustEmail").value.trim();
+    const address = document.getElementById("addCustAddress").value.trim();
+    const pickup_store = document.getElementById("addCustPickup").value;
+
+    try {
+        const res = await fetch("/api/admin/customers", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ name, phone, email, address, pickup_store })
+        });
+        const data = await res.json();
+        if (data.success && data.customer) {
+            customersList.unshift(data.customer);
+        } else {
+            customersList.unshift({
+                id: `USR-${Math.floor(1000 + Math.random() * 9000)}`,
+                name,
+                phone: phone || "—",
+                email: email || "—",
+                address: pickup_store ? `${address} [Pickup: ${pickup_store}]` : (address || "Doorstep Address"),
+                orders_count: 0,
+                total_spent: 0,
+                last_order: "Newly Added"
+            });
+        }
+    } catch {
+        customersList.unshift({
+            id: `USR-${Math.floor(1000 + Math.random() * 9000)}`,
+            name,
+            phone: phone || "—",
+            email: email || "—",
+            address: pickup_store ? `${address} [Pickup: ${pickup_store}]` : (address || "Doorstep Address"),
+            orders_count: 0,
+            total_spent: 0,
+            last_order: "Newly Added"
+        });
+    }
+
+    closeAddCustomerModal();
+    renderCustomers(customersList);
+    alert(`✓ Customer "${name}" added successfully!`);
+}
+
+function openEditCustomerModal(id) {
+    const cust = customersList.find(c => c.id == id);
+    if (!cust) return;
+
+    document.getElementById("editCustTargetId").value = id;
+    document.getElementById("editCustName").value = cust.name || "";
+    document.getElementById("editCustPhone").value = cust.phone != "—" ? cust.phone : "";
+    document.getElementById("editCustEmail").value = cust.email != "—" ? cust.email : "";
+    document.getElementById("editCustAddress").value = cust.address || "";
+    
+    const sel = document.getElementById("editCustPickup");
+    sel.value = "";
+    for (let opt of sel.options) {
+        if (opt.value && cust.address && cust.address.includes(opt.value)) {
+            sel.value = opt.value;
+            break;
+        }
+    }
+
+    document.getElementById("editCustomerModal").style.display = "flex";
+}
+
+function closeEditCustomerModal() {
+    document.getElementById("editCustomerModal").style.display = "none";
+}
+
+async function handleEditCustomerSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById("editCustTargetId").value;
+    const name = document.getElementById("editCustName").value.trim();
+    const phone = document.getElementById("editCustPhone").value.trim();
+    const email = document.getElementById("editCustEmail").value.trim();
+    const address = document.getElementById("editCustAddress").value.trim();
+    const pickup_store = document.getElementById("editCustPickup").value;
+
+    const cust = customersList.find(c => c.id == id);
+    if (cust) {
+        cust.name = name;
+        cust.phone = phone;
+        cust.email = email;
+        cust.address = pickup_store ? `${address} [Pickup: ${pickup_store}]` : address;
+    }
+
+    try {
+        await fetch(`/api/admin/customers/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ name, phone, email, address, pickup_store })
+        });
+    } catch {}
+
+    closeEditCustomerModal();
+    renderCustomers(customersList);
+    alert(`✓ Customer "${name}" (${id}) updated successfully!`);
 }
 
 loadCustomers();
