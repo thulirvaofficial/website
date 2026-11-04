@@ -184,6 +184,13 @@
                             <option value="last_month">🟡 Paid Last Month</option>
                             <option value="older">⚪ Older Months</option>
                         </select>
+                        <button class="action-btn" onclick="loadSubscriptions(false)" style="background:var(--green); color:white; padding:8px 14px; border-radius:6px; font-weight:700; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                            ↻ Refresh Live Data
+                        </button>
+                        <span style="font-size:11px; color:#2e7d32; font-weight:700; background:#e8f5e9; border:1px solid #c8e6c9; border-radius:20px; padding:4px 10px; display:inline-flex; align-items:center; gap:5px;">
+                            <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#2e7d32;"></span>
+                            Real-time Sync Active
+                        </span>
                     </div>
                 </div>
 
@@ -358,6 +365,8 @@ let currentUploadedImageBase64 = "";
 async function init() {
     await loadPlans();
     await loadSubscriptions();
+    // 10-second real-time automatic polling
+    setInterval(() => loadSubscriptions(true), 10000);
 }
 
 function switchTab(tab) {
@@ -598,16 +607,24 @@ async function deletePlan(id) {
 }
 
 /* REAL-TIME SUBSCRIBERS (NO FAKE RECORDS) */
-async function loadSubscriptions() {
-    subsList = [];
+async function loadSubscriptions(isBackground = false) {
     try {
-        const res = await fetch("/api/subscriptions");
+        let res = await fetch("/api/subscriptions/admin/all");
+        if (!res.ok) {
+            res = await fetch("/api/subscriptions");
+        }
         const data = await res.json();
-        if (data.subscriptions && data.subscriptions.length) {
+        if (data.subscriptions && Array.isArray(data.subscriptions)) {
             subsList = data.subscriptions;
         }
     } catch {
-        subsList = [];
+        try {
+            const res2 = await fetch("/api/subscriptions");
+            const data2 = await res2.json();
+            if (data2.subscriptions && Array.isArray(data2.subscriptions)) {
+                subsList = data2.subscriptions;
+            }
+        } catch (_) {}
     }
 
     // Merge from local storage subscriptions if created in this browser
@@ -618,7 +635,7 @@ async function loadSubscriptions() {
         }
     });
 
-    renderSubscriptions(subsList);
+    filterSubscriptions();
 }
 
 let currentRenderedSubs = [];
