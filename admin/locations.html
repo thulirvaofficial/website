@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THULIRVA Admin — Delivery Locations & Coverage</title>
+    <title>THULIRVA Admin — Locations & Pickup Stores</title>
     <link rel="stylesheet" href="css/admin.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,6 +58,21 @@
             justify-content: center;
             font-size: 22px;
         }
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            font-weight: 700;
+            font-size: 14px;
+            color: #556B5D;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            color: #1a4a2e;
+            border-bottom-color: #1a4a2e;
+        }
     </style>
 </head>
 <body>
@@ -76,8 +91,9 @@
         <a href="subscriptions.html">🔄 Subscriptions</a>
         <a href="orders.html">📦 Orders</a>
         <a href="customers.html">👥 Customers</a>
-        <a href="locations.html" class="active">📍 Delivery Locations</a>
+        <a href="locations.html" class="active">📍 Delivery & Pickup</a>
         <a href="coupons.html">🎟️ Promo Codes</a>
+        <a href="notifications.html">📢 News & Notifications</a>
         <a href="recipes.html">🍳 Recipes</a>
         <a href="/" target="_blank">🌐 View Website ↗</a>
 
@@ -89,11 +105,11 @@
     <main class="admin-main">
         <div class="admin-header">
             <div>
-                <h1 style="font-family:'Playfair Display',serif; font-size: 26px;">Delivery Locations & Coverage</h1>
-                <p>Manage available doorstep delivery areas for daily milk subscription & direct orders.</p>
+                <h1 style="font-family:'Playfair Display',serif; font-size: 26px;">Delivery Locations & Store Pickup</h1>
+                <p>Manage daily doorstep delivery zones and physical farm store pickup counters.</p>
             </div>
             <div style="display:flex; gap:12px; align-items:center;">
-                <button class="add-btn" onclick="openAddModal()">＋ Add New Location</button>
+                <button class="add-btn" id="primaryAddBtn" onclick="openActiveAddModal()">＋ Add Location</button>
                 <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
         </div>
@@ -103,15 +119,15 @@
             <div class="stat-card-item">
                 <div class="stat-card-icon">📍</div>
                 <div>
-                    <div style="font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase;">Total Locations</div>
+                    <div style="font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase;">Delivery Zones</div>
                     <div id="statTotalLocations" style="font-size:22px; font-weight:700; color:var(--text); margin-top:2px;">11</div>
                 </div>
             </div>
             <div class="stat-card-item">
-                <div class="stat-card-icon" style="background:#E8F5E9; color:#2E7D32;">✅</div>
+                <div class="stat-card-icon" style="background:#E8F5E9; color:#2E7D32;">🏪</div>
                 <div>
-                    <div style="font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase;">Active Service Areas</div>
-                    <div id="statActiveLocations" style="font-size:22px; font-weight:700; color:#2E7D32; margin-top:2px;">11</div>
+                    <div style="font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase;">Pickup Stores</div>
+                    <div id="statTotalStores" style="font-size:22px; font-weight:700; color:#2E7D32; margin-top:2px;">3</div>
                 </div>
             </div>
             <div class="stat-card-item">
@@ -123,7 +139,14 @@
             </div>
         </div>
 
-        <div class="admin-panel">
+        <!-- TAB NAVIGATION -->
+        <div style="display:flex; gap:10px; border-bottom:1px solid var(--border); margin-bottom:20px; background:white; border-radius:10px 10px 0 0; padding:4px 16px 0;">
+            <button class="tab-btn active" id="tabDelivery" onclick="switchTab('delivery')">📍 Doorstep Delivery Areas</button>
+            <button class="tab-btn" id="tabPickup" onclick="switchTab('pickup')">🏪 Store Pickup Branches</button>
+        </div>
+
+        <!-- 1. DELIVERY AREAS PANEL -->
+        <div class="admin-panel" id="deliveryPanel">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap:wrap; gap:10px;">
                 <h2>Configured Delivery Areas (<span id="totalLocationsCount">0</span>)</h2>
                 <div style="display: flex; gap: 10px;">
@@ -138,72 +161,191 @@
                         <th>Delivery Area / Location</th>
                         <th>Pincode</th>
                         <th>Coverage Status</th>
-                        <th>Slot Available</th>
+                        <th>Delivery Timing</th>
                         <th style="text-align: right;">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="locationsTable">
-                    <!-- Dynamic Rows -->
+                    <tr><td colspan="6" style="text-align:center; padding:30px;">Loading locations...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 2. PICKUP STORES PANEL -->
+        <div class="admin-panel" id="pickupPanel" style="display:none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap:wrap; gap:10px;">
+                <div>
+                    <h2>Active Pickup Stores & Branches (<span id="totalStoresCount">0</span>)</h2>
+                    <p style="font-size:12.5px; color:var(--muted); margin-top:2px;">Customers can select these stores during app & website checkout for express self-pickup.</p>
+                </div>
+                <button class="add-btn" onclick="openAddStoreModal()">＋ Add Pickup Store</button>
+            </div>
+
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;"># ID</th>
+                        <th>Store Name</th>
+                        <th>Address & City</th>
+                        <th>Contact Phone</th>
+                        <th>Timings</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="storesTable">
+                    <tr><td colspan="7" style="text-align:center; padding:30px;">Loading pickup stores...</td></tr>
                 </tbody>
             </table>
         </div>
     </main>
 </div>
 
-<!-- ADD / EDIT LOCATION MODAL -->
-<div class="modal-overlay" id="locationModal">
-    <div class="modal-box" style="max-width: 480px;">
-        <div class="modal-header">
-            <h3 id="modalTitle">Add New Delivery Location</h3>
-            <button class="modal-close" onclick="closeModal()">✕</button>
-        </div>
-        <div class="modal-body">
-            <form id="locationForm" onsubmit="handleLocationSubmit(event)">
-                <input type="hidden" id="locId">
-                <div class="form-grid">
-                    <div class="form-field full">
-                        <label>Location / Area Name * <small style="color:var(--muted);">(e.g. Oragadam, Porur, Maduravoyal)</small></label>
-                        <input type="text" id="locName" required placeholder="Enter area name">
-                    </div>
-                    <div class="form-field">
-                        <label>Postal Pincode</label>
-                        <input type="text" id="locPincode" placeholder="e.g. 600116" maxlength="6">
-                    </div>
-                    <div class="form-field">
-                        <label>Status</label>
-                        <select id="locStatus">
-                            <option value="active">Active (Available for delivery)</option>
-                            <option value="inactive">Inactive (Temporarily suspended)</option>
-                        </select>
-                    </div>
+<!-- MODAL: ADD/EDIT DELIVERY LOCATION -->
+<div class="modal-overlay" id="locationModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; width: 440px; max-width: 90%; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+        <h3 id="modalTitle" style="font-family:'Playfair Display',serif; margin-bottom: 16px; font-size:20px;">Add Delivery Location</h3>
+        <form id="locationForm" onsubmit="saveLocation(event)">
+            <input type="hidden" id="locId">
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Area / Locality Name *</label>
+                <input type="text" id="locName" required placeholder="e.g. Kanchipuram West, Anna Nagar" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; box-sizing:border-box;">
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Postal Pincode *</label>
+                <input type="text" id="locPincode" required placeholder="e.g. 631601 or 600040" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; box-sizing:border-box;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Status</label>
+                <select id="locStatus" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; box-sizing:border-box;">
+                    <option value="active">Active (Delivering Daily)</option>
+                    <option value="inactive">Inactive (Temporarily Paused)</option>
+                </select>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="action-btn" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="add-btn" style="padding:8px 16px;">Save Location</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: ADD/EDIT PICKUP STORE -->
+<div class="modal-overlay" id="storeModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; width: 480px; max-width: 92%; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); max-height:90vh; overflow-y:auto;">
+        <h3 id="storeModalTitle" style="font-family:'Playfair Display',serif; margin-bottom: 16px; font-size:20px;">Add Pickup Store</h3>
+        <form id="storeForm" onsubmit="saveStore(event)">
+            <input type="hidden" id="storeId">
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px;">Store Name *</label>
+                <input type="text" id="storeName" required placeholder="e.g. Thulirva Anna Nagar" style="width:100%; padding:9px; border:1px solid var(--border); border-radius:6px; box-sizing:border-box;">
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px;">Full Address *</label>
+                <textarea id="storeAddress" required rows="2" placeholder="Street, Building, Landmark" style="width:100%; padding:9px; border:1px solid var(--border); border-radius:6px; box-sizing:border-box;"></textarea>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+                <div>
+                    <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">City</label>
+                    <input type="text" id="storeCity" value="Chennai" style="width:100%; padding:9px; border:1px solid var(--border); border-radius:6px; box-sizing:border-box;">
                 </div>
-                <div class="modal-footer" style="margin-top:20px;">
-                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="add-btn" id="modalSubmitBtn">Save Location</button>
+                <div>
+                    <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">PIN Code</label>
+                    <input type="text" id="storePincode" value="600042" style="width:100%; padding:9px; border:1px solid var(--border); border-radius:6px; box-sizing:border-box;">
                 </div>
-            </form>
-        </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Contact Phone</label>
+                <input type="text" id="storePhone" value="+91 79048 80944" style="width:100%; padding:9px; border:1px solid var(--border); border-radius:6px; box-sizing:border-box;">
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Operating Timings</label>
+                <input type="text" id="storeTimings" value="6:30 AM - 9:00 PM (All 7 Days)" style="width:100%; padding:9px; border:1px solid var(--border); border-radius:6px; box-sizing:border-box;">
+            </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Status</label>
+                <select id="storeStatus" style="width:100%; padding:9px; border:1px solid var(--border); border-radius:6px; box-sizing:border-box;">
+                    <option value="active">Active (Available for Pickup)</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="action-btn" onclick="closeStoreModal()">Cancel</button>
+                <button type="submit" class="add-btn" style="padding:8px 16px;">Save Store</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <script>
-const token = localStorage.getItem("thulirva_admin_token");
+let currentTab = 'delivery';
 let locationsList = [];
+let storesList = [];
 
 const DEFAULT_LOCATIONS = [
-    { id: 1, name: "Oragadam", pincode: "603109", status: "active" },
-    { id: 2, name: "Padapai", pincode: "601301", status: "active" },
-    { id: 3, name: "Sriperumbudur", pincode: "602105", status: "active" },
-    { id: 4, name: "Valasaravakkam", pincode: "600087", status: "active" },
-    { id: 5, name: "Porur", pincode: "600116", status: "active" },
-    { id: 6, name: "Virugambakkam", pincode: "600092", status: "active" },
-    { id: 7, name: "Vadapalani", pincode: "600026", status: "active" },
-    { id: 8, name: "Koyambedu", pincode: "600107", status: "active" },
-    { id: 9, name: "KK Nagar", pincode: "600078", status: "active" },
-    { id: 10, name: "Alapakkam", pincode: "600116", status: "active" },
-    { id: 11, name: "Maduravoyal", pincode: "600095", status: "active" }
+    { id: 1, name: "Thimmarajampettai", pincode: "631601", status: "active" },
+    { id: 2, name: "Kanchipuram Main Town", pincode: "631501", status: "active" },
+    { id: 3, name: "Anna Nagar", pincode: "600040", status: "active" },
+    { id: 4, name: "T Nagar", pincode: "600017", status: "active" },
+    { id: 5, name: "Velachery", pincode: "600042", status: "active" },
+    { id: 6, name: "Adyar", pincode: "600020", status: "active" }
 ];
 
+const DEFAULT_STORES = [
+    {
+        id: 1,
+        name: "Thulirva Main Branch",
+        address: "No 1, Mayana Salai, Thimmarajampettai",
+        city: "Kanchipuram",
+        pincode: "631601",
+        phone: "+91 93606 71533",
+        timings: "7:00 AM - 8:00 PM (All 7 Days)",
+        status: "active"
+    },
+    {
+        id: 2,
+        name: "Thulirva Anna Nagar",
+        address: "Plot 42, 2nd Avenue, Near Roundtana, Anna Nagar",
+        city: "Chennai",
+        pincode: "600040",
+        phone: "+91 79048 80944",
+        timings: "6:30 AM - 9:00 PM (All 7 Days)",
+        status: "active"
+    },
+    {
+        id: 3,
+        name: "Thulirva Velachery",
+        address: "No 18, Velachery Main Road, Near Vijaya Nagar Bus Stand",
+        city: "Chennai",
+        pincode: "600042",
+        phone: "+91 79048 80944",
+        timings: "6:30 AM - 9:00 PM (All 7 Days)",
+        status: "active"
+    }
+];
+
+function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tabDelivery').classList.toggle('active', tab === 'delivery');
+    document.getElementById('tabPickup').classList.toggle('active', tab === 'pickup');
+    document.getElementById('deliveryPanel').style.display = tab === 'delivery' ? 'block' : 'none';
+    document.getElementById('pickupPanel').style.display = tab === 'pickup' ? 'block' : 'none';
+
+    const addBtn = document.getElementById('primaryAddBtn');
+    addBtn.innerText = tab === 'delivery' ? '＋ Add Location' : '＋ Add Store';
+}
+
+function openActiveAddModal() {
+    if (currentTab === 'delivery') {
+        openAddModal();
+    } else {
+        openAddStoreModal();
+    }
+}
+
+/* ============================================================
+   DELIVERY LOCATIONS FUNCTIONS
+============================================================ */
 async function loadLocations() {
     try {
         const res = await fetch("/api/locations");
@@ -218,39 +360,29 @@ async function loadLocations() {
             locationsList = getStoredOrDefaults();
         }
     } catch (err) {
-        console.warn("Could not fetch remote locations, using fallback:", err);
         locationsList = getStoredOrDefaults();
     }
 
-    saveToStorage(locationsList);
-    updateStats();
     renderLocations(locationsList);
+    updateStats();
 }
 
 function getStoredOrDefaults() {
     try {
-        const stored = localStorage.getItem("thulirva_delivery_locations");
-        if (stored) {
-            const parsed = JSON.parse(stored);
-            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        const s = localStorage.getItem("thulirva_delivery_locations");
+        if (s) {
+            const p = JSON.parse(s);
+            if (Array.isArray(p) && p.length > 0) return p;
         }
     } catch (e) {}
     return [...DEFAULT_LOCATIONS];
 }
 
-function saveToStorage(list) {
-    try {
-        localStorage.setItem("thulirva_delivery_locations", JSON.stringify(list));
-    } catch (e) {}
-}
-
 function updateStats() {
-    const total = locationsList.length;
-    const active = locationsList.filter(l => l.status === "active").length;
-    
-    document.getElementById("statTotalLocations").innerText = total;
-    document.getElementById("statActiveLocations").innerText = active;
-    document.getElementById("totalLocationsCount").innerText = total;
+    document.getElementById("statTotalLocations").innerText = locationsList.length;
+    document.getElementById("totalLocationsCount").innerText = locationsList.length;
+    document.getElementById("statTotalStores").innerText = storesList.length;
+    document.getElementById("totalStoresCount").innerText = storesList.length;
 }
 
 function renderLocations(list) {
@@ -267,9 +399,7 @@ function renderLocations(list) {
         return `
             <tr>
                 <td style="font-weight:600; color:var(--muted);">#${l.id || (index + 1)}</td>
-                <td style="font-weight:700; color:var(--text); font-size:14.5px;">
-                    📍 ${l.name}
-                </td>
+                <td style="font-weight:700; color:var(--text); font-size:14.5px;">📍 ${l.name}</td>
                 <td style="font-family:monospace; font-size:13px; color:var(--muted);">${l.pincode || "—"}</td>
                 <td>
                     <span class="${isActive ? 'badge-active' : 'badge-inactive'}">
@@ -279,11 +409,11 @@ function renderLocations(list) {
                 <td style="font-size:12.5px; color:#555;">Early Morning (5:30 - 7:30 AM)</td>
                 <td style="text-align: right;">
                     <div style="display:inline-flex; gap:6px; align-items:center;">
-                        <button class="action-btn" style="background:#f4f6f0; color:#2e7d32;" title="Toggle Status" onclick="toggleLocationStatus(${l.id})">
+                        <button class="action-btn" style="background:#f4f6f0; color:#2e7d32;" onclick="toggleLocationStatus(${l.id})">
                             ${isActive ? '⏸ Pause' : '▶ Activate'}
                         </button>
-                        <button class="action-btn" title="Edit" onclick="openEditModal(${l.id})">✏️ Edit</button>
-                        <button class="action-btn delete-btn" title="Delete" onclick="deleteLocation(${l.id})">🗑 Delete</button>
+                        <button class="action-btn" onclick="openEditModal(${l.id})">✏️ Edit</button>
+                        <button class="action-btn delete-btn" onclick="deleteLocation(${l.id})">🗑 Delete</button>
                     </div>
                 </td>
             </tr>
@@ -299,89 +429,71 @@ function filterLocations() {
     }
     const filtered = locationsList.filter(l => 
         (l.name && l.name.toLowerCase().includes(query)) ||
-        (l.pincode && l.pincode.toLowerCase().includes(query))
+        (l.pincode && l.pincode.toString().includes(query))
     );
     renderLocations(filtered);
 }
 
 function openAddModal() {
-    document.getElementById("modalTitle").innerText = "Add New Delivery Location";
-    document.getElementById("modalSubmitBtn").innerText = "Add Location";
+    document.getElementById("modalTitle").innerText = "Add Delivery Location";
     document.getElementById("locId").value = "";
     document.getElementById("locName").value = "";
     document.getElementById("locPincode").value = "";
     document.getElementById("locStatus").value = "active";
-    document.getElementById("locationModal").classList.add("active");
+    document.getElementById("locationModal").style.display = "flex";
 }
 
 function openEditModal(id) {
     const loc = locationsList.find(l => l.id == id);
     if (!loc) return;
-
     document.getElementById("modalTitle").innerText = "Edit Delivery Location";
-    document.getElementById("modalSubmitBtn").innerText = "Update Location";
     document.getElementById("locId").value = loc.id;
-    document.getElementById("locName").value = loc.name;
+    document.getElementById("locName").value = loc.name || "";
     document.getElementById("locPincode").value = loc.pincode || "";
     document.getElementById("locStatus").value = loc.status || "active";
-    document.getElementById("locationModal").classList.add("active");
+    document.getElementById("locationModal").style.display = "flex";
 }
 
 function closeModal() {
-    document.getElementById("locationModal").classList.remove("active");
+    document.getElementById("locationModal").style.display = "none";
 }
 
-async function handleLocationSubmit(e) {
+async function saveLocation(e) {
     e.preventDefault();
     const id = document.getElementById("locId").value;
     const name = document.getElementById("locName").value.trim();
     const pincode = document.getElementById("locPincode").value.trim();
     const status = document.getElementById("locStatus").value;
 
-    if (!name) {
-        alert("Please enter a location name.");
+    if (!name || !pincode) {
+        alert("Please provide both area name and pincode.");
         return;
     }
 
     if (id) {
-        // Edit existing
+        const idx = locationsList.findIndex(l => l.id == id);
+        if (idx !== -1) {
+            locationsList[idx] = { ...locationsList[idx], name, pincode, status };
+        }
         try {
             await fetch(`/api/locations/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, pincode, status })
             });
-        } catch (err) {}
-
-        const idx = locationsList.findIndex(l => l.id == id);
-        if (idx !== -1) {
-            locationsList[idx] = { ...locationsList[idx], name, pincode, status };
-        }
-        alert("Location updated successfully!");
+        } catch (_) {}
     } else {
-        // Create new
-        let createdLoc = null;
+        const newId = locationsList.length ? Math.max(...locationsList.map(l => Number(l.id) || 0)) + 1 : 1;
+        locationsList.push({ id: newId, name, pincode, status });
         try {
-            const res = await fetch("/api/locations", {
+            await fetch("/api/locations", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, pincode, status })
             });
-            if (res.ok) {
-                const data = await res.json();
-                if (data.location) createdLoc = data.location;
-            }
-        } catch (err) {}
-
-        if (!createdLoc) {
-            const newId = locationsList.length ? Math.max(...locationsList.map(l => Number(l.id) || 0)) + 1 : 1;
-            createdLoc = { id: newId, name, pincode, status };
-        }
-        locationsList.push(createdLoc);
-        alert("New delivery location added successfully!");
+        } catch (_) {}
     }
 
-    saveToStorage(locationsList);
     closeModal();
     updateStats();
     renderLocations(locationsList);
@@ -390,33 +502,184 @@ async function handleLocationSubmit(e) {
 async function toggleLocationStatus(id) {
     const loc = locationsList.find(l => l.id == id);
     if (!loc) return;
-    const newStatus = loc.status === "active" ? "inactive" : "active";
-    loc.status = newStatus;
-
+    loc.status = loc.status === "active" ? "inactive" : "active";
     try {
         await fetch(`/api/locations/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: newStatus })
+            body: JSON.stringify({ status: loc.status })
         });
-    } catch (e) {}
-
-    saveToStorage(locationsList);
+    } catch (_) {}
     updateStats();
     renderLocations(locationsList);
 }
 
 async function deleteLocation(id) {
     if (!confirm("Are you sure you want to remove this delivery location?")) return;
-
     try {
         await fetch(`/api/locations/${id}`, { method: "DELETE" });
-    } catch (e) {}
-
+    } catch (_) {}
     locationsList = locationsList.filter(l => l.id != id);
-    saveToStorage(locationsList);
     updateStats();
     renderLocations(locationsList);
+}
+
+/* ============================================================
+   PICKUP STORES FUNCTIONS
+============================================================ */
+async function loadStores() {
+    try {
+        const res = await fetch("/api/pickup/stores");
+        if (res.ok) {
+            const data = await res.json();
+            if (data.stores && data.stores.length > 0) {
+                storesList = data.stores;
+            } else {
+                storesList = [...DEFAULT_STORES];
+            }
+        } else {
+            storesList = [...DEFAULT_STORES];
+        }
+    } catch (_) {
+        storesList = [...DEFAULT_STORES];
+    }
+    renderStores(storesList);
+    updateStats();
+}
+
+function renderStores(list) {
+    const tbody = document.getElementById("storesTable");
+    if (!tbody) return;
+
+    if (!list || list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--muted);">No pickup stores configured yet.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = list.map((s, idx) => {
+        const isActive = s.status === 'active';
+        return `
+            <tr>
+                <td style="font-weight:600; color:var(--muted);">#${s.id || (idx + 1)}</td>
+                <td style="font-weight:700; color:var(--text); font-size:14.5px;">🏪 ${s.name}</td>
+                <td style="font-size:13px; color:#555;">${s.address}, ${s.city || 'Chennai'} - ${s.pincode || '600042'}</td>
+                <td style="font-family:monospace; font-size:13px; color:#1a4a2e; font-weight:700;">${s.phone || '—'}</td>
+                <td style="font-size:12px; color:#666;">${s.timings || '7:00 AM - 8:00 PM'}</td>
+                <td>
+                    <span class="${isActive ? 'badge-active' : 'badge-inactive'}">
+                        ● ${isActive ? 'Active' : 'Inactive'}
+                    </span>
+                </td>
+                <td style="text-align: right;">
+                    <div style="display:inline-flex; gap:6px; align-items:center;">
+                        <button class="action-btn" style="background:#f4f6f0; color:#2e7d32;" onclick="toggleStoreStatus(${s.id})">
+                            ${isActive ? '⏸ Pause' : '▶ Activate'}
+                        </button>
+                        <button class="action-btn" onclick="openEditStoreModal(${s.id})">✏️ Edit</button>
+                        <button class="action-btn delete-btn" onclick="deleteStore(${s.id})">🗑 Delete</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+function openAddStoreModal() {
+    document.getElementById("storeModalTitle").innerText = "Add Pickup Store";
+    document.getElementById("storeId").value = "";
+    document.getElementById("storeName").value = "";
+    document.getElementById("storeAddress").value = "";
+    document.getElementById("storeCity").value = "Chennai";
+    document.getElementById("storePincode").value = "600042";
+    document.getElementById("storePhone").value = "+91 79048 80944";
+    document.getElementById("storeTimings").value = "6:30 AM - 9:00 PM (All 7 Days)";
+    document.getElementById("storeStatus").value = "active";
+    document.getElementById("storeModal").style.display = "flex";
+}
+
+function openEditStoreModal(id) {
+    const s = storesList.find(st => st.id == id);
+    if (!s) return;
+    document.getElementById("storeModalTitle").innerText = "Edit Pickup Store";
+    document.getElementById("storeId").value = s.id;
+    document.getElementById("storeName").value = s.name || "";
+    document.getElementById("storeAddress").value = s.address || "";
+    document.getElementById("storeCity").value = s.city || "Chennai";
+    document.getElementById("storePincode").value = s.pincode || "600042";
+    document.getElementById("storePhone").value = s.phone || "+91 79048 80944";
+    document.getElementById("storeTimings").value = s.timings || "6:30 AM - 9:00 PM (All 7 Days)";
+    document.getElementById("storeStatus").value = s.status || "active";
+    document.getElementById("storeModal").style.display = "flex";
+}
+
+function closeStoreModal() {
+    document.getElementById("storeModal").style.display = "none";
+}
+
+async function saveStore(e) {
+    e.preventDefault();
+    const id = document.getElementById("storeId").value;
+    const name = document.getElementById("storeName").value.trim();
+    const address = document.getElementById("storeAddress").value.trim();
+    const city = document.getElementById("storeCity").value.trim();
+    const pincode = document.getElementById("storePincode").value.trim();
+    const phone = document.getElementById("storePhone").value.trim();
+    const timings = document.getElementById("storeTimings").value.trim();
+    const status = document.getElementById("storeStatus").value;
+
+    if (!name || !address) {
+        alert("Please enter store name and address.");
+        return;
+    }
+
+    const payload = { name, address, city, pincode, phone, timings, status };
+
+    if (id) {
+        const idx = storesList.findIndex(st => st.id == id);
+        if (idx !== -1) storesList[idx] = { ...storesList[idx], ...payload };
+        try {
+            await fetch(`/api/pickup/stores/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+        } catch (_) {}
+    } else {
+        const newId = storesList.length ? Math.max(...storesList.map(st => Number(st.id) || 0)) + 1 : 1;
+        storesList.push({ id: newId, ...payload });
+        try {
+            await fetch("/api/pickup/stores", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+        } catch (_) {}
+    }
+
+    closeStoreModal();
+    updateStats();
+    renderStores(storesList);
+}
+
+async function toggleStoreStatus(id) {
+    const s = storesList.find(st => st.id == id);
+    if (!s) return;
+    s.status = s.status === 'active' ? 'inactive' : 'active';
+    try {
+        await fetch(`/api/pickup/stores/${id}/toggle`, { method: "PUT" });
+    } catch (_) {}
+    updateStats();
+    renderStores(storesList);
+}
+
+async function deleteStore(id) {
+    if (!confirm("Are you sure you want to delete this pickup store?")) return;
+    try {
+        await fetch(`/api/pickup/stores/${id}`, { method: "DELETE" });
+    } catch (_) {}
+    storesList = storesList.filter(st => st.id != id);
+    updateStats();
+    renderStores(storesList);
 }
 
 function logout() {
@@ -424,7 +687,10 @@ function logout() {
     window.location.href = "index.html";
 }
 
-document.addEventListener("DOMContentLoaded", loadLocations);
+document.addEventListener("DOMContentLoaded", () => {
+    loadLocations();
+    loadStores();
+});
 </script>
 
 </body>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THULIRVA Admin — News & Announcements</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        .badge-active { background: #E8F5E9; color: #2E7D32; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .badge-inactive { background: #FFEBEE; color: #C62828; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .announcement-card {
+            background: white;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        .announcement-badge {
+            display: inline-block;
+            background: #eaf2e4;
+            color: #1a4a2e;
+            font-weight: 700;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        .announcement-title {
+            font-weight: 800;
+            font-size: 16px;
+            color: var(--forest-green, #1a4a2e);
+            margin-bottom: 6px;
+        }
+        .announcement-text {
+            color: #4a5d4e;
+            font-size: 13.5px;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+        .announcement-meta {
+            font-size: 11.5px;
+            color: var(--muted, #6E8072);
+        }
+        .btn-action-sm {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <img src="/admin/images/logo.png" alt="THULIRVA" onerror="this.src='images/logo.png'">
+                <div>
+                    <h2>THULIRVA</h2>
+                    <span style="font-size:11px; color:var(--gold); letter-spacing:1px; text-transform:uppercase;">Admin Portal</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html">📊 Dashboard</a>
+                <a href="orders.html">📦 Orders & Verification</a>
+                <a href="products.html">🥛 Products & Stock</a>
+                <a href="categories.html">🏷️ Categories</a>
+                <a href="subscriptions.html">📅 Subscriptions</a>
+                <a href="customers.html">👥 Customers</a>
+                <a href="coupons.html">🎟️ Coupons & Offers</a>
+                <a href="locations.html">📍 Delivery Zones</a>
+                <a href="notifications.html" class="active">📢 News & Notifications</a>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="admin-main">
+            <div class="admin-header">
+                <div>
+                    <h1 style="font-family:'Playfair Display',serif; font-size: 26px;">News & Announcements</h1>
+                    <p style="color:var(--muted); font-size:14px; margin-top:4px;">Publish news, announcements and push notifications to all registered customers with Customer App installed.</p>
+                </div>
+                <button onclick="document.getElementById('broadcastCard').scrollIntoView({behavior:'smooth'})" class="btn" style="background:#1a4a2e; color:white; padding:10px 18px; border-radius:8px; font-weight:700; border:none; cursor:pointer;">
+                    + Create Announcement
+                </button>
+            </div>
+
+            <!-- BROADCAST / PUBLISH FORM -->
+            <div class="card" id="broadcastCard" style="margin-bottom:28px;">
+                <h3 style="margin-bottom:16px; font-size:17px; color:var(--dark-green);">📢 Broadcast Announcement to Customers</h3>
+                <form id="broadcastForm" onsubmit="handleBroadcast(event)">
+                    <div style="display:grid; grid-template-columns: 2fr 1fr; gap:16px; margin-bottom:16px;">
+                        <div>
+                            <label style="display:block; font-size:12.5px; font-weight:700; margin-bottom:6px;">Announcement Title *</label>
+                            <input type="text" id="annTitle" placeholder="e.g. 🌾 Fresh Morning Milk Batch Ready!" required style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px;">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:12.5px; font-weight:700; margin-bottom:6px;">Badge Tag</label>
+                            <select id="annBadge" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px;">
+                                <option value="Farm Update">Farm Update</option>
+                                <option value="Announcement">Announcement</option>
+                                <option value="Special Release">Special Release</option>
+                                <option value="Offer">Special Offer</option>
+                                <option value="Notice">Notice</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <label style="display:block; font-size:12.5px; font-weight:700; margin-bottom:6px;">Message Content *</label>
+                        <textarea id="annMessage" rows="3" placeholder="Enter detailed announcement message for customers..." required style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px;"></textarea>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; cursor:pointer;">
+                            <input type="checkbox" id="sendPushCheck" checked style="width:16px; height:16px;">
+                            Deliver push notification to all installed customer devices
+                        </label>
+                        <button type="submit" id="submitBtn" style="background:#1a4a2e; color:white; border:none; padding:10px 22px; border-radius:8px; font-weight:700; cursor:pointer;">
+                            Publish & Broadcast
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ANNOUNCEMENTS LIST -->
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <h3 style="font-size:17px; color:var(--dark-green);">Published Announcements</h3>
+                    <button onclick="loadAnnouncements()" style="background:#f4f9f2; border:1px solid #c8dbbf; color:#1a4a2e; padding:6px 12px; border-radius:6px; font-weight:700; cursor:pointer;">
+                        🔄 Refresh
+                    </button>
+                </div>
+
+                <div id="announcementsList">
+                    <p style="color:var(--muted); text-align:center; padding:20px;">Loading announcements...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem("thulirva_admin_token") || "";
+
+        async function loadAnnouncements() {
+            const listEl = document.getElementById("announcementsList");
+            try {
+                const res = await fetch("/api/notifications/admin/all", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+                const items = data.announcements || [];
+
+                if (!items.length) {
+                    listEl.innerHTML = '<p style="color:var(--muted); text-align:center; padding:30px;">No announcements created yet. Create one above to broadcast to all customers.</p>';
+                    return;
+                }
+
+                listEl.innerHTML = items.map(a => `
+                    <div class="announcement-card">
+                        <div style="flex:1;">
+                            <span class="announcement-badge">${a.badge || 'Update'}</span>
+                            <div class="announcement-title">${a.title}</div>
+                            <div class="announcement-text">${a.message}</div>
+                            <div class="announcement-meta">Published: ${new Date(a.created_at || a.createdAt || Date.now()).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })} &bull; Target: All Registered Families</div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            <button onclick="deleteAnnouncement(${a.id})" class="btn-action-sm" style="background:#fde8e8; color:#c62828;">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
+                `).join("");
+            } catch (err) {
+                listEl.innerHTML = `<p style="color:#c62828; text-align:center; padding:20px;">Failed to load announcements: ${err.message}</p>`;
+            }
+        }
+
+        async function handleBroadcast(e) {
+            e.preventDefault();
+            const btn = document.getElementById("submitBtn");
+            btn.disabled = true;
+            btn.textContent = "Publishing...";
+
+            const title = document.getElementById("annTitle").value.trim();
+            const message = document.getElementById("annMessage").value.trim();
+            const badge = document.getElementById("annBadge").value;
+            const sendPush = document.getElementById("sendPushCheck").checked;
+
+            try {
+                const res = await fetch("/api/notifications/admin/broadcast", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ title, message, badge, send_push: sendPush })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("✓ Announcement successfully published and broadcast sent to all registered customers!");
+                    document.getElementById("broadcastForm").reset();
+                    loadAnnouncements();
+                } else {
+                    alert("Error: " + (data.message || "Failed to publish"));
+                }
+            } catch (err) {
+                alert("Network error: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Publish & Broadcast";
+            }
+        }
+
+        async function deleteAnnouncement(id) {
+            if (!confirm(`Delete announcement #${id}?`)) return;
+            try {
+                const res = await fetch(`/api/notifications/admin/${id}`, {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadAnnouncements();
+                } else {
+                    alert("Error: " + (data.message || "Failed to delete"));
+                }
+            } catch (err) {
+                alert("Network error: " + err.message);
+            }
+        }
+
+        loadAnnouncements();
+    </script>
+</body>
+</html>

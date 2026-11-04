@@ -13,7 +13,7 @@ function saveBase64Image(image) {
             if (matches) {
                 const ext = matches[1].includes("jpeg") ? "jpg" : (matches[1].includes("png") ? "png" : "jpg");
                 const buffer = Buffer.from(matches[2], "base64");
-                const uploadsDir = path.join(__dirname, "..", "..", "website", "assets", "images", "uploads");
+                const uploadsDir = path.resolve(__dirname, "..", "..", "website", "website", "assets", "images", "uploads");
                 if (!fs.existsSync(uploadsDir)) {
                     fs.mkdirSync(uploadsDir, { recursive: true });
                 }
@@ -480,6 +480,27 @@ const updateSubStatusHandler = async (req, res) => {
     });
 };
 
+/* CANCEL SUBSCRIPTION (Admin & Customer) */
+const cancelSubHandler = async (req, res) => {
+    const id = req.params.id;
+    try {
+        await pool.query("UPDATE subscriptions SET status='Cancelled' WHERE id=$1", [id]);
+    } catch {}
+
+    const sub = MOCK_SUBSCRIPTIONS.find(s => s.id == id);
+    if (sub) {
+        sub.status = "Cancelled";
+    }
+
+    res.json({
+        success: true,
+        message: "Subscription cancelled successfully",
+        subscription: sub
+    });
+};
+
+router.put("/:id/cancel", cancelSubHandler);
+router.post("/:id/cancel", cancelSubHandler);
 router.patch("/:id/status", updateSubStatusHandler);
 router.put("/:id/status", updateSubStatusHandler);
 

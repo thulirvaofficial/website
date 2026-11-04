@@ -80,6 +80,7 @@
             <a href="customers.html">👥 Customers</a>
             <a href="locations.html">📍 Delivery Locations</a>
             <a href="coupons.html">🎟️ Promo Codes</a>
+            <a href="notifications.html">📢 News & Notifications</a>
             <a href="recipes.html">🍳 Recipes</a>
             <a href="/" target="_blank">🌐 View Website ↗</a>
 
@@ -351,19 +352,45 @@
             document.getElementById("proofModal").classList.add("active");
         }
 
-        async function verifyCurrentProof() {
-            if (!activeModalOrderId) return;
-            if (!confirm(`Verify payment for Order #${activeModalOrderId}?`)) return;
-            try {
-                const res = await fetch(`/api/orders/${activeModalOrderId}/verify-payment`, {
-                    method: "PUT",
+        async function safeApiCall(url, method, body) {
+            let res = await fetch(url, {
+                method: method,
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(body)
+            });
+
+            // Try fallback POST if PUT method not supported by reverse proxy
+            if ((res.status === 404 || res.status === 405) && method === "PUT") {
+                res = await fetch(url, {
+                    method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`
                     },
-                    body: JSON.stringify({ verified_by: "Admin" })
+                    body: JSON.stringify(body)
                 });
-                const data = await res.json();
+            }
+
+            const contentType = res.headers.get("content-type") || "";
+            if (contentType.includes("application/json")) {
+                return await res.json();
+            } else {
+                const text = await res.text();
+                if (res.ok) {
+                    return { success: true };
+                }
+                throw new Error(text.slice(0, 100) || `Server error (${res.status})`);
+            }
+        }
+
+        async function verifyCurrentProof() {
+            if (!activeModalOrderId) return;
+            if (!confirm(`Verify payment for Order #${activeModalOrderId}?`)) return;
+            try {
+                const data = await safeApiCall(`/api/orders/${activeModalOrderId}/verify-payment`, "PUT", { verified_by: "Admin" });
                 if (data.success) {
                     alert(`✓ Payment for Order #${activeModalOrderId} verified successfully!`);
                     closeProofModal();
@@ -372,7 +399,7 @@
                     alert(`Error: ${data.message || 'Failed to verify'}`);
                 }
             } catch (e) {
-                alert(`Network error: ${e.message}`);
+                alert(`Error: ${e.message}`);
             }
         }
 
@@ -381,15 +408,7 @@
             const reason = prompt("Enter internal reason for payment rejection:", "UTR reference mismatch / Invalid payment proof");
             if (!reason) return;
             try {
-                const res = await fetch(`/api/orders/${activeModalOrderId}/reject-payment`, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ reason })
-                });
-                const data = await res.json();
+                const data = await safeApiCall(`/api/orders/${activeModalOrderId}/reject-payment`, "PUT", { reason, rejection_reason: reason });
                 if (data.success) {
                     alert(`Order #${activeModalOrderId} payment rejected.`);
                     closeProofModal();
@@ -398,7 +417,7 @@
                     alert(`Error: ${data.message || 'Failed to reject'}`);
                 }
             } catch (e) {
-                alert(`Network error: ${e.message}`);
+                alert(`Error: ${e.message}`);
             }
         }
 
@@ -407,16 +426,28 @@
             activeModalOrderId = null;
         }
 
-        async function updateStatus(orderId, newStatus) {
+        async function cancelOrder(orderId) {
+            const reason = prompt(`Enter reason for cancelling Order #${orderId}:`, "Cancelled by Admin / Out of Stock");
+            if (!reason) return;
             try {
-                await fetch(`/api/orders/${orderId}/status`, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ status: newStatus, order_status: newStatus })
-                });
+                const data = await safeApiCall(`/api/orders/${orderId}/cancel`, "PUT", { reason, cancellation_reason: reason });
+                if (data.success) {
+                    alert(`Order #${orderId} has been cancelled and product stock restored.`);
+                    loadOrders();
+                } else {
+                    alert(`Error: ${data.message || 'Failed to cancel'}`);
+                }
+            } catch (e) {
+                alert(`Error: ${e.message}`);
+            }
+        }
+
+        async function updateStatus(orderId, newStatus) {
+            if (newStatus === "cancelled") {
+                return cancelOrder(orderId);
+            }
+            try {
+                await safeApiCall(`/api/orders/${orderId}/status`, "PUT", { status: newStatus, order_status: newStatus });
             } catch { }
 
             // Update in-memory allOrders
