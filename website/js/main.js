@@ -4,10 +4,64 @@
 
 const API = "/api";
 
-/* ---- Mobile Menu ---- */
+/* ---- Mobile Menu with Backdrop & Smooth Dismiss ---- */
 const menuBtn  = document.getElementById("mobileMenuButton");
 const mobileNav = document.getElementById("mobileNavigation");
-if (menuBtn) menuBtn.addEventListener("click", () => mobileNav.classList.toggle("show"));
+let mobileBackdrop = document.querySelector(".mobile-nav-backdrop");
+
+if (!mobileBackdrop) {
+    mobileBackdrop = document.createElement("div");
+    mobileBackdrop.className = "mobile-nav-backdrop";
+    document.body.appendChild(mobileBackdrop);
+}
+
+function openMobileNav() {
+    if (mobileNav) mobileNav.classList.add("show");
+    if (mobileBackdrop) mobileBackdrop.classList.add("active");
+    if (menuBtn) menuBtn.textContent = "✕";
+}
+
+function closeMobileNav() {
+    if (mobileNav) mobileNav.classList.remove("show");
+    if (mobileBackdrop) mobileBackdrop.classList.remove("active");
+    if (menuBtn) menuBtn.textContent = "☰";
+}
+
+if (menuBtn && mobileNav) {
+    menuBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (mobileNav.classList.contains("show")) {
+            closeMobileNav();
+        } else {
+            openMobileNav();
+        }
+    });
+
+    mobileBackdrop.addEventListener("click", closeMobileNav);
+
+    mobileNav.querySelectorAll("a").forEach(link => {
+        link.addEventListener("click", closeMobileNav);
+    });
+}
+
+// Mark cart & checkout pages to avoid floating elements overlapping buttons
+if (window.location.pathname.includes("cart.html") || window.location.pathname.includes("/cart")) {
+    document.body.classList.add("is-cart-page");
+}
+if (window.location.pathname.includes("checkout.html") || window.location.pathname.includes("/checkout")) {
+    document.body.classList.add("is-checkout-page");
+}
+
+/* ---- Quick Header Search Interaction ---- */
+document.querySelectorAll(".header-icon, #searchBtn").forEach(btn => {
+    if (btn.textContent.includes("🔍") || btn.id === "searchBtn") {
+        btn.addEventListener("click", () => {
+            const isPages = window.location.pathname.includes("/pages/");
+            const shopUrl = isPages ? "shop.html" : "pages/shop.html";
+            window.location.href = shopUrl;
+        });
+    }
+});
 
 /* ---- Sticky header shadow on scroll ---- */
 window.addEventListener("scroll", () => {

@@ -104,7 +104,7 @@ function renderCartPage() {
                 <div class="cart-product-img">${itemImg}</div>
                 <div>
                     <div class="cart-product-name">${item.name}</div>
-                    <div class="cart-product-weight">${item.weight || ""}</div>
+                    <div class="cart-product-weight">${item.weight ? item.weight + ' • ' : ''}₹${item.price}</div>
                 </div>
             </div>
             <div class="cart-price">₹${item.price}</div>
