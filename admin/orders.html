@@ -111,18 +111,28 @@
                 <div
                     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                     <h2>Real-time Customer Orders (<span id="totalOrdersCount">0</span>)</h2>
-                    <div style="display:flex; gap:10px;">
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <select id="typeFilter" onchange="filterOrders()"
+                            style="padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px;">
+                            <option value="all">All Delivery Types</option>
+                            <option value="delivery">Home Delivery</option>
+                            <option value="pickup">Store Pickup Only</option>
+                        </select>
                         <select id="statusFilter" onchange="filterOrders()"
                             style="padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px;">
                             <option value="all">All Statuses</option>
                             <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="preparing">Preparing (Pickup)</option>
+                            <option value="ready_for_pickup">Ready for Pickup</option>
+                            <option value="collected">Collected</option>
                             <option value="shipped">Shipped</option>
                             <option value="delivered">Delivered</option>
                             <option value="cancelled">Cancelled</option>
                         </select>
                         <input type="text" id="orderSearch" placeholder="Search customer, phone, or UTR..."
                             onkeyup="filterOrders()"
-                            style="padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px; width: 240px;">
+                            style="padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px; width: 220px;">
                     </div>
                 </div>
 
@@ -167,13 +177,23 @@
                 <img id="proofModalImg" src="" alt="Payment Proof"
                     style="max-width:100%; max-height:480px; object-fit:contain; border-radius:4px;">
             </div>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <a id="proofDownloadLink" href="#" target="_blank" download="payment_proof.jpg" class="action-btn"
-                    style="background:#2E7D32; color:white; text-decoration:none; padding:8px 16px; font-size:12px; border-radius:6px; font-weight:700;">
-                    ⬇ Open Full Size / Download
-                </a>
-                <button onclick="closeProofModal()" class="action-btn"
-                    style="background:#ddd; color:#333; padding:8px 16px; font-size:12px; border-radius:6px;">Close</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:14px; border-top:1px solid #eee; padding-top:14px;">
+                <div style="display:flex; gap:8px;">
+                    <button id="modalVerifyBtn" onclick="verifyCurrentProof()" style="background:#1b4332; color:white; border:none; padding:9px 16px; border-radius:6px; font-weight:700; cursor:pointer;">
+                        ✓ Verify Payment
+                    </button>
+                    <button id="modalRejectBtn" onclick="rejectCurrentProof()" style="background:#c62828; color:white; border:none; padding:9px 16px; border-radius:6px; font-weight:700; cursor:pointer;">
+                        ✕ Reject Payment
+                    </button>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <a id="proofDownloadLink" href="#" target="_blank" download="payment_proof.jpg" class="action-btn"
+                        style="background:#2E7D32; color:white; text-decoration:none; padding:8px 16px; font-size:12px; border-radius:6px; font-weight:700;">
+                        ⬇ Open Full Size / Download
+                    </a>
+                    <button onclick="closeProofModal()" class="action-btn"
+                        style="background:#ddd; color:#333; padding:8px 16px; font-size:12px; border-radius:6px;">Close</button>
+                </div>
             </div>
         </div>
     </div>
@@ -280,6 +300,10 @@
             <td>
                 <select onchange="updateStatus(${o.id}, this.value)" style="padding:4px 8px; border:1px solid var(--border); border-radius:4px; font-size:11.5px; font-weight:600;">
                     <option value="pending" ${o.order_status === 'pending' ? 'selected' : ''}>Pending</option>
+                    <option value="processing" ${o.order_status === 'processing' ? 'selected' : ''}>Processing</option>
+                    <option value="preparing" ${o.order_status === 'preparing' ? 'selected' : ''}>Preparing (Pickup)</option>
+                    <option value="ready_for_pickup" ${o.order_status === 'ready_for_pickup' ? 'selected' : ''}>Ready for Pickup</option>
+                    <option value="collected" ${o.order_status === 'collected' ? 'selected' : ''}>Collected</option>
                     <option value="shipped" ${o.order_status === 'shipped' ? 'selected' : ''}>Shipped</option>
                     <option value="delivered" ${o.order_status === 'delivered' ? 'selected' : ''}>Delivered</option>
                     <option value="cancelled" ${o.order_status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
@@ -290,9 +314,12 @@
             });
         }
 
+        let activeModalOrderId = null;
+
         function openProofModal(idx) {
             const o = currentRenderedOrders[idx];
             if (!o) return;
+            activeModalOrderId = o.id;
             const proofImg = o.payment_proof || o.paymentProof || o.proof || '';
             const txnId = o.transaction_id || o.transactionId || o.utr || 'N/A';
             const custName = o.customer_name || o.customerName || 'Customer';
@@ -316,6 +343,7 @@
             document.getElementById("proofModalInfo").innerHTML = `
         <div><strong>Order ID:</strong> #${o.id} &bull; <strong>Customer:</strong> ${custName} ${userTag}</div>
         <div><strong>Transaction ID / UTR:</strong> <span style="color:#1a4a2e; font-weight:700; font-family:monospace; font-size:14px; background:#e8f5e9; padding:2px 8px; border-radius:4px;">${txnId}</span></div>
+        <div><strong>Payment Status:</strong> <span style="font-weight:700; color:${o.payment_status === 'verified' ? '#2e7d32' : (o.payment_status === 'rejected' ? '#c62828' : '#e65100')}">${o.payment_status || 'Verification Pending'}</span></div>
         ${promoLine}
         <div><strong>Amount Paid:</strong> ₹${totalAmt} &bull; <strong>Paid to UPI ID:</strong> <span style="font-family:monospace; font-weight:600;">7904880944@superyes</span></div>
         ${!proofImg ? '<div style="color:#c62828; margin-top:6px; font-weight:600;">⚠️ No screenshot file was attached for this order.</div>' : ''}
@@ -323,8 +351,60 @@
             document.getElementById("proofModal").classList.add("active");
         }
 
+        async function verifyCurrentProof() {
+            if (!activeModalOrderId) return;
+            if (!confirm(`Verify payment for Order #${activeModalOrderId}?`)) return;
+            try {
+                const res = await fetch(`/api/orders/${activeModalOrderId}/verify-payment`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ verified_by: "Admin" })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(`✓ Payment for Order #${activeModalOrderId} verified successfully!`);
+                    closeProofModal();
+                    loadOrders();
+                } else {
+                    alert(`Error: ${data.message || 'Failed to verify'}`);
+                }
+            } catch (e) {
+                alert(`Network error: ${e.message}`);
+            }
+        }
+
+        async function rejectCurrentProof() {
+            if (!activeModalOrderId) return;
+            const reason = prompt("Enter internal reason for payment rejection:", "UTR reference mismatch / Invalid payment proof");
+            if (!reason) return;
+            try {
+                const res = await fetch(`/api/orders/${activeModalOrderId}/reject-payment`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ reason })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(`Order #${activeModalOrderId} payment rejected.`);
+                    closeProofModal();
+                    loadOrders();
+                } else {
+                    alert(`Error: ${data.message || 'Failed to reject'}`);
+                }
+            } catch (e) {
+                alert(`Network error: ${e.message}`);
+            }
+        }
+
         function closeProofModal() {
             document.getElementById("proofModal").classList.remove("active");
+            activeModalOrderId = null;
         }
 
         async function updateStatus(orderId, newStatus) {
@@ -361,10 +441,16 @@
         }
 
         function filterOrders() {
+            const type = document.getElementById("typeFilter") ? document.getElementById("typeFilter").value.toLowerCase() : "all";
             const status = document.getElementById("statusFilter").value.toLowerCase();
             const q = document.getElementById("orderSearch").value.toLowerCase();
 
             let filtered = allOrders;
+            if (type === "pickup") {
+                filtered = filtered.filter(o => o.order_type === 'pickup' || o.is_pickup || (o.address && o.address.toLowerCase().includes('pickup')));
+            } else if (type === "delivery") {
+                filtered = filtered.filter(o => !(o.order_type === 'pickup' || o.is_pickup || (o.address && o.address.toLowerCase().includes('pickup'))));
+            }
             if (status !== "all") {
                 filtered = filtered.filter(o => (o.order_status || "").toLowerCase() === status);
             }

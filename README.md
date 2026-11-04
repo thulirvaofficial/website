@@ -11,3 +11,4 @@ Pure, natural farm-fresh milk, bilona cow ghee, artisanal paneer, cold-pressed o
 - Frontend: HTML5, CSS3, JavaScript (Vanilla ES6)
 - Backend: Node.js, Express, PostgreSQL
 - Assets: HD product photography, vector illustrations, Leaflet maps
+
