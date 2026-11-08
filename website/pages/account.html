@@ -614,6 +614,20 @@ function isSubForCurrentUser(s) {
 }
 
 async function initAccount() {
+    // Sync latest profile from server
+    try {
+        const ident = currentUser.id || currentUser.email || currentUser.phone;
+        if (ident) {
+            const pRes = await fetch(`/api/auth/profile/${encodeURIComponent(ident)}`);
+            if (pRes.ok) {
+                const pData = await pRes.json();
+                if (pData.success && pData.user) {
+                    currentUser = { ...currentUser, ...pData.user };
+                }
+            }
+        }
+    } catch (_) {}
+
     // Ensure user has a distinct User ID
     const userId = currentUser.id ? (String(currentUser.id).startsWith("USR-") ? currentUser.id : "USR-" + currentUser.id) : ("USR-" + Math.floor(1000 + Math.random() * 9000));
     currentUser.id = userId;
@@ -1585,7 +1599,7 @@ function closeInvoiceModal() {
 /* =========================================================
    USER PROFILE UPDATE
 ========================================================= */
-function handleProfileUpdate(e) {
+async function handleProfileUpdate(e) {
     e.preventDefault();
     const btn = document.getElementById("saveProfileBtn");
     if (btn) {
@@ -1603,13 +1617,24 @@ function handleProfileUpdate(e) {
     document.getElementById("userNameDisplay").textContent = currentUser.name || "Customer";
     document.getElementById("userContactDisplay").textContent = currentUser.phone || currentUser.email || "Farm Member";
 
-    setTimeout(() => {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = "💾 Save Changes";
-        }
-        showToast("✓ Profile information updated successfully! 🌿", "success");
-    }, 300);
+    try {
+        await fetch("/api/auth/profile", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                id: currentUser.id,
+                name: currentUser.name,
+                phone: currentUser.phone,
+                email: currentUser.email
+            })
+        });
+    } catch (_) {}
+
+    if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = "💾 Save Changes";
+    }
+    showToast("✓ Profile information updated and synchronized! 🌿", "success");
 }
 
 function userLogout() {

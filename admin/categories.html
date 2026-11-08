@@ -39,7 +39,7 @@
         <div class="admin-header">
             <div>
                 <h1 style="font-family:'Playfair Display',serif; font-size: 26px;">Category Management</h1>
-                <p>Create, edit, and organize product categories across the website.</p>
+                <p>Create, edit, and organize product categories across the website and Flutter mobile app.</p>
             </div>
             <div style="display:flex; gap:12px; align-items:center;">
                 <button class="add-btn" onclick="openAddModal()">＋ Add New Category</button>
@@ -58,11 +58,12 @@
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th style="width: 60px;">Image</th>
+                        <th style="width: 50px;">Order</th>
+                        <th style="width: 60px;">Web Image</th>
+                        <th style="width: 60px;">Mobile Image</th>
                         <th>Category Name</th>
-                        <th>Identifier / Slug</th>
-                        <th>Description</th>
-                        <th style="text-align: center;">Emoji</th>
+                        <th>Identifier</th>
+                        <th style="text-align: center;">Status</th>
                         <th style="text-align: right;">Actions</th>
                     </tr>
                 </thead>
@@ -76,7 +77,7 @@
 
 <!-- ADD / EDIT CATEGORY MODAL -->
 <div class="modal-overlay" id="categoryModal">
-    <div class="modal-box" style="max-width: 550px;">
+    <div class="modal-box" style="max-width: 600px;">
         <div class="modal-header">
             <h3 id="modalTitle">Add New Category</h3>
             <button class="modal-close" onclick="closeModal()">✕</button>
@@ -90,44 +91,56 @@
                         <input type="text" id="catName" required placeholder="e.g. Milk, Ghee, Paneer, Honey">
                     </div>
                     <div class="form-field full">
-                        <label>Display Title * <small style="color:var(--muted);">(shown on website headings)</small></label>
-                        <input type="text" id="catDisplayName" required placeholder="e.g. Fresh Farm Milk &amp; Dairy">
+                        <label>Display Title * <small style="color:var(--muted);">(shown on website & app headings)</small></label>
+                        <input type="text" id="catDisplayName" required placeholder="e.g. Fresh Farm Milk & Dairy">
                     </div>
                     <div class="form-field">
-                        <label>Emoji Icon</label>
-                        <input type="text" id="catEmoji" placeholder="e.g. 🥛, 🧈, 🧀, 🌱">
+                        <label>Display Order (Priority)</label>
+                        <input type="number" id="catDisplayOrder" min="1" value="1" placeholder="1">
                     </div>
                     <div class="form-field">
-                        <label>Preset Photo Pick</label>
-                        <select id="catPresetSelect" onchange="handlePresetSelect(this.value)">
-                            <option value="">Choose preset or upload...</option>
-                            <option value="/assets/images/products/fresh_cow_milk.jpg">🥛 Fresh Cow Milk</option>
-                            <option value="/assets/images/products/pure_cow_ghee.jpg">🧈 Pure Cow Ghee</option>
-                            <option value="/assets/images/products/fresh_paneer.jpg">🧀 Artisanal Paneer</option>
-                            <option value="/assets/images/products/product_lineup.jpg">🌾 Full Farm Lineup</option>
-                            <option value="custom">Enter Custom Image URL...</option>
+                        <label>Status</label>
+                        <select id="catStatus">
+                            <option value="true">Active (Visible)</option>
+                            <option value="false">Inactive (Hidden)</option>
                         </select>
                     </div>
-                    <div class="form-field full">
-                        <label>Category Image</label>
-                        <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px; flex-wrap:wrap;">
-                            <label class="btn btn-outline" style="cursor:pointer; padding:7px 14px; font-size:12px; font-weight:700; background:#E9EBD9; color:var(--green); border:1px solid var(--border); border-radius:6px;">
-                                📁 Upload Image from Computer
-                                <input type="file" id="catFileInput" accept="image/*" style="display:none;" onchange="handleFileUpload(event)">
-                            </label>
-                            <span style="font-size:11.5px; color:var(--muted);">or provide link below</span>
-                        </div>
-                        <input type="text" id="catCustomImage" placeholder="Or enter image URL" style="display:none;" oninput="previewCustomUrl(this.value)">
 
-                        <!-- Image Preview -->
-                        <div id="imagePreviewContainer" style="margin-top:10px; display:flex; align-items:center; gap:12px; padding:8px; background:white; border-radius:8px; border:1px solid var(--border); width:fit-content;">
-                            <img id="imagePreview" src="/assets/images/products/fresh_cow_milk.jpg" alt="Preview" style="width:54px; height:54px; object-fit:cover; border-radius:6px; border:1px solid var(--border);">
-                            <span id="previewLabel" style="font-size:11.5px; color:var(--muted);">Category image preview</span>
+                    <!-- WEBSITE IMAGE -->
+                    <div class="form-field full" style="border-top:1px dashed var(--border); padding-top:10px;">
+                        <label><strong>Website Image</strong> <small style="color:var(--muted);">(Desktop banner & web catalog)</small></label>
+                        <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px; flex-wrap:wrap;">
+                            <label class="btn btn-outline" style="cursor:pointer; padding:6px 12px; font-size:12px; font-weight:700; background:#E9EBD9; color:var(--green); border:1px solid var(--border); border-radius:6px;">
+                                📁 Upload Website Photo
+                                <input type="file" id="catWebFileInput" accept="image/*" style="display:none;" onchange="handleWebFileUpload(event)">
+                            </label>
+                            <input type="text" id="catWebImageUrl" placeholder="Or image path / URL" style="flex:1; font-size:12px;" oninput="previewWebUrl(this.value)">
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <img id="webPreview" src="/assets/images/products/fresh_cow_milk.jpg" alt="Web Preview" style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:1px solid var(--border);">
+                            <span id="webPreviewLabel" style="font-size:11px; color:var(--muted);">Web image preview</span>
                         </div>
                     </div>
+
+                    <!-- MOBILE APP IMAGE (FLUTTER SPECIFIC) -->
+                    <div class="form-field full" style="background:#F4F8F3; padding:12px; border-radius:8px; border:1px solid #C8DBBF;">
+                        <label style="color:var(--green);"><strong>📱 Mobile App Image (Flutter Exclusive)</strong> <small style="color:var(--muted);">(Used ONLY in Flutter app)</small></label>
+                        <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px; flex-wrap:wrap;">
+                            <label class="btn btn-outline" style="cursor:pointer; padding:6px 12px; font-size:12px; font-weight:700; background:#fff; color:var(--green); border:1px solid var(--green); border-radius:6px;">
+                                📱 Upload Mobile App Photo
+                                <input type="file" id="catMobFileInput" accept="image/*" style="display:none;" onchange="handleMobFileUpload(event)">
+                            </label>
+                            <input type="text" id="catMobImageUrl" placeholder="Or mobile image path / URL" style="flex:1; font-size:12px;" oninput="previewMobUrl(this.value)">
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <img id="mobPreview" src="/assets/images/products/fresh_cow_milk.jpg" alt="Mobile Preview" style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:1.5px solid var(--green);">
+                            <span id="mobPreviewLabel" style="font-size:11px; color:var(--green); font-weight:600;">Mobile App thumbnail (shown in Flutter)</span>
+                        </div>
+                    </div>
+
                     <div class="form-field full">
                         <label>Description</label>
-                        <textarea id="catDescription" rows="3" placeholder="Describe the category products, sourcing, and benefits..."></textarea>
+                        <textarea id="catDescription" rows="2" placeholder="Describe the category products, sourcing, and benefits..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -142,17 +155,8 @@
 <script>
 const token = localStorage.getItem("thulirva_admin_token");
 let categoriesList = [];
-let currentUploadedImageBase64 = "";
-
-const DEFAULT_CATEGORIES = [
-    { id: 1, name: "Milk", displayName: "Fresh Cow Milk", slug: "milk", description: "Farm fresh A2 raw & chilled cow milk", image: "/assets/images/products/fresh_cow_milk.jpg", emoji: "🥛" },
-    { id: 2, name: "Ghee", displayName: "Ghee & Butter", slug: "ghee", description: "Traditional Bilona cow ghee and butter", image: "/assets/images/products/pure_cow_ghee.jpg", emoji: "🧈" },
-    { id: 3, name: "Paneer", displayName: "Paneer & Tofu", slug: "paneer", description: "Soft, chemical-free cottage cheese & tofu", image: "/assets/images/products/fresh_paneer.jpg", emoji: "🧀" },
-    { id: 4, name: "Curd", displayName: "Natural Set Curd", slug: "curd", description: "Probiotic thick set curd", image: "/assets/images/products/product_lineup.jpg", emoji: "🫙" },
-    { id: 5, name: "Oils", displayName: "Cold-Pressed Oils", slug: "oils", description: "Traditional wood pressed oils", image: "/assets/images/products/product_lineup.jpg", emoji: "🫗" },
-    { id: 6, name: "Masalas", displayName: "Pure Spices & Masalas", slug: "masalas", description: "Aromatic turmeric & ground masalas", image: "/assets/images/products/product_lineup.jpg", emoji: "🌶️" },
-    { id: 7, name: "Vegan", displayName: "Vegan & Plant-Based", slug: "vegan", description: "Oat milk, tofu & raw honey", image: "/assets/images/products/fresh_paneer.jpg", emoji: "🌱" }
-];
+let currentWebImageBase64 = "";
+let currentMobImageBase64 = "";
 
 async function loadCategories() {
     try {
@@ -161,34 +165,10 @@ async function loadCategories() {
             const data = await res.json();
             if (data.categories && data.categories.length) {
                 categoriesList = data.categories;
-            } else {
-                categoriesList = getStoredCategories();
             }
-        } else {
-            categoriesList = getStoredCategories();
         }
-    } catch {
-        categoriesList = getStoredCategories();
-    }
-    saveStoredCategories(categoriesList);
+    } catch {}
     renderTable(categoriesList);
-}
-
-function getStoredCategories() {
-    try {
-        const s = localStorage.getItem("thulirva_categories");
-        if (s) {
-            const parsed = JSON.parse(s);
-            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        }
-    } catch {}
-    return [...DEFAULT_CATEGORIES];
-}
-
-function saveStoredCategories(list) {
-    try {
-        localStorage.setItem("thulirva_categories", JSON.stringify(list));
-    } catch {}
 }
 
 function renderTable(items) {
@@ -197,25 +177,34 @@ function renderTable(items) {
     table.innerHTML = "";
 
     if (!items.length) {
-        table.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--muted);">No categories found. Click 'Add New Category' above.</td></tr>`;
+        table.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--muted);">No categories found. Click 'Add New Category' above.</td></tr>`;
         return;
     }
 
     items.forEach(c => {
         const row = document.createElement("tr");
-        const img = c.image || "/assets/images/products/fresh_cow_milk.jpg";
-        const emoji = c.emoji || "🏷️";
+        const webImg = c.website_image || c.image || "/assets/images/products/fresh_cow_milk.jpg";
+        const mobImg = c.mobile_image || c.appImage || webImg;
+        const isActive = c.is_active !== false;
+
         row.innerHTML = `
+            <td style="font-weight:700; color:var(--muted);">${c.display_order || 1}</td>
             <td>
-                <img src="${img}" alt="${c.name}" style="width:44px; height:44px; object-fit:cover; border-radius:6px; border:1px solid var(--border);">
+                <img src="${webImg}" alt="${c.name}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid var(--border);">
+            </td>
+            <td>
+                <img src="${mobImg}" alt="${c.name}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1.5px solid var(--green);">
             </td>
             <td>
                 <div style="font-weight:700; color:var(--green); font-size:14px;">${c.displayName || c.name}</div>
-                <small style="color:var(--muted);">${c.name !== (c.displayName || c.name) ? 'Key: ' + c.name : ''}</small>
+                <small style="color:var(--muted);">${c.description ? c.description.substring(0, 40) + '...' : ''}</small>
             </td>
             <td><span class="badge badge-shipped">${c.name}</span></td>
-            <td style="max-width:320px; font-size:12.5px; color:var(--muted); line-height:1.4;">${c.description || '—'}</td>
-            <td style="text-align:center; font-size:18px;">${emoji}</td>
+            <td style="text-align:center;">
+                <span class="badge" style="background:${isActive ? '#EDF7EB' : '#FEE2E2'}; color:${isActive ? '#1B4332' : '#991B1B'}; font-weight:700;">
+                    ${isActive ? 'Active' : 'Inactive'}
+                </span>
+            </td>
             <td style="text-align:right;">
                 <button class="action-btn edit-btn" onclick="openEditModal(${c.id})">✎ Edit</button>
                 <button class="action-btn delete-btn" onclick="deleteCategory(${c.id})" style="margin-left:6px;">✕ Delete</button>
@@ -235,35 +224,41 @@ function filterCategories() {
     renderTable(filtered);
 }
 
-function handleFileUpload(e) {
+function handleWebFileUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(evt) {
-        currentUploadedImageBase64 = evt.target.result;
-        document.getElementById("imagePreview").src = currentUploadedImageBase64;
-        document.getElementById("previewLabel").textContent = "✓ Uploaded: " + file.name;
+        currentWebImageBase64 = evt.target.result;
+        document.getElementById("webPreview").src = currentWebImageBase64;
+        document.getElementById("webPreviewLabel").textContent = "✓ Uploaded: " + file.name;
     };
     reader.readAsDataURL(file);
 }
 
-function previewCustomUrl(url) {
+function previewWebUrl(url) {
     if (url) {
-        currentUploadedImageBase64 = url;
-        document.getElementById("imagePreview").src = url;
-        document.getElementById("previewLabel").textContent = "Custom Image URL";
+        currentWebImageBase64 = url;
+        document.getElementById("webPreview").src = url;
     }
 }
 
-function handlePresetSelect(val) {
-    const custom = document.getElementById("catCustomImage");
-    if (val === "custom") {
-        custom.style.display = "block";
-    } else if (val) {
-        custom.style.display = "none";
-        currentUploadedImageBase64 = val;
-        document.getElementById("imagePreview").src = val;
-        document.getElementById("previewLabel").textContent = "Selected: " + val.split("/").pop();
+function handleMobFileUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        currentMobImageBase64 = evt.target.result;
+        document.getElementById("mobPreview").src = currentMobImageBase64;
+        document.getElementById("mobPreviewLabel").textContent = "✓ App Image: " + file.name;
+    };
+    reader.readAsDataURL(file);
+}
+
+function previewMobUrl(url) {
+    if (url) {
+        currentMobImageBase64 = url;
+        document.getElementById("mobPreview").src = url;
     }
 }
 
@@ -272,10 +267,12 @@ function openAddModal() {
     document.getElementById("modalSubmitBtn").textContent = "Create Category";
     document.getElementById("catId").value = "";
     document.getElementById("categoryForm").reset();
-    document.getElementById("catCustomImage").style.display = "none";
-    currentUploadedImageBase64 = "/assets/images/products/fresh_cow_milk.jpg";
-    document.getElementById("imagePreview").src = currentUploadedImageBase64;
-    document.getElementById("previewLabel").textContent = "Default preview";
+    currentWebImageBase64 = "/assets/images/products/fresh_cow_milk.jpg";
+    currentMobImageBase64 = "/assets/images/products/fresh_cow_milk.jpg";
+    document.getElementById("webPreview").src = currentWebImageBase64;
+    document.getElementById("mobPreview").src = currentMobImageBase64;
+    document.getElementById("catDisplayOrder").value = categoriesList.length + 1;
+    document.getElementById("catStatus").value = "true";
     document.getElementById("categoryModal").classList.add("active");
 }
 
@@ -287,26 +284,17 @@ function openEditModal(id) {
     document.getElementById("catId").value = c.id;
     document.getElementById("catName").value = c.name || "";
     document.getElementById("catDisplayName").value = c.displayName || c.name || "";
-    document.getElementById("catEmoji").value = c.emoji || "🏷️";
     document.getElementById("catDescription").value = c.description || "";
+    document.getElementById("catDisplayOrder").value = c.display_order || 1;
+    document.getElementById("catStatus").value = c.is_active !== false ? "true" : "false";
 
-    const custom = document.getElementById("catCustomImage");
-    const preset = document.getElementById("catPresetSelect");
-    currentUploadedImageBase64 = c.image || "/assets/images/products/fresh_cow_milk.jpg";
-    document.getElementById("imagePreview").src = currentUploadedImageBase64;
-    document.getElementById("previewLabel").textContent = "Current image";
+    currentWebImageBase64 = c.website_image || c.image || "/assets/images/products/fresh_cow_milk.jpg";
+    currentMobImageBase64 = c.mobile_image || c.appImage || currentWebImageBase64;
 
-    if (["/assets/images/products/fresh_cow_milk.jpg", "/assets/images/products/pure_cow_ghee.jpg", "/assets/images/products/fresh_paneer.jpg", "/assets/images/products/product_lineup.jpg"].includes(c.image)) {
-        preset.value = c.image;
-        custom.style.display = "none";
-    } else if (c.image) {
-        preset.value = "custom";
-        custom.style.display = "block";
-        custom.value = c.image;
-    } else {
-        preset.value = "";
-        custom.style.display = "none";
-    }
+    document.getElementById("catWebImageUrl").value = currentWebImageBase64.startsWith("data:") ? "" : currentWebImageBase64;
+    document.getElementById("catMobImageUrl").value = currentMobImageBase64.startsWith("data:") ? "" : currentMobImageBase64;
+    document.getElementById("webPreview").src = currentWebImageBase64;
+    document.getElementById("mobPreview").src = currentMobImageBase64;
 
     document.getElementById("categoryModal").classList.add("active");
 }
@@ -320,19 +308,22 @@ async function handleCategorySubmit(e) {
     const id = document.getElementById("catId").value;
     const isEdit = Boolean(id);
 
-    let image = currentUploadedImageBase64;
-    if (!image) {
-        const custom = document.getElementById("catCustomImage").value;
-        const preset = document.getElementById("catPresetSelect").value;
-        image = (preset === "custom" ? custom : preset) || "/assets/images/products/fresh_cow_milk.jpg";
-    }
+    const webUrlInput = document.getElementById("catWebImageUrl").value.trim();
+    const mobUrlInput = document.getElementById("catMobImageUrl").value.trim();
+
+    const webImg = webUrlInput || currentWebImageBase64 || "/assets/images/products/fresh_cow_milk.jpg";
+    const mobImg = mobUrlInput || currentMobImageBase64 || webImg;
 
     const payload = {
         name: document.getElementById("catName").value.trim(),
         displayName: document.getElementById("catDisplayName").value.trim(),
-        emoji: document.getElementById("catEmoji").value.trim() || "🏷️",
         description: document.getElementById("catDescription").value.trim(),
-        image: image || "/assets/images/products/fresh_cow_milk.jpg"
+        website_image: webImg,
+        image: webImg,
+        mobile_image: mobImg,
+        appImage: mobImg,
+        is_active: document.getElementById("catStatus").value === "true",
+        display_order: parseInt(document.getElementById("catDisplayOrder").value, 10) || 1
     };
 
     try {
@@ -374,9 +365,7 @@ async function deleteCategory(id) {
             method: "DELETE",
             headers: { Authorization: `Bearer ${token}` }
         });
-    } catch {
-        // fallback
-    }
+    } catch {}
     categoriesList = categoriesList.filter(c => c.id != id);
     renderTable(categoriesList);
 }
@@ -390,4 +379,3 @@ loadCategories();
 </script>
 </body>
 </html>
-
