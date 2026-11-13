@@ -88,6 +88,9 @@
                             <button class="btn btn-secondary btn-sm" id="tabSettlementsBtn" onclick="switchTab('settlements')">
                                 Past Weekly Settlements (Bank Logs)
                             </button>
+                            <button class="btn btn-secondary btn-sm" id="tabBankAccountsBtn" onclick="switchTab('bank_accounts')">
+                                Partner Bank Accounts Verification
+                            </button>
                         </div>
                         <div class="flex-center gap-2 flex-grow-1 justify-end">
                             <div class="search-input-wrap" style="max-width: 280px; width: 100%;">
@@ -174,6 +177,48 @@
                         <button class="btn btn-secondary btn-sm" id="btnPrevSettlePage" onclick="changeSettlePage(-1)">‹ Prev</button>
                         <span class="text-xs font-bold text-dark px-2" id="settleCurrentPageNum">Page 1 of 1</span>
                         <button class="btn btn-secondary btn-sm" id="btnNextSettlePage" onclick="changeSettlePage(1)">Next ›</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View 3: Partner Bank Accounts Table -->
+            <div id="viewBankAccounts" class="card" style="display: none;">
+                <div class="card-header flex-between p-3 border-bottom">
+                    <div>
+                        <h3 class="card-title font-bold text-sm">Partner Bank Accounts & Verification</h3>
+                        <p class="text-xs text-muted">Review submitted passbooks, IFSC credentials, and authorize direct weekly bank payouts</p>
+                    </div>
+                    <div class="flex-center gap-2">
+                        <select id="bankStatusFilter" class="form-control form-control-sm" style="width: auto;" onchange="loadBankAccounts()">
+                            <option value="ALL">All Accounts</option>
+                            <option value="PENDING" selected>Pending Review</option>
+                            <option value="APPROVED">Approved</option>
+                            <option value="REJECTED">Rejected</option>
+                        </select>
+                        <button class="btn btn-secondary btn-sm" onclick="loadBankAccounts()">Refresh</button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table" id="bankAccountsTable">
+                            <thead>
+                                <tr>
+                                    <th>Associate Details</th>
+                                    <th>Bank & Branch</th>
+                                    <th>Account Type</th>
+                                    <th>Masked Account No</th>
+                                    <th>IFSC Code</th>
+                                    <th>Passbook / Cheque</th>
+                                    <th>Status</th>
+                                    <th class="text-right">Verification Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bankAccountsTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center py-5 text-muted">Loading bank accounts...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -634,18 +679,223 @@ async function handleExecuteSettlement(e) {
 }
 
 function switchTab(tab) {
-    if (tab === "wallets") {
-        document.getElementById("viewWallets").style.display = "block";
-        document.getElementById("viewSettlements").style.display = "none";
-        document.getElementById("tabWalletsBtn").className = "btn btn-primary btn-sm";
-        document.getElementById("tabSettlementsBtn").className = "btn btn-secondary btn-sm";
-    } else {
-        document.getElementById("viewWallets").style.display = "none";
-        document.getElementById("viewSettlements").style.display = "block";
-        document.getElementById("tabWalletsBtn").className = "btn btn-secondary btn-sm";
-        document.getElementById("tabSettlementsBtn").className = "btn btn-primary btn-sm";
+    document.getElementById("viewWallets").style.display = tab === "wallets" ? "block" : "none";
+    document.getElementById("viewSettlements").style.display = tab === "settlements" ? "block" : "none";
+    document.getElementById("viewBankAccounts").style.display = tab === "bank_accounts" ? "block" : "none";
+
+    document.getElementById("tabWalletsBtn").className = tab === "wallets" ? "btn btn-primary btn-sm" : "btn btn-secondary btn-sm";
+    document.getElementById("tabSettlementsBtn").className = tab === "settlements" ? "btn btn-primary btn-sm" : "btn btn-secondary btn-sm";
+    document.getElementById("tabBankAccountsBtn").className = tab === "bank_accounts" ? "btn btn-primary btn-sm" : "btn btn-secondary btn-sm";
+
+    if (tab === "bank_accounts") {
+        loadBankAccounts();
     }
 }
+
+let partnerBankAccounts = [];
+
+async function loadBankAccounts() {
+    const tbody = document.getElementById("bankAccountsTableBody");
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2"></span> Loading verified bank accounts...</td></tr>`;
+
+    try {
+        const status = document.getElementById("bankStatusFilter") ? document.getElementById("bankStatusFilter").value : "ALL";
+        const query = status && status !== "ALL" ? `?status=${encodeURIComponent(status)}` : "";
+        const res = await (window.apiClient ? window.apiClient.get(`/v1/bank-accounts/admin/all${query}`) : fetch(`/api/v1/bank-accounts/admin/all${query}`));
+        const data = await res.json();
+
+        if (data.success && Array.isArray(data.accounts)) {
+            partnerBankAccounts = data.accounts;
+            renderBankAccountsTable();
+        } else {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5 text-muted">${data.message || 'No bank accounts found.'}</td></tr>`;
+        }
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5 text-danger">Failed to load bank accounts: ${err.message}</td></tr>`;
+    }
+}
+
+function renderBankAccountsTable() {
+    const tbody = document.getElementById("bankAccountsTableBody");
+    if (!partnerBankAccounts.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5 text-muted">No bank accounts match the current filter.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = partnerBankAccounts.map(b => {
+        const vStatus = (b.verification_status || (b.is_verified ? "APPROVED" : "PENDING")).toUpperCase();
+        let badgeHtml = '<span class="badge badge-warning">● PENDING</span>';
+        if (vStatus === "APPROVED") {
+            badgeHtml = '<span class="badge badge-success">✓ APPROVED</span>';
+        } else if (vStatus === "REJECTED") {
+            badgeHtml = `<span class="badge badge-danger" title="${b.rejection_reason || ''}">✗ REJECTED</span>`;
+        }
+
+        const passbookThumbnail = b.passbook_url ? `
+            <a href="javascript:void(0)" onclick="previewPassbook('${b.passbook_url}')" class="flex-center gap-1 text-primary text-xs font-bold">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                View Passbook
+            </a>
+        ` : '<span class="text-xs text-muted">Not Attached</span>';
+
+        return `
+            <tr>
+                <td>
+                    <div class="font-bold text-dark">${b.account_holder_name || 'Associate'}</div>
+                    <div class="text-xs text-muted font-mono">${b.partner_id}</div>
+                </td>
+                <td>
+                    <div class="font-bold text-dark">${b.bank_name || 'Bank'}</div>
+                    <div class="text-xs text-muted">${b.branch_name || 'Branch unspecified'}</div>
+                </td>
+                <td><span class="badge badge-neutral">${b.account_type || 'Savings'}</span></td>
+                <td class="font-mono font-bold text-dark text-xs">${b.masked_account_number || ('••••' + (b.account_number || '').slice(-4))}</td>
+                <td class="font-mono font-bold text-xs">${b.ifsc_code || '—'}</td>
+                <td>${passbookThumbnail}</td>
+                <td>${badgeHtml}</td>
+                <td class="text-right">
+                    <div class="flex-center gap-1 justify-end">
+                        ${vStatus !== "APPROVED" ? `
+                            <button class="btn btn-primary btn-sm py-1 px-2 text-xs" onclick="approveBankAccount('${b.id}')">
+                                Approve
+                            </button>
+                        ` : ''}
+                        ${vStatus !== "REJECTED" ? `
+                            <button class="btn btn-secondary btn-sm py-1 px-2 text-xs text-danger" onclick="openRejectBankModal('${b.id}')">
+                                Reject
+                            </button>
+                        ` : ''}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+async function approveBankAccount(id) {
+    if (!confirm("Confirm approval of this partner bank account for automated weekly disbursements?")) return;
+    try {
+        const res = await (window.apiClient ? window.apiClient.post(`/v1/bank-accounts/${id}/review`, { status: "APPROVED" }) : fetch(`/api/v1/bank-accounts/${id}/review`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("adminToken") || ""}` },
+            body: JSON.stringify({ status: "APPROVED" })
+        }));
+        const data = await res.json();
+        if (data.success) {
+            showToast("Bank account verified and approved successfully.", "success");
+            loadBankAccounts();
+        } else {
+            showToast(data.message || "Failed to approve bank account", "danger");
+        }
+    } catch (err) {
+        showToast("Error: " + err.message, "danger");
+    }
+}
+
+function openRejectBankModal(id) {
+    document.getElementById("rejectBankAccountId").value = id;
+    document.getElementById("rejectBankReasonText").value = "";
+    document.getElementById("presetRejectReason").value = "";
+    document.getElementById("rejectBankModal").classList.add("active");
+}
+
+function applyPresetRejectReason(val) {
+    if (val) {
+        document.getElementById("rejectBankReasonText").value = val;
+    }
+}
+
+async function submitRejectBankAccount(e) {
+    e.preventDefault();
+    const id = document.getElementById("rejectBankAccountId").value;
+    const reason = document.getElementById("rejectBankReasonText").value.trim();
+    if (!reason) {
+        alert("Please provide a rejection reason.");
+        return;
+    }
+
+    const btn = document.getElementById("btnConfirmBankReject");
+    btn.disabled = true;
+    btn.textContent = "Processing...";
+
+    try {
+        const res = await (window.apiClient ? window.apiClient.post(`/v1/bank-accounts/${id}/review`, { status: "REJECTED", reason }) : fetch(`/api/v1/bank-accounts/${id}/review`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("adminToken") || ""}` },
+            body: JSON.stringify({ status: "REJECTED", reason })
+        }));
+        const data = await res.json();
+        if (data.success) {
+            showToast("Bank account rejected. Partner has been notified.", "success");
+            closeModal("rejectBankModal");
+            loadBankAccounts();
+        } else {
+            showToast(data.message || "Failed to reject bank account", "danger");
+        }
+    } catch (err) {
+        showToast("Error: " + err.message, "danger");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Confirm Rejection";
+    }
+}
+
+function previewPassbook(url) {
+    const fullUrl = url.startsWith("http") ? url : `${window.location.origin}${url.startsWith("/") ? "" : "/"}${url}`;
+    document.getElementById("passbookPreviewImg").src = fullUrl;
+    document.getElementById("passbookPreviewModal").classList.add("active");
+}
 </script>
+
+<!-- Bank Rejection Modal -->
+<div class="modal" id="rejectBankModal">
+    <div class="modal-dialog" style="max-width: 480px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title text-danger">Reject Partner Bank Account</h3>
+                <button class="modal-close" onclick="closeModal('rejectBankModal')">&times;</button>
+            </div>
+            <form id="rejectBankForm" onsubmit="submitRejectBankAccount(event)">
+                <input type="hidden" id="rejectBankAccountId">
+                <div class="modal-body">
+                    <p class="text-sm text-muted mb-3">Provide a clear reason for rejecting this bank account. The delivery partner will be notified in-app to correct and resubmit.</p>
+                    <div class="form-group mb-3">
+                        <label class="form-label required">Preset Reason</label>
+                        <select id="presetRejectReason" class="form-control" onchange="applyPresetRejectReason(this.value)">
+                            <option value="">-- Choose Common Reason --</option>
+                            <option value="Account holder name does not match Aadhaar / registered partner name.">Name mismatch with registered ID</option>
+                            <option value="IFSC code does not match the provided bank branch.">IFSC code mismatch</option>
+                            <option value="Passbook / cancelled cheque photo is blurry or unreadable.">Blurry / unreadable passbook photo</option>
+                            <option value="Invalid or incomplete account number provided.">Invalid account number</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Specific Rejection Reason</label>
+                        <textarea id="rejectBankReasonText" class="form-control" rows="3" placeholder="Explain the exact issue so partner can correct..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer flex-end gap-2">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('rejectBankModal')">Cancel</button>
+                    <button type="submit" class="btn btn-danger" id="btnConfirmBankReject">Confirm Rejection</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Passbook Photo Preview Modal -->
+<div class="modal" id="passbookPreviewModal">
+    <div class="modal-dialog" style="max-width: 600px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Passbook / Cheque Document</h3>
+                <button class="modal-close" onclick="closeModal('passbookPreviewModal')">&times;</button>
+            </div>
+            <div class="modal-body text-center p-3">
+                <img id="passbookPreviewImg" src="" alt="Passbook" style="max-width: 100%; max-height: 480px; object-fit: contain; border-radius: 8px;">
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
