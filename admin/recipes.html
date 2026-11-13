@@ -197,69 +197,7 @@
 
 <script src="js/admin-shell.js"></script>
 <script>
-let recipesList = [
-    {
-        id: 1,
-        title: "Creamy Paneer Butter Masala",
-        category: "curry",
-        categoryName: "Curries & Mains",
-        time: "30 Mins",
-        difficulty: "Medium",
-        servings: "4 Servings",
-        ingredient: "THULIRVA Fresh Farm Paneer & Butter",
-        desc: "Rich, luscious tomato-cashew makhani gravy gently spiced with Kashmiri red chili and kasuri methi, studded with velvety soft cubes of farm paneer and finished with golden butter.",
-        image: "images/logo.jpg"
-    },
-    {
-        id: 2,
-        title: "Aromatic Ghee Pongal",
-        category: "breakfast",
-        categoryName: "Wholesome Breakfast",
-        time: "20 Mins",
-        difficulty: "Easy",
-        servings: "3 Servings",
-        ingredient: "THULIRVA Pure Bilona Desi Ghee",
-        desc: "Traditional South Indian rice and moong dal tempered with crushed black pepper, fiery ginger, crunchy roasted cashews, and generous spoonfuls of golden A2 Cow Ghee.",
-        image: "images/logo.jpg"
-    },
-    {
-        id: 3,
-        title: "Golden Kesar Badam Milk",
-        category: "beverage",
-        categoryName: "Nourishing Beverages",
-        time: "15 Mins",
-        difficulty: "Easy",
-        servings: "2 Servings",
-        ingredient: "THULIRVA Farm Fresh Milk & Raw Honey",
-        desc: "Warm farm-fresh whole milk infused with freshly crushed Kashmiri saffron threads, slivered almonds, nutmeg, and sweetened with raw forest honey.",
-        image: "images/logo.jpg"
-    },
-    {
-        id: 4,
-        title: "Traditional Mysore Pak",
-        category: "sweet",
-        categoryName: "Traditional Sweets",
-        time: "35 Mins",
-        difficulty: "Medium",
-        servings: "6 Servings",
-        ingredient: "THULIRVA Cultured Desi Cow Ghee",
-        desc: "Melt-in-the-mouth heritage delicacy crafted from roasted gram flour, organic raw sugar, and abundant fragrant Bilona Cow Ghee.",
-        image: "images/logo.jpg"
-    },
-    {
-        id: 5,
-        title: "Masala Chai with Farm Milk",
-        category: "beverage",
-        categoryName: "Nourishing Beverages",
-        time: "10 Mins",
-        difficulty: "Easy",
-        servings: "2 Servings",
-        ingredient: "THULIRVA Fresh A2 Cow Milk",
-        desc: "Rich, creamy whole cow milk simmered with fresh ginger, crushed green cardamom pods, cinnamon bark, and premium estate Assam black tea.",
-        image: "images/logo.jpg"
-    }
-];
-
+let recipesList = [];
 const token = localStorage.getItem("thulirva_admin_token") || "";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -275,9 +213,25 @@ document.addEventListener("DOMContentLoaded", () => {
     loadRecipes();
 });
 
-function loadRecipes() {
-    renderMetrics();
-    filterRecipes();
+async function loadRecipes() {
+    try {
+        const res = await fetch("/api/recipes/admin/all", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        recipesList = Array.isArray(data.recipes) ? data.recipes : [];
+        renderMetrics();
+        filterRecipes();
+    } catch (err) {
+        showToast("Error loading recipes: " + err.message, "danger");
+        if (typeof window.renderErrorState === "function") {
+            window.renderErrorState(document.getElementById("recipesTableBody"), {
+                title: "Failed to load farm recipes",
+                message: err.message,
+                onRetry: "loadRecipes()"
+            });
+        }
+    }
 }
 
 function renderMetrics() {
@@ -290,11 +244,11 @@ function filterRecipes() {
 
     const filtered = recipesList.filter(r => {
         const matchesQuery = !query ||
-            r.title.toLowerCase().includes(query) ||
-            r.ingredient.toLowerCase().includes(query) ||
-            r.desc.toLowerCase().includes(query);
+            (r.title || "").toLowerCase().includes(query) ||
+            (r.ingredients || r.ingredient || "").toLowerCase().includes(query) ||
+            (r.description || r.desc || "").toLowerCase().includes(query);
 
-        const matchesCategory = !category || r.category === category;
+        const matchesCategory = !category || (r.category || "").toLowerCase() === category.toLowerCase();
 
         return matchesQuery && matchesCategory;
     });
@@ -305,26 +259,41 @@ function filterRecipes() {
 function renderTable(list) {
     const tbody = document.getElementById("recipesTableBody");
     if (!list.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">No recipes found matching criteria.</td></tr>`;
+        if (typeof window.renderEmptyState === "function") {
+            window.renderEmptyState(tbody, {
+                title: "No Farm Recipes Found",
+                message: "No culinary dairy recipes match your search criteria. Publish a new recipe to inspire your customers!",
+                actionText: "Publish Recipe",
+                actionFn: "openAddRecipeModal()"
+            });
+        } else {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">No recipes found matching criteria.</td></tr>`;
+        }
         return;
     }
 
-    tbody.innerHTML = list.map(r => `
+    tbody.innerHTML = list.map(r => {
+        const img = r.image_url || r.image || "/assets/images/products/fresh_cow_milk.jpg";
+        const ing = r.ingredients || r.ingredient || "Pure Farm Dairy";
+        const prepTime = r.preparation_time || r.time || "20 Mins";
+        const isPublished = r.status === "published" || !r.status;
+
+        return `
         <tr>
             <td>
                 <div class="flex-center justify-start gap-3">
-                    <img src="${r.image || 'images/logo.jpg'}" class="recipe-thumb" alt="${r.title}">
+                    <img src="${img}" class="recipe-thumb" alt="${r.title}" onerror="this.onerror=null; this.src='images/logo.jpg';">
                     <div>
                         <div class="font-bold text-dark text-sm">${r.title}</div>
                         <div class="text-xs text-muted font-mono">RECIPE-${String(r.id).padStart(3, "0")}</div>
                     </div>
                 </div>
             </td>
-            <td><span class="badge badge-neutral uppercase text-xs">${r.category}</span></td>
-            <td class="font-mono text-xs font-semibold">${r.time}</td>
-            <td><span class="badge badge-info">${r.difficulty}</span></td>
-            <td class="text-xs font-medium">${r.servings || '2 Servings'}</td>
-            <td><span class="font-bold text-dark text-xs">${r.ingredient}</span></td>
+            <td><span class="badge badge-neutral uppercase text-xs">${r.category || 'Curry'}</span></td>
+            <td class="font-mono text-xs font-semibold">${prepTime}</td>
+            <td><span class="badge badge-info">${r.difficulty || 'Easy'}</span></td>
+            <td class="text-xs font-medium">${r.servings || '4 Servings'}</td>
+            <td><span class="font-bold text-dark text-xs">${ing.length > 40 ? ing.substring(0, 38) + '...' : ing}</span></td>
             <td class="text-right">
                 <div class="flex-center justify-end gap-1">
                     <button class="btn btn-secondary btn-icon" onclick="openEditRecipeModal(${r.id})" title="Edit Recipe">
@@ -336,14 +305,15 @@ function renderTable(list) {
                 </div>
             </td>
         </tr>
-    `).join("");
+        `;
+    }).join("");
 }
 
 function openAddRecipeModal() {
     document.getElementById("recipeModalTitle").textContent = "Publish Farm Recipe";
     document.getElementById("recipeId").value = "";
     document.getElementById("recipeForm").reset();
-    document.getElementById("recipeModal").classList.add("show");
+    openModal("recipeModal");
 }
 
 function openEditRecipeModal(id) {
@@ -352,19 +322,19 @@ function openEditRecipeModal(id) {
 
     document.getElementById("recipeModalTitle").textContent = "Edit Farm Recipe";
     document.getElementById("recipeId").value = r.id;
-    document.getElementById("recipeTitle").value = r.title;
-    document.getElementById("recipeCategory").value = r.category;
-    document.getElementById("recipeTime").value = r.time;
-    document.getElementById("recipeDifficulty").value = r.difficulty;
+    document.getElementById("recipeTitle").value = r.title || "";
+    document.getElementById("recipeCategory").value = (r.category || "curry").toLowerCase();
+    document.getElementById("recipeTime").value = r.preparation_time || r.time || "";
+    document.getElementById("recipeDifficulty").value = r.difficulty || "Easy";
     document.getElementById("recipeServings").value = r.servings || "";
-    document.getElementById("recipeIngredient").value = r.ingredient;
-    document.getElementById("recipeImage").value = r.image || "";
-    document.getElementById("recipeDesc").value = r.desc;
+    document.getElementById("recipeIngredient").value = r.ingredients || r.ingredient || "";
+    document.getElementById("recipeImage").value = r.image_url || r.image || "";
+    document.getElementById("recipeDesc").value = r.instructions || r.description || r.desc || "";
 
-    document.getElementById("recipeModal").classList.add("show");
+    openModal("recipeModal");
 }
 
-function handleSaveRecipe(e) {
+async function handleSaveRecipe(e) {
     e.preventDefault();
     const id = document.getElementById("recipeId").value;
     const title = document.getElementById("recipeTitle").value.trim();
@@ -373,30 +343,71 @@ function handleSaveRecipe(e) {
     const difficulty = document.getElementById("recipeDifficulty").value;
     const servings = document.getElementById("recipeServings").value.trim();
     const ingredient = document.getElementById("recipeIngredient").value.trim();
-    const image = document.getElementById("recipeImage").value.trim() || "images/logo.jpg";
+    const image = document.getElementById("recipeImage").value.trim() || "/assets/images/products/fresh_cow_milk.jpg";
     const desc = document.getElementById("recipeDesc").value.trim();
+    const btn = document.getElementById("btnSaveRecipe");
 
-    if (id) {
-        const idx = recipesList.findIndex(x => x.id == id);
-        if (idx !== -1) {
-            recipesList[idx] = { id: Number(id), title, category, time, difficulty, servings, ingredient, image, desc };
+    btn.disabled = true;
+    btn.textContent = "Saving...";
+
+    const payload = {
+        title,
+        category,
+        preparation_time: time,
+        difficulty,
+        servings,
+        ingredients: ingredient,
+        instructions: desc,
+        description: desc,
+        image_url: image,
+        status: "published"
+    };
+
+    try {
+        const url = id ? `/api/recipes/${id}` : "/api/recipes";
+        const method = id ? "PUT" : "POST";
+        const res = await fetch(url, {
+            method,
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(id ? "Recipe updated successfully." : "New farm recipe published.", "success");
+            closeModal("recipeModal");
+            loadRecipes();
+        } else {
+            showToast(data.message || "Failed to save recipe", "danger");
         }
-        showToast("Recipe updated successfully.", "success");
-    } else {
-        const nextId = recipesList.length ? Math.max(...recipesList.map(r => r.id)) + 1 : 1;
-        recipesList.push({ id: nextId, title, category, time, difficulty, servings, ingredient, image, desc });
-        showToast("New farm recipe published.", "success");
+    } catch (err) {
+        showToast("Error saving recipe: " + err.message, "danger");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Publish Recipe";
     }
-
-    closeModal("recipeModal");
-    loadRecipes();
 }
 
-function deleteRecipe(id) {
-    if (!confirm("Are you sure you want to remove this recipe?")) return;
-    recipesList = recipesList.filter(r => r.id != id);
-    showToast("Recipe removed from directory.", "success");
-    loadRecipes();
+async function deleteRecipe(id) {
+    if (!confirm("Are you sure you want to permanently remove this recipe?")) return;
+
+    try {
+        const res = await fetch(`/api/recipes/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Recipe removed from directory.", "success");
+            loadRecipes();
+        } else {
+            showToast(data.message || "Failed to delete recipe", "danger");
+        }
+    } catch (err) {
+        showToast("Error deleting recipe: " + err.message, "danger");
+    }
 }
 </script>
 </body>

@@ -286,7 +286,11 @@ function renderSubsTable() {
 
     table.innerHTML = "";
     if (!filteredSubscriptions.length) {
-        table.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:36px; color:var(--thulirva-text-muted);">No subscriptions found matching your query.</td></tr>`;
+        renderEmptyState(table, {
+            icon: SVG_ICONS["calendar-clock"] || "🔄",
+            title: "No Subscriptions Active",
+            message: "No daily milk or dairy subscriptions are currently active. Active subscriptions will appear here automatically as customers subscribe on the mobile app or website."
+        });
         return;
     }
 

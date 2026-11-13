@@ -352,121 +352,63 @@ function addRecipeIngredient(name, price, img) {
     }
 }
 
-function loadDynamicRecipes() {
+async function loadDynamicRecipes() {
     const grid = document.getElementById('recipesGrid');
     if (!grid) return;
 
     let recipes = [];
-    const stored = localStorage.getItem('thulirva_custom_recipes');
-    if (stored) {
-        try { recipes = JSON.parse(stored); } catch (e) {}
+    try {
+        const res = await fetch('/api/recipes');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && Array.isArray(data.recipes)) {
+                recipes = data.recipes;
+            }
+        }
+    } catch (err) {
+        console.warn("[RECIPES] Live API fetch failed:", err.message);
     }
 
-    if (!recipes || !recipes.length) {
-        recipes = [
-            {
-                id: 1,
-                title: "Shahi Paneer with Malai Gravy",
-                category: "curry",
-                categoryName: "Curries & Mains",
-                time: "30 Mins",
-                difficulty: "Medium",
-                servings: "4 Servings",
-                ingredient: "THULIRVA Artisanal Paneer & Desi Ghee",
-                desc: "Soft cubes of fresh THULIRVA artisanal paneer simmered in a velvety cashew, melon seed, and fresh cream gravy scented with cardamom and saffron.",
-                image: "../assets/images/fresh_paneer.jpg"
-            },
-            {
-                id: 2,
-                title: "Aromatic Ghee Pongal",
-                category: "breakfast",
-                categoryName: "Wholesome Breakfast",
-                time: "20 Mins",
-                difficulty: "Easy",
-                servings: "3 Servings",
-                ingredient: "THULIRVA Pure Bilona Desi Ghee",
-                desc: "Traditional South Indian rice and moong dal tempered with crushed black pepper, fiery ginger, crunchy roasted cashews, and generous spoonfuls of golden A2 Cow Ghee.",
-                image: "../assets/images/hero_products.jpg"
-            },
-            {
-                id: 3,
-                title: "Golden Kesar Badam Milk",
-                category: "beverage",
-                categoryName: "Nourishing Beverages",
-                time: "15 Mins",
-                difficulty: "Easy",
-                servings: "2 Servings",
-                ingredient: "THULIRVA Farm Fresh Milk & Raw Honey",
-                desc: "Warm farm-fresh whole milk infused with freshly crushed Kashmiri saffron threads, slivered almonds, nutmeg, and sweetened with raw forest honey.",
-                image: "../assets/images/dairy_products.jpg"
-            },
-            {
-                id: 4,
-                title: "Traditional Mysore Pak",
-                category: "sweet",
-                categoryName: "Traditional Sweets",
-                time: "35 Mins",
-                difficulty: "Medium",
-                servings: "6 Servings",
-                ingredient: "THULIRVA Cultured Desi Cow Ghee",
-                desc: "Melt-in-the-mouth heritage delicacy crafted from roasted gram flour, organic raw sugar, and abundant fragrant Bilona Cow Ghee.",
-                image: "../assets/images/dairy_products.jpg"
-            },
-            {
-                id: 5,
-                title: "Masala Chai with Farm Milk",
-                category: "beverage",
-                categoryName: "Nourishing Beverages",
-                time: "10 Mins",
-                difficulty: "Easy",
-                servings: "2 Servings",
-                ingredient: "THULIRVA Fresh A2 Cow Milk",
-                desc: "Rich, creamy whole cow milk simmered with fresh ginger, crushed green cardamom pods, cinnamon bark, and premium estate Assam black tea.",
-                image: "../assets/images/fresh_cow_milk.jpg"
-            },
-            {
-                id: 6,
-                title: "Classic Palak Paneer",
-                category: "curry",
-                categoryName: "Curries & Mains",
-                time: "25 Mins",
-                difficulty: "Easy",
-                servings: "4 Servings",
-                ingredient: "THULIRVA Fresh Paneer & Butter",
-                desc: "Nutritious garden spinach purée gently tempered with cumin, garlic, and green chilies, studded with tender cubes of farm paneer and finished with white butter.",
-                image: "../assets/images/fresh_paneer.jpg"
-            }
-        ];
-        localStorage.setItem('thulirva_custom_recipes', JSON.stringify(recipes));
+    if (!recipes.length) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 48px 0; color: #6E7D73;">No recipes currently published. Please check back soon!</div>`;
+        return;
     }
 
     grid.innerHTML = "";
     recipes.forEach(r => {
         const card = document.createElement('div');
         card.className = 'recipe-card';
-        card.dataset.category = r.category;
+        card.dataset.category = r.category || 'curry';
         
-        let imgSrc = r.image || '../assets/images/fresh_paneer.jpg';
-        if (imgSrc.startsWith('assets/')) imgSrc = '../' + imgSrc;
+        let imgSrc = r.image_url || r.image || '../assets/images/products/fresh_cow_milk.jpg';
+        if (imgSrc.startsWith('/assets/')) imgSrc = '..' + imgSrc;
+        else if (imgSrc.startsWith('assets/')) imgSrc = '../' + imgSrc;
+
+        const timeStr = r.preparation_time || r.time || "25 Mins";
+        const diffStr = r.difficulty || "Easy";
+        const servStr = r.servings || "4 Servings";
+        const catName = r.category_name || r.categoryName || r.category || "Culinary";
+        const ingStr = r.ingredients || r.ingredient || "Pure Farm Dairy";
+        const descStr = r.description || r.desc || "";
 
         card.innerHTML = `
             <div class="recipe-img-wrap">
-                <img src="${imgSrc}" alt="${r.title}">
-                <span class="recipe-tag">${r.categoryName || r.category}</span>
+                <img src="${imgSrc}" alt="${r.title}" onerror="this.onerror=null; this.src='../assets/images/products/fresh_cow_milk.jpg';">
+                <span class="recipe-tag">${catName}</span>
             </div>
             <div class="recipe-content">
                 <div class="recipe-meta-row">
-                    <span class="recipe-meta-item">⏱️ ${r.time}</span>
-                    <span class="recipe-meta-item">👨‍🍳 ${r.difficulty}</span>
-                    <span class="recipe-meta-item">🍽️ ${r.servings}</span>
+                    <span class="recipe-meta-item">⏱️ ${timeStr}</span>
+                    <span class="recipe-meta-item">👨‍🍳 ${diffStr}</span>
+                    <span class="recipe-meta-item">🍽️ ${servStr}</span>
                 </div>
                 <h3 class="recipe-title">${r.title}</h3>
-                <p class="recipe-desc">${r.desc}</p>
+                <p class="recipe-desc">${descStr}</p>
                 <div class="recipe-ingredients-badge">
-                    <span>✨ Key: ${r.ingredient}</span>
+                    <span>✨ Key: ${ingStr.length > 50 ? ingStr.substring(0, 48) + '...' : ingStr}</span>
                 </div>
                 <div class="recipe-actions">
-                    <button class="btn btn-primary" style="flex: 1;" onclick="addRecipeIngredient('${r.ingredient.split('&')[0].trim()}', 120, '${imgSrc}')">Add to Cart</button>
+                    <button class="btn btn-primary" style="flex: 1;" onclick="addRecipeIngredient('${ingStr.split(',')[0].split('&')[0].trim()}', 120, '${imgSrc}')">Add to Cart</button>
                     <a href="shop.html" class="btn btn-outline" style="padding: 10px 14px;">Shop Farm Dairy</a>
                 </div>
             </div>

@@ -272,27 +272,9 @@ async function loadCustomers() {
             const data = await res.json();
             customersList = data.customers || [];
         }
-    } catch (_) {}
-
-    // Merge registered accounts
-    const regUsers = JSON.parse(localStorage.getItem('thulirva_registered_users') || '[]');
-    regUsers.forEach(u => {
-        if (!u.phone && !u.email) return;
-        const exists = customersList.find(c => (u.phone && c.phone === u.phone) || (u.email && c.email === u.email));
-        if (!exists) {
-            customersList.push({
-                id: u.id || `USR-${Math.floor(1000 + Math.random() * 9000)}`,
-                name: u.name || "Customer",
-                phone: u.phone || "—",
-                email: u.email || "—",
-                address: u.address || "Doorstep Address Saved",
-                city: u.city || "Padur",
-                orders_count: 0,
-                total_spent: 0,
-                created_at: u.created_at || "Recent"
-            });
-        }
-    });
+    } catch (err) {
+        showToast("Error loading customers: " + err.message, "danger");
+    }
 
     calculateStats();
     filterCustomers();

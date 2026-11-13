@@ -144,24 +144,50 @@
     </main>
 </div>
 
-<!-- Screenshot Proof Lightbox Modal -->
+<!-- Screenshot Proof Lightbox Modal with Zoom & Fullscreen -->
 <div class="modal" id="proofModal">
-    <div class="modal-dialog" style="max-width: 520px;">
+    <div class="modal-dialog" style="max-width: 680px;">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title" id="proofModalTitle">UPI Payment Screenshot</h3>
-                <button class="modal-close" onclick="closeModal('proofModal')">&times;</button>
+                <div class="flex-center gap-2">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="zoomProof(-0.25)" title="Zoom Out">−</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="resetProofZoom()" title="Reset Zoom">1:1</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="zoomProof(0.25)" title="Zoom In">+</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleProofFullscreen()" title="Open Original Image">⛶</button>
+                    <button type="button" class="modal-close" onclick="closeModal('proofModal')">&times;</button>
+                </div>
             </div>
-            <div class="modal-body text-center p-4">
-                <img id="proofPreviewImg" src="" alt="Payment Screenshot" style="width: 100%; max-height: 480px; object-fit: contain; border-radius: 8px; border: 1px solid var(--border);">
-                <div class="mt-3 text-muted text-sm" id="proofMetaText"></div>
+            <div class="modal-body text-center p-4" style="overflow:auto; max-height:68vh; background:#18221B; border-radius:4px;">
+                <div id="proofImgContainer" style="display:inline-block; transition:transform 0.2s ease;">
+                    <img id="proofPreviewImg" src="" alt="Payment Screenshot" style="max-width:100%; max-height:500px; object-fit:contain; border-radius:6px; box-shadow:0 4px 20px rgba(0,0,0,0.5);" onerror="this.onerror=null; this.src='images/logo.jpg';">
+                </div>
+                <div class="mt-3 text-sm" id="proofMetaText" style="color:#FAF7F0 !important;"></div>
             </div>
             <div class="modal-footer flex-between">
-                <button class="btn btn-secondary" onclick="closeModal('proofModal')">Close</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('proofModal')">Close</button>
                 <div class="flex-center gap-2">
-                    <button class="btn btn-danger btn-sm" id="btnProofReject" onclick="promptRejectFromProof()">Reject</button>
-                    <button class="btn btn-primary btn-sm" id="btnProofApprove" onclick="approveFromProof()">Approve Payment</button>
+                    <button type="button" class="btn btn-danger btn-sm" id="btnProofReject" onclick="promptRejectFromProof()">Reject</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="btnProofApprove" onclick="approveFromProof()">Approve Payment</button>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Audit History Modal -->
+<div class="modal" id="auditHistoryModal">
+    <div class="modal-dialog" style="max-width: 560px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="auditModalTitle">Payment Audit Trail</h3>
+                <button type="button" class="modal-close" onclick="closeModal('auditHistoryModal')">&times;</button>
+            </div>
+            <div class="modal-body p-4" id="auditModalBody">
+                <!-- Injected via JS -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary w-full" onclick="closeModal('auditHistoryModal')">Close Audit Log</button>
             </div>
         </div>
     </div>
@@ -173,7 +199,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title">Reject Payment Proof</h3>
-                <button class="modal-close" onclick="closeModal('rejectReasonModal')">&times;</button>
+                <button type="button" class="modal-close" onclick="closeModal('rejectReasonModal')">&times;</button>
             </div>
             <form id="rejectReasonForm" onsubmit="handleRejectPayment(event)">
                 <input type="hidden" id="rejectPaymentId">
@@ -220,13 +246,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function loadAllPayments() {
     try {
-        const [ordersRes, subsRes] = await Promise.all([
-            fetch("/api/orders", { headers: { Authorization: `Bearer ${token}` } }),
-            fetch("/api/subscriptions", { headers: { Authorization: `Bearer ${token}` } })
-        ]);
+        let ordersData = { orders: [] };
+        let subsData = { subscriptions: [] };
 
-        const ordersData = await ordersRes.json();
-        const subsData = await subsRes.json();
+        // Fetch Orders with fallback to admin endpoints
+        try {
+            const ordersRes = await fetch("/api/orders", { headers: { Authorization: `Bearer ${token}` } });
+            if (ordersRes.ok) {
+                ordersData = await ordersRes.json();
+            } else {
+                const altRes = await fetch("/api/orders/admin/all", { headers: { Authorization: `Bearer ${token}` } });
+                if (altRes.ok) ordersData = await altRes.json();
+            }
+        } catch (e) {
+            console.warn("[PAYMENTS] Orders fetch warning:", e.message);
+        }
+
+        // Fetch Subscriptions with fallback to admin endpoints
+        try {
+            const subsRes = await fetch("/api/subscriptions/admin/all", { headers: { Authorization: `Bearer ${token}` } });
+            if (subsRes.ok) {
+                subsData = await subsRes.json();
+            } else {
+                const altSubs = await fetch("/api/subscriptions", { headers: { Authorization: `Bearer ${token}` } });
+                if (altSubs.ok) subsData = await altSubs.json();
+            }
+        } catch (e) {
+            console.warn("[PAYMENTS] Subscriptions fetch warning:", e.message);
+        }
 
         const orders = (ordersData.orders || []).map(o => ({
             id: o.id || o.order_number,
@@ -239,6 +286,8 @@ async function loadAllPayments() {
             transaction_id: o.transaction_id || o.transactionId || "",
             payment_proof: o.payment_proof || o.paymentProof || "",
             payment_status: (o.payment_status || "Pending").toLowerCase(),
+            verified_by: o.payment_verified_by || o.verified_by || null,
+            rejection_reason: o.rejection_reason || o.payment_rejection_reason || null,
             created_at: o.created_at || o.createdAt || Date.now()
         }));
 
@@ -253,6 +302,8 @@ async function loadAllPayments() {
             transaction_id: s.transaction_id || s.transactionId || "",
             payment_proof: s.payment_proof || s.paymentProof || "",
             payment_status: (s.payment_status || "Pending").toLowerCase(),
+            verified_by: s.verified_by || null,
+            rejection_reason: s.rejection_reason || null,
             created_at: s.created_at || s.createdAt || Date.now()
         }));
 
@@ -263,9 +314,17 @@ async function loadAllPayments() {
         filterPayments();
     } catch (err) {
         showToast("Error retrieving payments: " + err.message, "danger");
-        document.getElementById("paymentsTableBody").innerHTML = `
-            <tr><td colspan="8" class="text-center py-4 text-danger">Failed to connect to backend payment records.</td></tr>
-        `;
+        if (typeof window.renderErrorState === "function") {
+            window.renderErrorState(document.getElementById("paymentsTableBody"), {
+                title: "Failed to connect to backend payment records",
+                message: err.message,
+                onRetry: "loadAllPayments()"
+            });
+        } else {
+            document.getElementById("paymentsTableBody").innerHTML = `
+                <tr><td colspan="8" class="text-center py-4 text-danger">Failed to connect to backend payment records.</td></tr>
+            `;
+        }
     }
 }
 
@@ -368,22 +427,45 @@ function renderTable(list) {
                 <td>${statusBadge}</td>
                 <td class="text-xs text-muted">${new Date(i.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}</td>
                 <td class="text-right">
-                    ${isPending ? `
-                        <div class="flex-center justify-end gap-1">
+                    <div class="flex-center justify-end gap-1">
+                        <button class="btn btn-secondary btn-icon" onclick="openAuditModal('${i.id}', '${i.item_type}')" title="View Audit Trail">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </button>
+                        ${isPending ? `
                             <button class="btn btn-primary btn-sm" onclick="quickVerify('${i.id}', '${i.item_type}')">
                                 Approve
                             </button>
                             <button class="btn btn-danger btn-sm" onclick="openRejectReasonModal('${i.id}', '${i.item_type}')">
                                 Reject
                             </button>
-                        </div>
-                    ` : `
-                        <span class="text-xs text-muted font-semibold">Processed</span>
-                    `}
+                        ` : `
+                            <span class="text-xs text-muted font-semibold">Processed</span>
+                        `}
+                    </div>
                 </td>
             </tr>
         `;
     }).join("");
+}
+
+let currentProofZoom = 1;
+function zoomProof(delta) {
+    currentProofZoom = Math.max(0.5, Math.min(3.5, currentProofZoom + delta));
+    const container = document.getElementById("proofImgContainer");
+    if (container) container.style.transform = `scale(${currentProofZoom})`;
+}
+
+function resetProofZoom() {
+    currentProofZoom = 1;
+    const container = document.getElementById("proofImgContainer");
+    if (container) container.style.transform = "scale(1)";
+}
+
+function toggleProofFullscreen() {
+    const img = document.getElementById("proofPreviewImg");
+    if (img && img.src) {
+        window.open(img.src, "_blank");
+    }
 }
 
 function openProofModal(id, itemType) {
@@ -391,6 +473,7 @@ function openProofModal(id, itemType) {
     if (!item) return;
 
     activeProofItem = item;
+    resetProofZoom();
     document.getElementById("proofModalTitle").textContent = `${item.ref_number} — Payment Proof Screenshot`;
     document.getElementById("proofPreviewImg").src = item.payment_proof || "images/logo.jpg";
     document.getElementById("proofMetaText").textContent = `Customer: ${item.customer_name} (${item.customer_phone}) • Amount: ₹${item.total.toFixed(2)} • UTR: ${item.transaction_id || 'N/A'}`;
@@ -399,7 +482,72 @@ function openProofModal(id, itemType) {
     document.getElementById("btnProofApprove").style.display = isPending ? "inline-block" : "none";
     document.getElementById("btnProofReject").style.display = isPending ? "inline-block" : "none";
 
-    document.getElementById("proofModal").classList.add("show");
+    openModal("proofModal");
+}
+
+function openAuditModal(id, itemType) {
+    const item = allItems.find(x => String(x.id) === String(id) && x.item_type === itemType);
+    if (!item) return;
+
+    document.getElementById("auditModalTitle").textContent = `${item.ref_number} — Payment Audit Trail`;
+    const isApproved = item.payment_status.includes("verif") || item.payment_status.includes("paid");
+    const isRejected = item.payment_status.includes("reject");
+
+    document.getElementById("auditModalBody").innerHTML = `
+        <div class="p-2">
+            <div class="card mb-3 p-3 bg-cream">
+                <div class="flex-between mb-2">
+                    <span class="font-bold text-dark">${item.ref_number} (${item.item_type === 'subscription' ? 'Subscription' : 'Product Order'})</span>
+                    <span class="font-bold text-success text-base">₹${item.total.toFixed(2)}</span>
+                </div>
+                <div class="text-xs text-muted">Customer: <strong>${item.customer_name}</strong> • Phone: ${item.customer_phone}</div>
+                <div class="text-xs text-muted mt-1">Payment Method: <strong>${item.payment_method}</strong></div>
+                <div class="text-xs text-muted">UTR / Transaction: <strong>${item.transaction_id || 'Not provided'}</strong></div>
+            </div>
+
+            <div class="mb-2">
+                <h5 class="font-bold text-dark text-xs uppercase text-muted mb-2">Audit History Events</h5>
+                <ul style="list-style:none; padding:0; margin:0;">
+                    <li class="mb-2 pb-2" style="border-bottom:1px solid var(--border-light);">
+                        <div class="flex-between">
+                            <span class="font-bold text-xs text-dark">Payment Submitted</span>
+                            <span class="text-xs text-muted">${new Date(item.created_at).toLocaleString('en-IN')}</span>
+                        </div>
+                        <div class="text-xs text-muted">Submitted via customer checkout with ${item.payment_method}</div>
+                    </li>
+                    ${isApproved ? `
+                        <li class="mb-2 pb-2" style="border-bottom:1px solid var(--border-light);">
+                            <div class="flex-between">
+                                <span class="font-bold text-xs text-success">✓ Verified & Cleared</span>
+                                <span class="text-xs text-muted">Audit Confirmed</span>
+                            </div>
+                            <div class="text-xs text-muted">Verified by: ${item.verified_by || 'Finance Admin'}</div>
+                        </li>
+                    ` : ''}
+                    ${isRejected ? `
+                        <li class="mb-2 pb-2" style="border-bottom:1px solid var(--border-light);">
+                            <div class="flex-between">
+                                <span class="font-bold text-xs text-danger">✗ Payment Rejected</span>
+                                <span class="text-xs text-muted">Action Recorded</span>
+                            </div>
+                            <div class="text-xs text-danger font-medium mt-1">Reason: ${item.rejection_reason || 'UTR not verified in bank records'}</div>
+                        </li>
+                    ` : ''}
+                    ${!isApproved && !isRejected ? `
+                        <li class="mb-2 pb-2">
+                            <div class="flex-between">
+                                <span class="font-bold text-xs text-gold">⏳ Pending Manual Review</span>
+                                <span class="text-xs text-muted">In Queue</span>
+                            </div>
+                            <div class="text-xs text-muted">Awaiting administrator verification against bank statement.</div>
+                        </li>
+                    ` : ''}
+                </ul>
+            </div>
+        </div>
+    `;
+
+    openModal("auditHistoryModal");
 }
 
 function promptRejectFromProof() {

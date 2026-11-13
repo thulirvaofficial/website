@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,167 +8,438 @@
     <link rel="stylesheet" href="css/admin.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap"
+        rel="stylesheet">
     <style>
+        :root {
+            --brand-forest: #173F2D;
+            --brand-forest-dark: #0F2D1E;
+            --brand-cream: #FAF7F0;
+            --brand-gold: #D4AF37;
+            --brand-gold-dark: #B89228;
+        }
+
         body {
-            background: linear-gradient(135deg, #173F2D 0%, #0F2D1E 100%);
+            background-color: var(--brand-cream);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(23, 63, 45, 0.05) 0%, transparent 45%),
+                radial-gradient(circle at 90% 80%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(23, 63, 45, 0.02) 0%, transparent 60%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 24px;
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+            color: #1F2937;
         }
+
+        /* Subtle dairy / leaf background watermark ornaments */
         body::before {
-            content: "";
-            position: absolute;
-            width: 600px;
-            height: 600px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%);
-            top: -150px;
-            right: -150px;
-            pointer-events: none;
-        }
-        body::after {
             content: "";
             position: absolute;
             width: 500px;
             height: 500px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(212,175,55,0.05) 0%, transparent 70%);
-            bottom: -100px;
-            left: -100px;
+            background: radial-gradient(circle, rgba(23, 63, 45, 0.04) 0%, transparent 70%);
+            top: -120px;
+            right: -100px;
             pointer-events: none;
         }
+
+        body::after {
+            content: "";
+            position: absolute;
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.06) 0%, transparent 70%);
+            bottom: -80px;
+            left: -80px;
+            pointer-events: none;
+        }
+
         .login-card-enterprise {
             background: #FFFFFF;
-            border: 1px solid rgba(212,175,55,0.25);
-            border-radius: 16px;
+            border: 1px solid rgba(212, 175, 55, 0.28);
+            border-radius: 20px;
             width: 100%;
             max-width: 440px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            padding: 44px 38px 36px;
+            box-shadow: 0 16px 40px rgba(23, 63, 45, 0.09), 0 4px 12px rgba(212, 175, 55, 0.08);
             position: relative;
             z-index: 10;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
         .login-brand-header {
             text-align: center;
             margin-bottom: 28px;
         }
+
+        .login-logo-wrap {
+            position: relative;
+            width: 78px;
+            height: 78px;
+            margin: 0 auto 16px;
+        }
+
         .login-logo {
-            width: 72px;
-            height: 72px;
+            width: 78px;
+            height: 78px;
             border-radius: 50%;
             border: 3px solid #D4AF37;
             padding: 2px;
             background: #FFFFFF;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.12);
-            margin: 0 auto 12px;
+            box-shadow: 0 6px 18px rgba(23, 63, 45, 0.14);
             display: block;
             object-fit: cover;
         }
+
         .login-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 26px;
-            font-weight: 700;
-            color: #173F2D;
-            letter-spacing: 0.5px;
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--brand-forest);
+            letter-spacing: 0.8px;
             margin-bottom: 4px;
+            line-height: 1.1;
         }
+
         .login-subtitle {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--brand-gold-dark);
+        }
+
+        .login-error {
+            background: #FEF2F2;
+            border: 1.5px solid #FCA5A5;
+            color: #991B1B;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            line-height: 1.4;
+            animation: fadeInDown 0.2s ease;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
             font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #8C7851;
+            letter-spacing: 0.6px;
+            color: #374151;
+            margin-bottom: 7px;
         }
-        .login-error {
-            background: #FFF2F2;
-            border: 1px solid #FFCDD2;
-            color: #C62828;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 13px;
-            margin-bottom: 16px;
+
+        .input-icon-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon-left {
+            position: absolute;
+            left: 14px;
+            color: #9CA3AF;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-control-enterprise {
+            width: 100%;
+            padding: 12px 14px 12px 42px;
+            border: 1.5px solid #E5E7EB;
+            border-radius: 10px;
+            font-size: 13.5px;
+            font-family: inherit;
+            background: #FAF8F2;
+            color: #111827;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .form-control-enterprise:focus {
+            background: #FFFFFF;
+            border-color: var(--brand-forest);
+            box-shadow: 0 0 0 3.5px rgba(23, 63, 45, 0.10);
+        }
+
+        .btn-toggle-pw {
+            position: absolute;
+            right: 12px;
+            background: transparent;
+            border: none;
+            color: #6B7280;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: color 0.15s ease;
+        }
+
+        .btn-toggle-pw:hover {
+            color: var(--brand-forest);
+        }
+
+        .form-options-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            font-size: 12.5px;
+        }
+
+        .remember-checkbox-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: #4B5563;
+            user-select: none;
+            font-weight: 500;
+        }
+
+        .remember-checkbox-label input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--brand-forest);
+            cursor: pointer;
+        }
+
+        .btn-login-submit {
+            width: 100%;
+            padding: 13px 20px;
+            background: linear-gradient(180deg, #173F2D 0%, #113123 100%);
+            color: #FFFFFF;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            border-radius: 10px;
+            font-size: 14.5px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 14px rgba(23, 63, 45, 0.22);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-login-submit:hover:not(:disabled) {
+            background: linear-gradient(180deg, #1E4F39 0%, #153A2A 100%);
+            border-color: #D4AF37;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(23, 63, 45, 0.30);
+        }
+
+        .btn-login-submit:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-login-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .spinner-login {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #FFFFFF;
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
             display: none;
+        }
+
+        .login-footer-trust {
+            margin-top: 26px;
+            text-align: center;
+            border-top: 1px solid #F3EFE4;
+            padding-top: 16px;
+        }
+
+        .trust-badge {
+            font-size: 11px;
+            font-weight: 600;
+            color: #6B7280;
+            letter-spacing: 0.4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .trust-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #1E6F43;
         }
     </style>
 </head>
+
 <body>
 
-<div class="login-card-enterprise">
-    <div class="login-brand-header">
-        <img src="images/logo.jpg" alt="THULIRVA" class="login-logo">
-        <h1 class="login-title">THULIRVA</h1>
-        <div class="login-subtitle">Enterprise Administration</div>
-    </div>
-
-    <div class="login-error" id="loginError"></div>
-
-    <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
-        <div class="form-group mb-3">
-            <label class="form-label required">Administrator Email</label>
-            <input type="email" id="email" class="form-control" value="admin@thulirva.com" placeholder="name@thulirva.com" required autocomplete="username">
+    <div class="login-card-enterprise">
+        <div class="login-brand-header">
+            <div class="login-logo-wrap">
+                <img src="images/logo.jpg" alt="THULIRVA Official Crest" class="login-logo">
+            </div>
+            <h1 class="login-title">THULIRVA</h1>
+            <div class="login-subtitle">Enterprise Administration</div>
         </div>
 
-        <div class="form-group mb-4">
-            <label class="form-label required">Password</label>
-            <input type="password" id="password" class="form-control" value="admin123" placeholder="••••••••" required autocomplete="current-password">
+        <div class="login-error" id="loginError">
+            <span style="font-size:16px;">⚠️</span>
+            <span id="loginErrorText">Invalid credentials or unauthorized access.</span>
         </div>
 
-        <button type="submit" class="btn btn-primary w-full py-3" id="btnLoginSubmit" style="font-size: 15px; font-weight: 700;">
-            Sign In to Dashboard
-        </button>
-    </form>
+        <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+            <div class="form-group">
+                <label class="form-label" for="email">Administrator Email</label>
+                <div class="input-icon-wrap">
+                    <span class="input-icon-left">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </span>
+                    <input type="email" id="email" class="form-control-enterprise" value="admin@thulirva.com"
+                        placeholder="admin@thulirva.com" required autocomplete="username">
+                </div>
+            </div>
 
-    <div class="mt-4 text-center">
-        <span class="text-xs text-muted">Single Source of Truth • Padur Hub Fleet Engine • Port 5500</span>
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <div class="input-icon-wrap">
+                    <span class="input-icon-left">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </span>
+                    <input type="password" id="password" class="form-control-enterprise" style="padding-right: 44px;"
+                        value="admin123" placeholder="••••••••" required autocomplete="current-password">
+                    <button type="button" class="btn-toggle-pw" id="btnTogglePassword" onclick="togglePasswordVisibility()" title="Show/Hide Password">
+                        <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-options-row">
+                <label class="remember-checkbox-label">
+                    <input type="checkbox" id="rememberMe" checked>
+                    <span>Remember this console</span>
+                </label>
+                <a href="javascript:void(0)" onclick="promptSupportHelp()" style="color:var(--brand-forest); font-weight:600; text-decoration:none;">Support Help</a>
+            </div>
+
+            <button type="submit" class="btn-login-submit" id="btnLoginSubmit">
+                <span class="spinner-login" id="loginSpinner"></span>
+                <span id="btnSubmitText">Sign In to Dashboard</span>
+            </button>
+        </form>
+
+        <div class="login-footer-trust">
+            <div class="trust-badge">
+                <span class="trust-badge-dot"></span>
+                <span>Single Source of Truth • Padur Hub • Port 5500</span>
+            </div>
+        </div>
     </div>
-</div>
 
-<script>
-// If already logged in, redirect straight to dashboard
-if (localStorage.getItem("thulirva_admin_token")) {
-    window.location.href = "dashboard.html";
-}
-
-async function handleAdminLogin(event) {
-    event.preventDefault();
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-    const errorEl = document.getElementById("loginError");
-    const btn = document.getElementById("btnLoginSubmit");
-
-    errorEl.style.display = "none";
-    btn.disabled = true;
-    btn.textContent = "Authenticating...";
-
-    try {
-        const response = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
-        });
-        const data = await response.json();
-
-        if (data.success && (data.user?.role === "admin" || !data.user?.role || data.token)) {
-            localStorage.setItem("thulirva_admin_token", data.token);
+    <script>
+        // Check if admin is already authenticated
+        if (localStorage.getItem("thulirva_admin_token")) {
             window.location.href = "dashboard.html";
-        } else {
-            errorEl.textContent = data.message || "Invalid credentials or unauthorized administrative access.";
-            errorEl.style.display = "block";
         }
-    } catch (err) {
-        errorEl.textContent = "Unable to connect to backend server on port 5500.";
-        errorEl.style.display = "block";
-    } finally {
-        btn.disabled = false;
-        btn.textContent = "Sign In to Dashboard";
-    }
-}
-</script>
+
+        // Restore remembered email if present
+        document.addEventListener("DOMContentLoaded", () => {
+            const rememberedEmail = localStorage.getItem("thulirva_remembered_email");
+            if (rememberedEmail) {
+                document.getElementById("email").value = rememberedEmail;
+            }
+        });
+
+        // Toggle password show/hide
+        function togglePasswordVisibility() {
+            const pwInput = document.getElementById("password");
+            const eyeIcon = document.getElementById("eyeIcon");
+            if (pwInput.type === "password") {
+                pwInput.type = "text";
+                eyeIcon.innerHTML = `<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>`;
+            } else {
+                pwInput.type = "password";
+                eyeIcon.innerHTML = `<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>`;
+            }
+        }
+
+        function promptSupportHelp() {
+            alert("THULIRVA Operations Support:\n\nDefault administrator credentials:\nEmail: admin@thulirva.com\nPassword: admin123\n\nContact backend systems engineer if credentials need rotation.");
+        }
+
+        async function handleAdminLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            const rememberMe = document.getElementById("rememberMe").checked;
+            const errorEl = document.getElementById("loginError");
+            const errorText = document.getElementById("loginErrorText");
+            const btn = document.getElementById("btnLoginSubmit");
+            const spinner = document.getElementById("loginSpinner");
+            const btnText = document.getElementById("btnSubmitText");
+
+            errorEl.style.display = "none";
+            btn.disabled = true;
+            spinner.style.display = "inline-block";
+            btnText.textContent = "Authenticating...";
+
+            if (rememberMe) {
+                localStorage.setItem("thulirva_remembered_email", email);
+            } else {
+                localStorage.removeItem("thulirva_remembered_email");
+            }
+
+            try {
+                const response = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+
+                if (data.success && (data.user?.role === "admin" || !data.user?.role || data.token)) {
+                    localStorage.setItem("thulirva_admin_token", data.token);
+                    window.location.href = "dashboard.html";
+                } else {
+                    errorText.textContent = data.message || "Invalid administrative credentials or insufficient privileges.";
+                    errorEl.style.display = "flex";
+                }
+            } catch (err) {
+                errorText.textContent = "Unable to connect to backend server on port 5500. Please verify the service is running.";
+                errorEl.style.display = "flex";
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = "none";
+                btnText.textContent = "Sign In to Dashboard";
+            }
+        }
+    </script>
 </body>
+
 </html>

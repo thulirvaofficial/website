@@ -259,8 +259,8 @@ function renderTable(list) {
             durationStr = `${hours}h ${mins}m`;
         }
 
-        const checkInLat = a.check_in_latitude || 12.8025;
-        const checkInLng = a.check_in_longitude || 80.2233;
+        const checkInLat = a.check_in_location?.latitude || a.check_in_latitude || 12.8025;
+        const checkInLng = a.check_in_location?.longitude || a.check_in_longitude || 80.2233;
         const checkInMaps = `https://www.google.com/maps?q=${checkInLat},${checkInLng}`;
 
         const selfieImg = a.check_in_photo || a.photo_base64 || a.photo_url || "images/logo.jpg";

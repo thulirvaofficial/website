@@ -525,19 +525,70 @@ async function handleAddPartner(e) {
     }
 }
 
-function openEditPartnerModal(id) {
-    const p = allPartners.find(x => x.partner_id === id);
-    if (!p) return;
+async function openEditPartnerModal(id) {
+    // 1. Immediately prefill from local cache so the user sees no blank fields
+    const localPartner = allPartners.find(x => x.partner_id === id || String(x.id) === String(id));
+    if (localPartner) {
+        populateEditPartnerForm(localPartner);
+    }
 
-    document.getElementById("editPartnerId").value = p.partner_id;
+    openModal("editPartnerModal");
+
+    // 2. Fetch authoritative live record by ID from backend to guarantee latest database state
+    try {
+        const res = await fetch(`/api/v1/partners/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && data.partner) {
+            populateEditPartnerForm(data.partner);
+        }
+    } catch (err) {
+        console.warn("[PARTNER EDIT] Live fetch fallback to local cache:", err.message);
+    }
+}
+
+function populateEditPartnerForm(p) {
+    if (!p) return;
+    document.getElementById("editPartnerId").value = p.partner_id || p.id || "";
     document.getElementById("editPartnerName").value = p.name || "";
     document.getElementById("editPartnerPhone").value = p.phone || "";
     document.getElementById("editPartnerEmail").value = p.email || "";
-    document.getElementById("editPartnerArea").value = p.assigned_area || "Padur";
-    document.getElementById("editPartnerVehicleType").value = p.vehicle_type || "Electric Scooter";
-    document.getElementById("editPartnerVehicleNumber").value = p.vehicle_number || "";
+    
+    // Normalize area selection
+    const areaVal = p.assigned_area || p.area || "Padur";
+    const areaSelect = document.getElementById("editPartnerArea");
+    if (areaSelect) {
+        let matched = false;
+        for (let opt of areaSelect.options) {
+            if (opt.value.toLowerCase() === areaVal.toLowerCase()) {
+                areaSelect.value = opt.value;
+                matched = true;
+                break;
+            }
+        }
+        if (!matched && areaVal) {
+            const newOpt = document.createElement("option");
+            newOpt.value = areaVal;
+            newOpt.textContent = areaVal;
+            areaSelect.appendChild(newOpt);
+            areaSelect.value = areaVal;
+        }
+    }
 
-    document.getElementById("editPartnerModal").classList.add("show");
+    // Normalize vehicle type
+    const vehType = p.vehicle_type || "Electric Scooter";
+    const vehSelect = document.getElementById("editPartnerVehicleType");
+    if (vehSelect) {
+        for (let opt of vehSelect.options) {
+            if (opt.value.toLowerCase() === vehType.toLowerCase()) {
+                vehSelect.value = opt.value;
+                break;
+            }
+        }
+    }
+
+    document.getElementById("editPartnerVehicleNumber").value = p.vehicle_number || p.vehicle_registration || "";
 }
 
 async function handleEditPartner(e) {

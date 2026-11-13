@@ -182,6 +182,38 @@
     </div>
 </div>
 
+<!-- DELIVERY PROOF PREVIEW & AUDIT MODAL -->
+<div class="modal-overlay" id="deliveryProofModal">
+    <div class="modal-content" style="max-width: 620px;">
+        <div class="modal-header">
+            <h3 class="modal-title">📸 Doorstep Delivery Photographic Proof</h3>
+            <button class="modal-close-btn" onclick="closeDeliveryProofModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="deliveryProofTargetOrderId">
+            <div id="deliveryProofModalInfo" style="margin-bottom:16px; font-size:13px; line-height:1.6;"></div>
+            <div style="text-align:center; background:#FAF8F2; padding:12px; border-radius:var(--radius-md); border:1px solid var(--thulirva-border); max-height:380px; overflow-y:auto;">
+                <img id="deliveryProofModalImg" src="" alt="Delivery Proof Photograph" style="max-width:100%; border-radius:8px; box-shadow:0 4px 14px rgba(0,0,0,0.15);">
+                <div id="noDeliveryProofNotice" style="display:none; padding:30px 10px; color:var(--thulirva-text-muted);">
+                    <div style="font-size:36px; margin-bottom:10px;">⚠️</div>
+                    <strong>No Delivery Photograph Uploaded</strong>
+                    <p style="font-size:12px; margin-top:4px;">This order was completed without an attached doorstep photograph.</p>
+                </div>
+            </div>
+            <div id="deliveryProofRemarksArea" style="margin-top:14px; font-size:12.5px; background:#fff; padding:10px 14px; border-radius:8px; border:1px solid var(--thulirva-border);"></div>
+        </div>
+        <div class="modal-footer" style="justify-content:space-between;">
+            <div>
+                <a id="deliveryProofDownloadLink" href="#" target="_blank" class="btn btn-secondary btn-sm">⬇ Open High-Res</a>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button type="button" class="btn btn-danger btn-sm" onclick="flagCurrentDeliveryProof()">⚠️ Flag Proof</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="verifyCurrentDeliveryProof()">✓ Verify Proof</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ASSIGN PARTNER MODAL -->
 <div class="modal-overlay" id="assignPartnerModal">
     <div class="modal-content" style="max-width: 480px;">
@@ -339,8 +371,22 @@ function renderOrdersTable() {
 
         const utrHtml = txnId ? `<div class="font-mono" style="font-size:11px; background:#EAF2E4; color:var(--thulirva-forest); padding:2px 6px; border-radius:4px; margin-top:2px;">UTR: ${txnId}</div>` : `<span style="font-size:11px; color:var(--thulirva-text-muted);">Unverified</span>`;
         const proofHtml = proofImg ? `
-            <img src="${proofImg}" class="proof-thumb" onclick="openProofModal('${o.id}')" title="Click to view full screenshot proof">
-        ` : `<span style="color:var(--thulirva-text-muted); font-size:11px;">None</span>`;
+            <img src="${proofImg}" class="proof-thumb" onclick="openProofModal('${o.id}')" title="Click to view full payment screenshot proof">
+        ` : `<span style="color:var(--thulirva-text-muted); font-size:11px;">No UTR Screenshot</span>`;
+
+        const deliveryProofUrl = o.delivery_proof_url || o.delivery_proof || o.proof_url || '';
+        let deliveryProofBadge = '';
+        if (o.order_status === 'delivered') {
+            if (deliveryProofUrl) {
+                deliveryProofBadge = `<button class="btn btn-secondary btn-sm" onclick="openDeliveryProofModal('${o.id}')" style="padding:2px 8px; font-size:11px; font-weight:700; color:#15803D; background:#DCFCE7; border-color:#86EFAC; margin-top:4px;">📸 Proof Photo</button>`;
+            } else {
+                deliveryProofBadge = `<button class="btn btn-secondary btn-sm" onclick="openDeliveryProofModal('${o.id}')" style="padding:2px 8px; font-size:11px; font-weight:700; color:#B45309; background:#FEF3C7; border-color:#FDE68A; margin-top:4px;">⚠️ No Photo</button>`;
+            }
+        } else if (o.order_status === 'in_transit' || o.order_status === 'shipped' || o.order_status === 'out_for_delivery') {
+            deliveryProofBadge = `<span style="font-size:10.5px; color:#1D4ED8; font-weight:600; display:block; margin-top:4px;">🚚 In Transit</span>`;
+        } else {
+            deliveryProofBadge = `<span style="font-size:10.5px; color:var(--thulirva-text-muted); display:block; margin-top:4px;">⏳ Awaiting</span>`;
+        }
 
         const partnerText = o.partner_name || o.partner_id ? `<span style="font-weight:600; color:var(--thulirva-forest);">${o.partner_name || o.partner_id}</span>` : `<button class="btn btn-secondary btn-sm" onclick="openAssignModal('${o.id}', '${o.order_number || o.id}')">＋ Assign</button>`;
 
@@ -357,7 +403,10 @@ function renderOrdersTable() {
                 <div style="font-size:11.5px; font-weight:600;">${o.payment_method || 'UPI'}</div>
                 ${utrHtml}
             </td>
-            <td>${proofHtml}</td>
+            <td>
+                ${proofHtml}
+                ${deliveryProofBadge}
+            </td>
             <td><strong>₹${totalAmt}</strong></td>
             <td>${partnerText}</td>
             <td><span class="badge ${badgeClass}">${o.order_status}</span></td>
@@ -478,6 +527,119 @@ async function rejectCurrentProof() {
             showToast(`Order #${activeModalOrderId} payment rejected.`, "info");
             closeProofModal();
             loadOrders();
+        }
+    } catch (e) {
+        showToast("Error: " + e.message, "error");
+    }
+}
+
+async function openDeliveryProofModal(orderId) {
+    const o = allOrders.find(ord => ord.id == orderId || ord.order_number == orderId);
+    if (!o) return;
+    document.getElementById("deliveryProofTargetOrderId").value = o.id;
+
+    let details = {};
+    try {
+        const res = await fetch(`/api/orders/${o.id}/delivery-details`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            details = data.data || {};
+        }
+    } catch (_) {}
+
+    const proofUrl = details.delivery_proof_url || o.delivery_proof_url || o.delivery_proof || '';
+    const imgEl = document.getElementById("deliveryProofModalImg");
+    const noticeEl = document.getElementById("noDeliveryProofNotice");
+    const linkEl = document.getElementById("deliveryProofDownloadLink");
+
+    if (proofUrl) {
+        imgEl.src = proofUrl;
+        imgEl.style.display = "block";
+        noticeEl.style.display = "none";
+        linkEl.href = proofUrl;
+        linkEl.style.display = "inline-block";
+    } else {
+        imgEl.style.display = "none";
+        noticeEl.style.display = "block";
+        linkEl.style.display = "none";
+    }
+
+    const partnerName = details.partner_name || o.partner_name || details.partner_id || o.partner_id || 'Assigned Partner';
+    const deliveredAt = details.delivered_at || o.delivered_at || 'Delivered';
+    const lat = details.delivery_lat || details.latitude || o.delivery_latitude;
+    const lng = details.delivery_lng || details.longitude || o.delivery_longitude;
+    const coordsStr = (lat && lng) ? `<a href="https://maps.google.com/?q=${lat},${lng}" target="_blank" style="color:var(--thulirva-forest); font-weight:bold; text-decoration:underline;">📍 ${Number(lat).toFixed(4)}°N, ${Number(lng).toFixed(4)}°E (View on Map)</a>` : 'Not recorded';
+    const remarks = details.remarks || details.delivery_remarks || o.delivery_remarks || 'Handed to customer safely';
+
+    document.getElementById("deliveryProofModalInfo").innerHTML = `
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div><strong>Order:</strong> #${o.id || o.order_number}</div>
+            <div><strong>Customer:</strong> ${o.customer_name || 'Customer'}</div>
+            <div><strong>Delivered By:</strong> <span style="color:var(--thulirva-forest); font-weight:700;">${partnerName}</span></div>
+            <div><strong>Handover Time:</strong> ${deliveredAt}</div>
+            <div style="grid-column:1 / -1;"><strong>Handover GPS:</strong> ${coordsStr}</div>
+        </div>
+    `;
+
+    document.getElementById("deliveryProofRemarksArea").innerHTML = `
+        <strong>Delivery Remarks:</strong> ${remarks}
+    `;
+
+    document.getElementById("deliveryProofModal").classList.add("active");
+}
+
+function closeDeliveryProofModal() {
+    document.getElementById("deliveryProofModal").classList.remove("active");
+}
+
+async function verifyCurrentDeliveryProof() {
+    const orderId = document.getElementById("deliveryProofTargetOrderId").value;
+    if (!orderId) return;
+    try {
+        const res = await fetch(`/api/v1/delivery-proof/verify`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ orderId, verifiedBy: "Admin" })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`✓ Delivery proof for Order #${orderId} verified and logged.`);
+            closeDeliveryProofModal();
+            loadOrders();
+        } else {
+            showToast(data.message || "Failed to verify proof", "error");
+        }
+    } catch (e) {
+        showToast("Error: " + e.message, "error");
+    }
+}
+
+async function flagCurrentDeliveryProof() {
+    const orderId = document.getElementById("deliveryProofTargetOrderId").value;
+    if (!orderId) return;
+    const reason = prompt("Enter reason for flagging delivery proof:", "Blurry photo / Delivery location mismatch");
+    if (!reason) return;
+    try {
+        const res = await fetch(`/api/v1/delivery-proof/flag`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ orderId, reason, flaggedBy: "Admin" })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Delivery proof for Order #${orderId} flagged for audit.`, "warning");
+            closeDeliveryProofModal();
+            loadOrders();
+        } else {
+            showToast(data.message || "Failed to flag proof", "error");
         }
     } catch (e) {
         showToast("Error: " + e.message, "error");

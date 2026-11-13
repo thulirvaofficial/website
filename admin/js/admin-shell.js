@@ -233,11 +233,24 @@ function initAdminShell({ activePage = "dashboard", breadcrumbs = [] } = {}) {
             </div>
         `;
 
-        // Mobile drawer toggle
+        // Mobile drawer toggle & backdrop
+        let backdropEl = document.querySelector(".sidebar-backdrop");
+        if (!backdropEl) {
+            backdropEl = document.createElement("div");
+            backdropEl.className = "sidebar-backdrop";
+            document.body.appendChild(backdropEl);
+            backdropEl.addEventListener("click", () => {
+                if (sidebarEl) sidebarEl.classList.remove("mobile-open");
+                backdropEl.classList.remove("active");
+            });
+        }
+
         const mobBtn = document.getElementById("mobileMenuToggle");
         if (mobBtn && sidebarEl) {
             mobBtn.addEventListener("click", () => {
-                sidebarEl.classList.toggle("mobile-open");
+                const isOpen = sidebarEl.classList.toggle("mobile-open");
+                if (isOpen) backdropEl.classList.add("active");
+                else backdropEl.classList.remove("active");
             });
         }
     }
@@ -267,11 +280,124 @@ function initAdminShell({ activePage = "dashboard", breadcrumbs = [] } = {}) {
             const userMenu = document.getElementById("userDropdownMenu");
             if (userMenu) userMenu.classList.remove("show");
         }
+        if (e.target.classList && (e.target.classList.contains("modal") || e.target.classList.contains("modal-overlay"))) {
+            closeModal(e.target);
+        }
     });
 
     // 7. Load Live Notification & Badge Counters
     loadShellBadges();
 }
+
+/**
+ * Universal Modal Management Helpers
+ */
+window.openModal = function(modalId) {
+    const el = typeof modalId === 'string' ? document.getElementById(modalId) : modalId;
+    if (el) {
+        el.classList.add('active', 'show');
+        el.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+};
+
+window.closeModal = function(modalId) {
+    if (!modalId) {
+        document.querySelectorAll('.modal, .modal-overlay').forEach(m => {
+            m.classList.remove('active', 'show');
+            m.style.display = '';
+        });
+        document.body.style.overflow = '';
+        return;
+    }
+    const el = typeof modalId === 'string' ? document.getElementById(modalId) : modalId;
+    if (el) {
+        el.classList.remove('active', 'show');
+        el.style.display = '';
+        document.body.style.overflow = '';
+    }
+};
+
+/**
+ * Enterprise Empty State Renderer
+ */
+window.renderEmptyState = function(container, { icon, title, message, actionText, actionFn, actionUrl } = {}) {
+    const target = typeof container === 'string' ? document.getElementById(container) : container;
+    if (!target) return;
+    
+    const iconMarkup = icon || SVG_ICONS["package"] || "📦";
+    const actionBtn = actionText ? (actionUrl ? 
+        `<a href="${actionUrl}" class="btn btn-primary btn-sm">${actionText}</a>` :
+        `<button class="btn btn-primary btn-sm" onclick="${actionFn}">${actionText}</button>`) : '';
+        
+    const html = `
+        <div class="empty-state-card">
+            <div class="empty-state-icon">${iconMarkup}</div>
+            <h3 class="empty-state-title">${title || "No Records Found"}</h3>
+            <p class="empty-state-desc">${message || "There are currently no items available in this view."}</p>
+            ${actionBtn}
+        </div>
+    `;
+    
+    if (target.tagName === 'TBODY') {
+        const colSpan = target.closest('table')?.querySelectorAll('thead th')?.length || 8;
+        target.innerHTML = `<tr><td colspan="${colSpan}" style="padding:0; border:none;">${html}</td></tr>`;
+    } else {
+        target.innerHTML = html;
+    }
+};
+
+/**
+ * Enterprise Error State Renderer with Retry
+ */
+window.renderErrorState = function(container, { title, message, onRetry } = {}) {
+    const target = typeof container === 'string' ? document.getElementById(container) : container;
+    if (!target) return;
+
+    const retryBtn = onRetry ? `<button class="btn btn-secondary btn-sm" onclick="${onRetry}">↻ Try Again</button>` : '';
+    const html = `
+        <div class="error-state-card">
+            <div class="error-state-icon">⚠️</div>
+            <h4 class="error-state-title">${title || "Unable to Load Data"}</h4>
+            <p class="error-state-desc">${message || "An error occurred while connecting to the backend server. Please verify your connection or retry."}</p>
+            ${retryBtn}
+        </div>
+    `;
+
+    if (target.tagName === 'TBODY') {
+        const colSpan = target.closest('table')?.querySelectorAll('thead th')?.length || 8;
+        target.innerHTML = `<tr><td colspan="${colSpan}" style="padding:0; border:none;">${html}</td></tr>`;
+    } else {
+        target.innerHTML = html;
+    }
+};
+
+/**
+ * Centralized Authorized Fetch Client
+ */
+window.apiFetch = async function(url, options = {}) {
+    const token = localStorage.getItem("thulirva_admin_token");
+    const headers = Object.assign({
+        "Content-Type": "application/json"
+    }, options.headers || {});
+    
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    try {
+        const res = await fetch(url, Object.assign({}, options, { headers }));
+        if (res.status === 401 && !window.location.pathname.endsWith("index.html")) {
+            localStorage.removeItem("thulirva_admin_token");
+            window.location.href = "index.html";
+            return null;
+        }
+        return res;
+    } catch (err) {
+        console.error("apiFetch network failure:", err);
+        throw err;
+    }
+};
 
 /**
  * Toast Notifications Manager
@@ -280,12 +406,15 @@ function showToast(message, type = "success") {
     const container = document.getElementById("toast-container");
     if (!container) return;
 
+    // Map 'danger' to 'error'
+    const normalizedType = type === "danger" ? "error" : type;
+
     const toast = document.createElement("div");
-    toast.className = `toast-msg ${type}`;
+    toast.className = `toast-msg ${normalizedType}`;
     
     let iconSvg = '';
-    if (type === "success") iconSvg = '<span style="color:#1E6F43; font-weight:800;">✓</span>';
-    else if (type === "error") iconSvg = '<span style="color:#B91C1C; font-weight:800;">✕</span>';
+    if (normalizedType === "success") iconSvg = '<span style="color:#1E6F43; font-weight:800;">✓</span>';
+    else if (normalizedType === "error") iconSvg = '<span style="color:#B91C1C; font-weight:800;">✕</span>';
     else iconSvg = '<span style="color:#0D5C75; font-weight:800;">ℹ</span>';
 
     toast.innerHTML = `

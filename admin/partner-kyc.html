@@ -115,10 +115,12 @@
                         <div class="filter-group">
                             <select id="filterKycStatus" class="form-control" onchange="filterKyc()">
                                 <option value="">All KYC Statuses</option>
+                                <option value="NOT_SUBMITTED">Not Submitted</option>
                                 <option value="PENDING">Pending Approval</option>
+                                <option value="UNDER_REVIEW">Under Review</option>
                                 <option value="APPROVED">Approved & Verified</option>
                                 <option value="REJECTED">Rejected</option>
-                                <option value="UNDER_REVIEW">Under Review</option>
+                                <option value="RESUBMISSION_REQUIRED">Resubmission Required</option>
                             </select>
 
                             <button class="btn btn-secondary btn-icon" onclick="loadKycData()" title="Reload">
@@ -294,6 +296,20 @@ function filterKyc() {
     renderTable(filtered);
 }
 
+function maskAadhaar(num) {
+    if (!num) return "";
+    const clean = String(num).replace(/\s+/g, "");
+    if (clean.length >= 4) return `•••• •••• ${clean.slice(-4)}`;
+    return "•••• ••••";
+}
+
+function maskDl(num) {
+    if (!num) return "";
+    const clean = String(num).trim();
+    if (clean.length > 4) return `••••••••${clean.slice(-4)}`;
+    return clean;
+}
+
 function renderTable(list) {
     const tbody = document.getElementById("kycTableBody");
     if (!list.length) {
@@ -312,7 +328,9 @@ function renderTable(list) {
         const kycStatus = (p.kyc_status || "PENDING").toUpperCase();
         let statusBadge = `<span class="badge badge-warning">Pending Review</span>`;
         if (kycStatus === "APPROVED") statusBadge = `<span class="badge badge-success">✓ Approved</span>`;
+        else if (kycStatus === "NOT_SUBMITTED") statusBadge = `<span class="badge badge-neutral">Not Submitted</span>`;
         else if (kycStatus === "REJECTED") statusBadge = `<span class="badge badge-danger">✗ Rejected</span>`;
+        else if (kycStatus === "RESUBMISSION_REQUIRED") statusBadge = `<span class="badge badge-warning" style="background:#FFF3CD; color:#856404;">Resubmission Req</span>`;
         else if (kycStatus === "UNDER_REVIEW") statusBadge = `<span class="badge badge-info">Under Review</span>`;
 
         const hasAadhaar = Boolean(p.aadhaar_front_url || p.aadhaar_back_url || p.aadhaar_number);
@@ -333,7 +351,7 @@ function renderTable(list) {
                     <div class="flex-center justify-start gap-1">
                         ${hasAadhaar ? `
                             <span class="doc-chip" onclick="inspectPartnerDocs('${p.partner_id}')">
-                                🪪 ${p.aadhaar_number ? `••• ${p.aadhaar_number.slice(-4)}` : 'Aadhaar Images'}
+                                🪪 ${p.aadhaar_number ? maskAadhaar(p.aadhaar_number) : 'Aadhaar Images'}
                             </span>
                         ` : '<span class="doc-chip missing">Missing</span>'}
                     </div>
@@ -341,14 +359,14 @@ function renderTable(list) {
                 <td>
                     ${hasDl ? `
                         <span class="doc-chip" onclick="inspectPartnerDocs('${p.partner_id}')">
-                            🚗 ${p.driving_license_number || 'DL Uploaded'}
+                            🚗 ${p.driving_license_number ? maskDl(p.driving_license_number) : 'DL Uploaded'}
                         </span>
                     ` : '<span class="doc-chip missing">Missing</span>'}
                 </td>
                 <td>
                     ${hasPan ? `
                         <span class="doc-chip" onclick="inspectPartnerDocs('${p.partner_id}')">
-                            📄 ${p.pan_number || 'PAN Uploaded'}
+                            📄 ${p.pan_number ? maskDl(p.pan_number) : 'PAN Uploaded'}
                         </span>
                     ` : '<span class="text-muted text-xs">Optional</span>'}
                 </td>
@@ -425,6 +443,12 @@ function inspectPartnerDocs(id) {
 }
 
 async function quickApproveKyc(partnerId) {
+    const p = allKycList.find(x => x.partner_id === partnerId);
+    if (p && (!p.aadhaar_front_url || !p.aadhaar_back_url)) {
+        showToast("Cannot approve partner: Mandatory Aadhaar front and back documents are missing.", "danger");
+        return;
+    }
+
     if (!confirm(`Are you sure you want to approve KYC for partner ${partnerId}?`)) return;
 
     try {

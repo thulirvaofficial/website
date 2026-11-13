@@ -167,7 +167,7 @@ async function loadInitialSettings() {
 
         if (allocRes && allocRes.ok) {
             const data = await allocRes.json();
-            allocEnabled = data.enabled !== false;
+            allocEnabled = data.area_allocation_enabled !== undefined ? Boolean(data.area_allocation_enabled) : (data.enabled !== false);
             updateAllocUi();
         }
     } catch (_) {}

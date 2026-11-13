@@ -219,7 +219,7 @@ async function loadAreaAllocationSetting() {
             headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
-        isAllocationEnabled = data.enabled !== false;
+        isAllocationEnabled = data.area_allocation_enabled !== undefined ? Boolean(data.area_allocation_enabled) : (data.enabled !== false);
         updateAllocationUi();
     } catch (_) {}
 }
