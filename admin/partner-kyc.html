@@ -123,6 +123,13 @@
                                 <option value="RESUBMISSION_REQUIRED">Resubmission Required</option>
                             </select>
 
+                            <select id="sortKyc" class="form-control" onchange="filterKyc()">
+                                <option value="date_desc">Sort: Newest Submissions</option>
+                                <option value="date_asc">Sort: Oldest Submissions</option>
+                                <option value="name_asc">Sort: Associate Name (A-Z)</option>
+                                <option value="status_pending">Sort: Pending Review First</option>
+                            </select>
+
                             <button class="btn btn-secondary btn-icon" onclick="loadKycData()" title="Reload">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
                             </button>
@@ -159,6 +166,15 @@
                         </table>
                     </div>
                 </div>
+                <!-- Pagination Footer -->
+                <div class="card-footer flex-between p-3 border-top" id="kycPagination">
+                    <div class="text-xs text-muted" id="kycPageInfo">Showing KYC records...</div>
+                    <div class="flex-center gap-2">
+                        <button class="btn btn-secondary btn-sm" id="btnPrevKycPage" onclick="changeKycPage(-1)">‹ Prev</button>
+                        <span class="text-xs font-bold text-dark px-2" id="kycCurrentPageNum">Page 1 of 1</span>
+                        <button class="btn btn-secondary btn-sm" id="btnNextKycPage" onclick="changeKycPage(1)">Next ›</button>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -179,6 +195,7 @@
                 <span class="text-muted text-xs">Verify photo resolution, legal name match and validity date before approving.</span>
                 <div class="flex-center gap-2">
                     <button class="btn btn-secondary" onclick="closeModal('docInspectionModal')">Close</button>
+                    <button class="btn btn-warning" id="btnInspectResubmit" onclick="promptResubmitModal()">Request Resubmission</button>
                     <button class="btn btn-danger" id="btnInspectReject" onclick="promptRejectModal()">Reject KYC</button>
                     <button class="btn btn-primary" id="btnInspectApprove" onclick="approveKycFromModal()">Approve KYC</button>
                 </div>
@@ -220,6 +237,9 @@
 <script src="js/admin-shell.js"></script>
 <script>
 let allKycList = [];
+let displayedKycList = [];
+let currentKycPage = 1;
+const kycPageSize = 10;
 let activePartnerId = null;
 const token = localStorage.getItem("thulirva_admin_token") || "";
 
@@ -276,8 +296,9 @@ function renderMetrics() {
 function filterKyc() {
     const query = (document.getElementById("kycSearch").value || "").toLowerCase().trim();
     const status = document.getElementById("filterKycStatus").value;
+    const sortBy = document.getElementById("sortKyc") ? document.getElementById("sortKyc").value : "date_desc";
 
-    const filtered = allKycList.filter(p => {
+    let filtered = allKycList.filter(p => {
         const matchesQuery = !query ||
             (p.name || "").toLowerCase().includes(query) ||
             (p.phone || "").includes(query) ||
@@ -293,7 +314,60 @@ function filterKyc() {
         return matchesQuery && matchesStatus;
     });
 
-    renderTable(filtered);
+    // Sorting
+    filtered.sort((a, b) => {
+        if (sortBy === "date_desc") return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+        if (sortBy === "date_asc") return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+        if (sortBy === "name_asc") return (a.name || "").localeCompare(b.name || "");
+        if (sortBy === "status_pending") {
+            const aPending = (!a.kyc_status || a.kyc_status === "PENDING" || a.kyc_status === "UNDER_REVIEW") ? 1 : 0;
+            const bPending = (!b.kyc_status || b.kyc_status === "PENDING" || b.kyc_status === "UNDER_REVIEW") ? 1 : 0;
+            return bPending - aPending;
+        }
+        return 0;
+    });
+
+    displayedKycList = filtered;
+    currentKycPage = 1;
+    renderCurrentKycPage();
+}
+
+function changeKycPage(delta) {
+    const totalPages = Math.ceil(displayedKycList.length / kycPageSize) || 1;
+    const target = currentKycPage + delta;
+    if (target >= 1 && target <= totalPages) {
+        currentKycPage = target;
+        renderCurrentKycPage();
+    }
+}
+
+function renderCurrentKycPage() {
+    const total = displayedKycList.length;
+    const totalPages = Math.ceil(total / kycPageSize) || 1;
+    if (currentKycPage > totalPages) currentKycPage = totalPages;
+    if (currentKycPage < 1) currentKycPage = 1;
+
+    const startIdx = (currentKycPage - 1) * kycPageSize;
+    const pageItems = displayedKycList.slice(startIdx, startIdx + kycPageSize);
+
+    const info = document.getElementById("kycPageInfo");
+    if (info) {
+        if (total === 0) {
+            info.textContent = "Showing 0 KYC records";
+        } else {
+            const endIdx = Math.min(startIdx + kycPageSize, total);
+            info.textContent = `Showing ${startIdx + 1} to ${endIdx} of ${total} records`;
+        }
+    }
+    const pageNum = document.getElementById("kycCurrentPageNum");
+    if (pageNum) pageNum.textContent = `Page ${currentKycPage} of ${totalPages}`;
+
+    const prevBtn = document.getElementById("btnPrevKycPage");
+    if (prevBtn) prevBtn.disabled = currentKycPage <= 1;
+    const nextBtn = document.getElementById("btnNextKycPage");
+    if (nextBtn) nextBtn.disabled = currentKycPage >= totalPages;
+
+    renderTable(pageItems);
 }
 
 function maskAadhaar(num) {
@@ -401,10 +475,10 @@ function inspectPartnerDocs(id) {
     activePartnerId = p.partner_id;
     document.getElementById("inspectModalTitle").textContent = `${p.name} (${p.partner_id}) — Document Portfolio`;
 
-    const aadhaarFront = p.aadhaar_front_url || "images/logo.jpg";
-    const aadhaarBack = p.aadhaar_back_url || "images/logo.jpg";
-    const dlImg = p.driving_license_url || "images/logo.jpg";
-    const panImg = p.pan_url || "images/logo.jpg";
+    const aadhaarFront = p.aadhaar_front_url || "images/logo.png";
+    const aadhaarBack = p.aadhaar_back_url || "images/logo.png";
+    const dlImg = p.driving_license_url || "images/logo.png";
+    const panImg = p.pan_url || "images/logo.png";
 
     document.getElementById("inspectModalBody").innerHTML = `
         <div class="mb-4">
@@ -415,25 +489,25 @@ function inspectPartnerDocs(id) {
         <div class="doc-preview-grid">
             <div class="doc-preview-card">
                 <div class="font-bold text-xs mb-2">Aadhaar Card (Front)</div>
-                <img src="${aadhaarFront}" class="doc-preview-img" onclick="window.open('${aadhaarFront}')" title="Click to open full size">
+                <img src="${aadhaarFront}" class="doc-preview-img" onerror="this.onerror=null; this.src='images/logo.png';" onclick="window.open('${aadhaarFront}')" title="Click to open full size">
                 <div class="text-xs font-mono text-muted">${p.aadhaar_number ? `Aadhaar: ${p.aadhaar_number}` : 'Front photo'}</div>
             </div>
 
             <div class="doc-preview-card">
                 <div class="font-bold text-xs mb-2">Aadhaar Card (Back)</div>
-                <img src="${aadhaarBack}" class="doc-preview-img" onclick="window.open('${aadhaarBack}')" title="Click to open full size">
+                <img src="${aadhaarBack}" class="doc-preview-img" onerror="this.onerror=null; this.src='images/logo.png';" onclick="window.open('${aadhaarBack}')" title="Click to open full size">
                 <div class="text-xs font-mono text-muted">Address verification side</div>
             </div>
 
             <div class="doc-preview-card">
                 <div class="font-bold text-xs mb-2">Driving License</div>
-                <img src="${dlImg}" class="doc-preview-img" onclick="window.open('${dlImg}')" title="Click to open full size">
+                <img src="${dlImg}" class="doc-preview-img" onerror="this.onerror=null; this.src='images/logo.png';" onclick="window.open('${dlImg}')" title="Click to open full size">
                 <div class="text-xs font-mono text-muted">${p.driving_license_number ? `DL: ${p.driving_license_number}` : 'Valid license proof'}</div>
             </div>
 
             <div class="doc-preview-card">
                 <div class="font-bold text-xs mb-2">PAN Card</div>
-                <img src="${panImg}" class="doc-preview-img" onclick="window.open('${panImg}')" title="Click to open full size">
+                <img src="${panImg}" class="doc-preview-img" onerror="this.onerror=null; this.src='images/logo.png';" onclick="window.open('${panImg}')" title="Click to open full size">
                 <div class="text-xs font-mono text-muted">${p.pan_number ? `PAN: ${p.pan_number}` : 'Tax identification'}</div>
             </div>
         </div>
@@ -489,6 +563,18 @@ function promptRejectModal() {
     }
 }
 
+function promptResubmitModal() {
+    closeModal("docInspectionModal");
+    if (activePartnerId) {
+        openRejectModal(activePartnerId);
+        const sel = document.getElementById("rejectReasonSelect");
+        if (sel) {
+            sel.value = "Resubmission Required: Aadhaar document image is blurred. Please upload a clear photo.";
+            handlePresetReason();
+        }
+    }
+}
+
 function openRejectModal(id) {
     activePartnerId = id;
     document.getElementById("rejectReasonSelect").value = "Aadhaar document image is blurred or unreadable.";
@@ -514,6 +600,9 @@ async function submitKycRejection() {
         return;
     }
 
+    const isResubmission = reason.toLowerCase().includes("resubmission");
+    const targetStatus = isResubmission ? "RESUBMISSION_REQUIRED" : "REJECTED";
+
     try {
         const res = await fetch(`/api/v1/kyc/admin/${activePartnerId}/review`, {
             method: "POST",
@@ -522,21 +611,21 @@ async function submitKycRejection() {
                 Authorization: `Bearer ${token}`
             },
             body: JSON.stringify({
-                status: "REJECTED",
+                status: targetStatus,
                 rejection_reason: reason,
-                notes: "Rejected via KYC portal"
+                notes: `${targetStatus} via KYC portal`
             })
         });
         const data = await res.json();
         if (data.success) {
-            showToast("Partner KYC rejected. Notification dispatched.", "warning");
+            showToast(isResubmission ? "Resubmission requested from delivery partner." : "Partner KYC rejected. Notification dispatched.", "warning");
             closeModal("rejectKycModal");
             loadKycData();
         } else {
-            showToast(data.message || "Failed to reject KYC", "danger");
+            showToast(data.message || "Failed to update KYC status", "danger");
         }
     } catch (err) {
-        showToast("Error rejecting KYC: " + err.message, "danger");
+        showToast("Error updating KYC status: " + err.message, "danger");
     }
 }
 </script>

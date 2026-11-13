@@ -98,6 +98,13 @@
                                 <option value="completed">Completed / Signed Off</option>
                             </select>
 
+                            <select id="sortAttendance" class="form-control" onchange="filterAttendance()">
+                                <option value="time_desc">Sort: Latest Check-in First</option>
+                                <option value="time_asc">Sort: Earliest Check-in</option>
+                                <option value="name_asc">Sort: Partner Name (A-Z)</option>
+                                <option value="name_desc">Sort: Partner Name (Z-A)</option>
+                            </select>
+
                             <button class="btn btn-secondary btn-icon" onclick="loadAttendance()" title="Refresh Attendance">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
                             </button>
@@ -134,25 +141,56 @@
                         </table>
                     </div>
                 </div>
+                <!-- Pagination Footer -->
+                <div class="card-footer flex-between p-3 border-top" id="attendancePagination">
+                    <div class="text-xs text-muted" id="attendancePageInfo">Showing shifts...</div>
+                    <div class="flex-center gap-2">
+                        <button class="btn btn-secondary btn-sm" id="btnPrevAttendancePage" onclick="changeAttendancePage(-1)">‹ Prev</button>
+                        <span class="text-xs font-bold text-dark px-2" id="attendanceCurrentPageNum">Page 1 of 1</span>
+                        <button class="btn btn-secondary btn-sm" id="btnNextAttendancePage" onclick="changeAttendancePage(1)">Next ›</button>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
 </div>
 
-<!-- Selfie Lightbox Modal -->
+<!-- Selfie Lightbox Modal with Zoom Controls & Meta Details -->
 <div class="modal" id="selfieModal">
-    <div class="modal-dialog" style="max-width: 480px;">
+    <div class="modal-dialog" style="max-width: 540px;">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="selfieTitle">Attendance Check-in Photo</h3>
-                <button class="modal-close" onclick="closeModal('selfieModal')">&times;</button>
+            <div class="modal-header flex-between">
+                <div>
+                    <h3 class="modal-title" id="selfieTitle">Attendance Check-in Photo</h3>
+                    <div class="text-xs text-muted font-mono" id="selfiePartnerId">Associate ID: —</div>
+                </div>
+                <div class="flex-center gap-2">
+                    <div class="flex-center gap-1" style="background: #F1F4EE; padding: 2px 6px; border-radius: 6px; border: 1px solid var(--border-light);">
+                        <button type="button" class="btn btn-secondary btn-icon" style="padding: 2px 8px; font-weight: bold; font-size: 14px;" onclick="zoomSelfie(0.2)" title="Zoom In">+</button>
+                        <button type="button" class="btn btn-secondary btn-icon" style="padding: 2px 8px; font-weight: bold; font-size: 14px;" onclick="zoomSelfie(-0.2)" title="Zoom Out">−</button>
+                        <button type="button" class="btn btn-secondary btn-icon" style="padding: 2px 8px; font-size: 11px;" onclick="resetSelfieZoom()" title="Reset Zoom">1:1</button>
+                    </div>
+                    <button class="modal-close" onclick="closeModal('selfieModal')">&times;</button>
+                </div>
             </div>
-            <div class="modal-body text-center p-4">
-                <img id="selfiePreviewImg" src="" alt="Check-in Selfie" style="width: 100%; max-height: 420px; object-fit: contain; border-radius: 12px; border: 1px solid var(--border);">
-                <div class="mt-3 text-muted text-sm" id="selfieMeta"></div>
+            <div class="modal-body text-center p-3" style="max-height: calc(88vh - 140px); overflow-y: auto;">
+                <div style="overflow: hidden; border-radius: 12px; background: #000; display: flex; align-items: center; justify-content: center; min-height: 280px; max-height: 440px;">
+                    <img id="selfiePreviewImg" src="" alt="Check-in Selfie" style="width: 100%; max-height: 420px; object-fit: contain; transition: transform 0.2s ease; cursor: grab;" onerror="this.onerror=null; this.src='images/logo.png';">
+                </div>
+                <div class="mt-3 p-3 bg-cream" style="border-radius: 8px; text-align: left;">
+                    <div class="flex-between mb-1">
+                        <span class="text-xs text-muted uppercase font-bold">Shift Check-In Timestamp</span>
+                        <span class="font-mono text-xs font-bold text-dark" id="selfieCheckinTime">—</span>
+                    </div>
+                    <div class="flex-between">
+                        <span class="text-xs text-muted uppercase font-bold">Padur Hub Coordinates</span>
+                        <span id="selfieGpsLink">—</span>
+                    </div>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary w-full" onclick="closeModal('selfieModal')">Close</button>
+            <div class="modal-footer flex-between">
+                <a id="selfieRawLink" href="#" target="_blank" class="btn btn-secondary btn-sm">Open Full-Resolution Photo</a>
+                <button class="btn btn-primary btn-sm" onclick="closeModal('selfieModal')">Done</button>
             </div>
         </div>
     </div>
@@ -161,6 +199,10 @@
 <script src="js/admin-shell.js"></script>
 <script>
 let allAttendance = [];
+let displayedAttendance = [];
+let currentAttendancePage = 1;
+const attendancePageSize = 10;
+let currentSelfieZoom = 1;
 const token = localStorage.getItem("thulirva_admin_token") || "";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -215,8 +257,9 @@ function renderMetrics() {
 function filterAttendance() {
     const query = (document.getElementById("attendanceSearch").value || "").toLowerCase().trim();
     const dutyStatus = document.getElementById("filterDutyStatus").value;
+    const sortBy = document.getElementById("sortAttendance") ? document.getElementById("sortAttendance").value : "time_desc";
 
-    const filtered = allAttendance.filter(a => {
+    let filtered = allAttendance.filter(a => {
         const matchesQuery = !query ||
             (a.partner_name || "").toLowerCase().includes(query) ||
             (a.partner_id || "").toLowerCase().includes(query);
@@ -228,7 +271,56 @@ function filterAttendance() {
         return matchesQuery && matchesStatus;
     });
 
-    renderTable(filtered);
+    // Sorting
+    filtered.sort((a, b) => {
+        if (sortBy === "time_desc") return new Date(b.check_in_time || 0) - new Date(a.check_in_time || 0);
+        if (sortBy === "time_asc") return new Date(a.check_in_time || 0) - new Date(b.check_in_time || 0);
+        if (sortBy === "name_asc") return (a.partner_name || "").localeCompare(b.partner_name || "");
+        if (sortBy === "name_desc") return (b.partner_name || "").localeCompare(a.partner_name || "");
+        return 0;
+    });
+
+    displayedAttendance = filtered;
+    currentAttendancePage = 1;
+    renderCurrentAttendancePage();
+}
+
+function changeAttendancePage(delta) {
+    const totalPages = Math.ceil(displayedAttendance.length / attendancePageSize) || 1;
+    const target = currentAttendancePage + delta;
+    if (target >= 1 && target <= totalPages) {
+        currentAttendancePage = target;
+        renderCurrentAttendancePage();
+    }
+}
+
+function renderCurrentAttendancePage() {
+    const total = displayedAttendance.length;
+    const totalPages = Math.ceil(total / attendancePageSize) || 1;
+    if (currentAttendancePage > totalPages) currentAttendancePage = totalPages;
+    if (currentAttendancePage < 1) currentAttendancePage = 1;
+
+    const startIdx = (currentAttendancePage - 1) * attendancePageSize;
+    const pageItems = displayedAttendance.slice(startIdx, startIdx + attendancePageSize);
+
+    const info = document.getElementById("attendancePageInfo");
+    if (info) {
+        if (total === 0) {
+            info.textContent = "Showing 0 shifts";
+        } else {
+            const endIdx = Math.min(startIdx + attendancePageSize, total);
+            info.textContent = `Showing ${startIdx + 1} to ${endIdx} of ${total} shifts`;
+        }
+    }
+    const pageNum = document.getElementById("attendanceCurrentPageNum");
+    if (pageNum) pageNum.textContent = `Page ${currentAttendancePage} of ${totalPages}`;
+
+    const prevBtn = document.getElementById("btnPrevAttendancePage");
+    if (prevBtn) prevBtn.disabled = currentAttendancePage <= 1;
+    const nextBtn = document.getElementById("btnNextAttendancePage");
+    if (nextBtn) nextBtn.disabled = currentAttendancePage >= totalPages;
+
+    renderTable(pageItems);
 }
 
 function renderTable(list) {
@@ -250,7 +342,6 @@ function renderTable(list) {
         const checkOutTime = a.check_out_time ? new Date(a.check_out_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—';
         const isOnDuty = !a.check_out_time;
 
-        // Calculate shift duration
         let durationStr = "In Progress";
         if (a.check_in_time && a.check_out_time) {
             const diffMs = new Date(a.check_out_time) - new Date(a.check_in_time);
@@ -263,7 +354,7 @@ function renderTable(list) {
         const checkInLng = a.check_in_location?.longitude || a.check_in_longitude || 80.2233;
         const checkInMaps = `https://www.google.com/maps?q=${checkInLat},${checkInLng}`;
 
-        const selfieImg = a.check_in_photo || a.photo_base64 || a.photo_url || "images/logo.jpg";
+        const selfieImg = a.check_in_photo || a.photo_base64 || a.photo_url || "images/logo.png";
 
         return `
             <tr>
@@ -276,7 +367,7 @@ function renderTable(list) {
                     <div class="text-xs text-muted font-mono">${a.partner_id || 'THU-DP-0001'}</div>
                 </td>
                 <td>
-                    <img src="${selfieImg}" class="selfie-thumb" alt="Selfie" onclick="openSelfieModal('${selfieImg}', '${a.partner_name}', '${checkInTime}')">
+                    <img src="${selfieImg}" class="selfie-thumb" alt="Selfie" onerror="this.onerror=null; this.src='images/logo.png';" onclick="openSelfieModal('${selfieImg}', '${a.partner_name}', '${a.partner_id}', '${checkInTime}', '${checkInLat}', '${checkInLng}')">
                 </td>
                 <td>
                     <span class="time-pill">IN: ${checkInTime}</span>
@@ -296,7 +387,7 @@ function renderTable(list) {
                     ${isOnDuty ? '<span class="badge badge-success">● On Duty</span>' : '<span class="badge badge-neutral">Completed</span>'}
                 </td>
                 <td class="text-right">
-                    <button class="btn btn-secondary btn-icon" onclick="openSelfieModal('${selfieImg}', '${a.partner_name}', '${checkInTime}')" title="Inspect Selfie">
+                    <button class="btn btn-secondary btn-icon" onclick="openSelfieModal('${selfieImg}', '${a.partner_name}', '${a.partner_id}', '${checkInTime}', '${checkInLat}', '${checkInLng}')" title="Inspect Selfie">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
                 </td>
@@ -305,11 +396,38 @@ function renderTable(list) {
     }).join("");
 }
 
-function openSelfieModal(imgSrc, partnerName, checkInTime) {
-    document.getElementById("selfieTitle").textContent = `${partnerName} — Check-In Verification`;
-    document.getElementById("selfiePreviewImg").src = imgSrc;
-    document.getElementById("selfieMeta").textContent = `Verified check-in at ${checkInTime} IST • Padur Distribution Hub`;
-    document.getElementById("selfieModal").classList.add("show");
+function openSelfieModal(imgSrc, partnerName, partnerId, checkInTime, lat, lng) {
+    document.getElementById("selfieTitle").textContent = `${partnerName} — Check-In Photo`;
+    document.getElementById("selfiePartnerId").textContent = `Associate ID: ${partnerId || 'THU-DP'}`;
+    const img = document.getElementById("selfiePreviewImg");
+    img.src = imgSrc;
+    resetSelfieZoom();
+
+    document.getElementById("selfieCheckinTime").textContent = `${checkInTime} IST • Shift Start`;
+    const mapsUrl = `https://www.google.com/maps?q=${lat || 12.8025},${lng || 80.2233}`;
+    document.getElementById("selfieGpsLink").innerHTML = `
+        <a href="${mapsUrl}" target="_blank" class="gps-pill" style="font-size: 11px;">
+            📍 ${Number(lat || 12.8025).toFixed(4)}, ${Number(lng || 80.2233).toFixed(4)} (Padur)
+        </a>
+    `;
+    document.getElementById("selfieRawLink").href = imgSrc;
+    openModal("selfieModal");
+}
+
+function zoomSelfie(delta) {
+    currentSelfieZoom = Math.max(0.6, Math.min(3.0, currentSelfieZoom + delta));
+    const img = document.getElementById("selfiePreviewImg");
+    if (img) {
+        img.style.transform = `scale(${currentSelfieZoom})`;
+    }
+}
+
+function resetSelfieZoom() {
+    currentSelfieZoom = 1;
+    const img = document.getElementById("selfiePreviewImg");
+    if (img) {
+        img.style.transform = "scale(1)";
+    }
 }
 
 function exportAttendanceCsv() {

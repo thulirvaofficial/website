@@ -73,6 +73,14 @@
                                 <option value="REJECTED">Rejected</option>
                             </select>
 
+                            <select id="sortWithdrawals" class="form-control" onchange="filterWithdrawals()">
+                                <option value="date_desc">Sort: Newest First</option>
+                                <option value="date_asc">Sort: Oldest First</option>
+                                <option value="amount_desc">Sort: Highest Amount</option>
+                                <option value="amount_asc">Sort: Lowest Amount</option>
+                                <option value="pending_first">Sort: Pending First</option>
+                            </select>
+
                             <button class="btn btn-secondary btn-icon" onclick="loadWithdrawals()" title="Reload">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
                             </button>
@@ -88,14 +96,14 @@
                         <table class="table" id="withdrawalsTable">
                             <thead>
                                 <tr>
-                                    <th>Request Ref</th>
-                                    <th>Delivery Associate</th>
-                                    <th>Amount Requested</th>
-                                    <th>Payout Destination</th>
-                                    <th>Status</th>
-                                    <th>UTR / Reference</th>
-                                    <th>Request Date</th>
-                                    <th class="text-right">Action</th>
+                                    <th style="min-width: 90px;">Request Ref</th>
+                                    <th style="min-width: 140px;">Delivery Associate</th>
+                                    <th style="min-width: 120px;">Amount Requested</th>
+                                    <th style="min-width: 180px;">Payout Destination</th>
+                                    <th style="min-width: 110px;">Status</th>
+                                    <th style="min-width: 130px;">UTR / Reference</th>
+                                    <th style="min-width: 100px;">Request Date</th>
+                                    <th class="text-right" style="min-width: 130px;">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="withdrawalsTableBody">
@@ -107,6 +115,15 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+                <!-- Pagination Footer -->
+                <div class="card-footer flex-between p-3 border-top" id="withdrawalsPagination">
+                    <div class="text-xs text-muted" id="withdrawalsPageInfo">Showing cash-out requests...</div>
+                    <div class="flex-center gap-2">
+                        <button class="btn btn-secondary btn-sm" id="btnPrevWithdrawalPage" onclick="changeWithdrawalPage(-1)">‹ Prev</button>
+                        <span class="text-xs font-bold text-dark px-2" id="withdrawalCurrentPageNum">Page 1 of 1</span>
+                        <button class="btn btn-secondary btn-sm" id="btnNextWithdrawalPage" onclick="changeWithdrawalPage(1)">Next ›</button>
                     </div>
                 </div>
             </div>
@@ -179,6 +196,9 @@
 <script src="js/admin-shell.js"></script>
 <script>
 let allWithdrawals = [];
+let displayedWithdrawals = [];
+let currentWithdrawalPage = 1;
+const withdrawalPageSize = 10;
 const token = localStorage.getItem("thulirva_admin_token") || "";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -235,8 +255,9 @@ function renderMetrics() {
 function filterWithdrawals() {
     const query = (document.getElementById("withdrawalSearch").value || "").toLowerCase().trim();
     const status = document.getElementById("filterStatus").value;
+    const sortBy = document.getElementById("sortWithdrawals") ? document.getElementById("sortWithdrawals").value : "date_desc";
 
-    const filtered = allWithdrawals.filter(w => {
+    let filtered = allWithdrawals.filter(w => {
         const matchesQuery = !query ||
             (w.request_id || "").toLowerCase().includes(query) ||
             (w.partner_id || "").toLowerCase().includes(query) ||
@@ -248,7 +269,60 @@ function filterWithdrawals() {
         return matchesQuery && matchesStatus;
     });
 
-    renderTable(filtered);
+    // Sorting
+    filtered.sort((a, b) => {
+        const amtA = Number(a.amount_in_rupees || (a.amount_in_paise ? a.amount_in_paise / 100 : 0));
+        const amtB = Number(b.amount_in_rupees || (b.amount_in_paise ? b.amount_in_paise / 100 : 0));
+
+        if (sortBy === "date_desc") return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+        if (sortBy === "date_asc") return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+        if (sortBy === "amount_desc") return amtB - amtA;
+        if (sortBy === "amount_asc") return amtA - amtB;
+        if (sortBy === "pending_first") {
+            const aP = a.status === "PENDING" ? 1 : 0;
+            const bP = b.status === "PENDING" ? 1 : 0;
+            return bP - aP;
+        }
+        return 0;
+    });
+
+    displayedWithdrawals = filtered;
+    currentWithdrawalPage = 1;
+    renderCurrentWithdrawalPage();
+}
+
+function changeWithdrawalPage(delta) {
+    const totalPages = Math.ceil(displayedWithdrawals.length / withdrawalPageSize) || 1;
+    const target = currentWithdrawalPage + delta;
+    if (target >= 1 && target <= totalPages) {
+        currentWithdrawalPage = target;
+        renderCurrentWithdrawalPage();
+    }
+}
+
+function renderCurrentWithdrawalPage() {
+    const total = displayedWithdrawals.length;
+    const totalPages = Math.ceil(total / withdrawalPageSize) || 1;
+    if (currentWithdrawalPage > totalPages) currentWithdrawalPage = totalPages;
+    if (currentWithdrawalPage < 1) currentWithdrawalPage = 1;
+
+    const startIdx = (currentWithdrawalPage - 1) * withdrawalPageSize;
+    const pageItems = displayedWithdrawals.slice(startIdx, startIdx + withdrawalPageSize);
+
+    const info = document.getElementById("withdrawalsPageInfo");
+    if (info) {
+        if (total === 0) info.textContent = "Showing 0 requests";
+        else info.textContent = `Showing ${startIdx + 1} to ${Math.min(startIdx + withdrawalPageSize, total)} of ${total} requests`;
+    }
+    const pageNum = document.getElementById("withdrawalCurrentPageNum");
+    if (pageNum) pageNum.textContent = `Page ${currentWithdrawalPage} of ${totalPages}`;
+
+    const prevBtn = document.getElementById("btnPrevWithdrawalPage");
+    if (prevBtn) prevBtn.disabled = currentWithdrawalPage <= 1;
+    const nextBtn = document.getElementById("btnNextWithdrawalPage");
+    if (nextBtn) nextBtn.disabled = currentWithdrawalPage >= totalPages;
+
+    renderTable(pageItems);
 }
 
 function renderTable(list) {

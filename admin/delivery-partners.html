@@ -82,27 +82,42 @@
                 </div>
             </div>
 
-            <!-- Stats Metric Overview -->
-            <div class="metrics-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Total Fleet Size</div>
+            <!-- Stats Metric Overview (7 authoritative metrics) -->
+            <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
+                <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('')" title="View all registered associates">
+                    <div class="stat-label">Total Registered</div>
                     <div class="stat-value" id="statTotalFleet">—</div>
-                    <div class="stat-sub">Registered delivery associates</div>
+                    <div class="stat-sub">Central database roster</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Online & Available</div>
+                <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('online')" title="Filter: Online Now">
+                    <div class="stat-label">Online Now</div>
                     <div class="stat-value text-gold" id="statOnlineFleet">—</div>
-                    <div class="stat-sub">Active for auto-dispatch</div>
+                    <div class="stat-sub">Available for dispatch</div>
+                </div>
+                <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('offline')" title="Filter: Offline">
+                    <div class="stat-label">Offline Fleet</div>
+                    <div class="stat-value text-muted" id="statOfflineFleet">—</div>
+                    <div class="stat-sub">Off shift / resting</div>
+                </div>
+                <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('active')" title="Filter: Active & Unblocked">
+                    <div class="stat-label">Active & Operational</div>
+                    <div class="stat-value text-success" id="statActiveFleet">—</div>
+                    <div class="stat-sub">Good standing roster</div>
+                </div>
+                <div class="stat-card" style="cursor: pointer;" onclick="window.location.href='partner-kyc.html'" title="Review KYC Submissions">
+                    <div class="stat-label">Pending KYC</div>
+                    <div class="stat-value" style="color: #E65100;" id="statPendingKyc">—</div>
+                    <div class="stat-sub">Awaiting verification</div>
+                </div>
+                <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('blocked')" title="Filter: Suspended">
+                    <div class="stat-label">Suspended / Blocked</div>
+                    <div class="stat-value text-danger" id="statBlockedFleet">—</div>
+                    <div class="stat-sub">Restricted accounts</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Padur Hub Roster</div>
-                    <div class="stat-value" id="statPadurFleet">—</div>
-                    <div class="stat-sub">Assigned to primary Padur route</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Fleet Reliability Rating</div>
-                    <div class="stat-value" id="statAvgRating">4.9 ★</div>
-                    <div class="stat-sub">Customer satisfaction score</div>
+                    <div class="stat-label">Customer Rating</div>
+                    <div class="stat-value" style="color: #B8860B;" id="statAvgRating">4.9 ★</div>
+                    <div class="stat-sub">Fleet satisfaction score</div>
                 </div>
             </div>
 
@@ -131,8 +146,17 @@
                                 <option value="padur">Padur (Primary Hub)</option>
                                 <option value="kelambakkam">Kelambakkam</option>
                                 <option value="siruseri">Siruseri / SIPCOT</option>
-                                <option value="navaluru">Navalur</option>
+                                <option value="navalur">Navalur</option>
                                 <option value="kanchipuram">Kanchipuram</option>
+                            </select>
+
+                            <select id="sortPartners" class="form-control" onchange="filterPartners()">
+                                <option value="name_asc">Sort: Name (A-Z)</option>
+                                <option value="name_desc">Sort: Name (Z-A)</option>
+                                <option value="trips_desc">Sort: Most Deliveries</option>
+                                <option value="trips_asc">Sort: Fewest Deliveries</option>
+                                <option value="rating_desc">Sort: Highest Rating</option>
+                                <option value="online_first">Sort: Online First</option>
                             </select>
 
                             <button class="btn btn-secondary btn-icon" onclick="loadPartners()" title="Refresh Roster">
@@ -142,8 +166,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Partners Data Table -->
             <div class="card">
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -172,6 +194,15 @@
                         </table>
                     </div>
                 </div>
+                <!-- Pagination Footer -->
+                <div class="card-footer flex-between p-3 border-top" id="partnerPagination">
+                    <div class="text-xs text-muted" id="partnerPageInfo">Showing associates...</div>
+                    <div class="flex-center gap-2">
+                        <button class="btn btn-secondary btn-sm" id="btnPrevPage" onclick="changePartnerPage(-1)">‹ Prev</button>
+                        <span class="text-xs font-bold text-dark px-2" id="partnerCurrentPageNum">Page 1 of 1</span>
+                        <button class="btn btn-secondary btn-sm" id="btnNextPage" onclick="changePartnerPage(1)">Next ›</button>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -186,7 +217,10 @@
                 <button class="modal-close" onclick="closeModal('addPartnerModal')">&times;</button>
             </div>
             <form id="addPartnerForm" onsubmit="handleAddPartner(event)">
-                <div class="modal-body">
+                <div class="modal-body" style="max-height: calc(88vh - 130px); overflow-y: auto;">
+                    <div class="p-3 mb-3" style="background: #E8F5E9; border-left: 4px solid #2E7D32; border-radius: 6px; font-size: 12px; color: #1B5E20; line-height: 1.5;">
+                        <strong>🔐 Production Security Notice:</strong> The initial password will be securely salted and hashed using <strong>bcrypt</strong> before insertion into the central database. The partner will be prompted to set a permanent private password on their first mobile app login.
+                    </div>
                     <div class="form-group mb-3">
                         <label class="form-label required">Full Legal Name</label>
                         <input type="text" id="partnerName" class="form-control" placeholder="e.g. Vignesh Sundaram" required>
@@ -323,6 +357,9 @@
 <script src="js/admin-shell.js"></script>
 <script>
 let allPartners = [];
+let displayedPartners = [];
+let currentPage = 1;
+const pageSize = 10;
 const token = localStorage.getItem("thulirva_admin_token") || "";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -356,22 +393,38 @@ async function loadPartners() {
     }
 }
 
+function setFilterStatus(status) {
+    document.getElementById("filterStatus").value = status;
+    filterPartners();
+}
+
 function renderMetrics() {
     const total = allPartners.length;
-    const online = allPartners.filter(p => p.is_online).length;
-    const padur = allPartners.filter(p => (p.assigned_area || "").toLowerCase().includes("padur")).length;
+    const online = allPartners.filter(p => Boolean(p.is_online)).length;
+    const offline = total - online;
+    const active = allPartners.filter(p => p.is_active !== false && !p.is_blocked).length;
+    const pendingKyc = allPartners.filter(p => p.kyc_status !== 'APPROVED').length;
+    const blocked = allPartners.filter(p => p.is_active === false || p.is_blocked === true).length;
+
+    const validRatings = allPartners.map(p => parseFloat(p.rating)).filter(r => !isNaN(r) && r > 0);
+    const avgRating = validRatings.length ? (validRatings.reduce((a, b) => a + b, 0) / validRatings.length).toFixed(1) : '4.9';
 
     document.getElementById("statTotalFleet").textContent = total;
     document.getElementById("statOnlineFleet").textContent = `${online} Active`;
-    document.getElementById("statPadurFleet").textContent = padur;
+    document.getElementById("statOfflineFleet").textContent = `${offline}`;
+    document.getElementById("statActiveFleet").textContent = `${active}`;
+    document.getElementById("statPendingKyc").textContent = `${pendingKyc}`;
+    document.getElementById("statBlockedFleet").textContent = `${blocked}`;
+    document.getElementById("statAvgRating").textContent = `${avgRating} ★`;
 }
 
 function filterPartners() {
     const query = (document.getElementById("partnerSearch").value || "").toLowerCase().trim();
     const status = document.getElementById("filterStatus").value;
     const area = document.getElementById("filterArea").value;
+    const sortBy = document.getElementById("sortPartners") ? document.getElementById("sortPartners").value : "name_asc";
 
-    const filtered = allPartners.filter(p => {
+    let filtered = allPartners.filter(p => {
         const matchesQuery = !query ||
             (p.name || "").toLowerCase().includes(query) ||
             (p.phone || "").includes(query) ||
@@ -388,7 +441,57 @@ function filterPartners() {
         return matchesQuery && matchesStatus && matchesArea;
     });
 
-    renderTable(filtered);
+    filtered.sort((a, b) => {
+        if (sortBy === "name_asc") return (a.name || "").localeCompare(b.name || "");
+        if (sortBy === "name_desc") return (b.name || "").localeCompare(a.name || "");
+        if (sortBy === "trips_desc") return (b.total_deliveries_count || 0) - (a.total_deliveries_count || 0);
+        if (sortBy === "trips_asc") return (a.total_deliveries_count || 0) - (b.total_deliveries_count || 0);
+        if (sortBy === "rating_desc") return (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0);
+        if (sortBy === "online_first") return (b.is_online ? 1 : 0) - (a.is_online ? 1 : 0);
+        return 0;
+    });
+
+    displayedPartners = filtered;
+    currentPage = 1;
+    renderCurrentPage();
+}
+
+function changePartnerPage(delta) {
+    const totalPages = Math.ceil(displayedPartners.length / pageSize) || 1;
+    const targetPage = currentPage + delta;
+    if (targetPage >= 1 && targetPage <= totalPages) {
+        currentPage = targetPage;
+        renderCurrentPage();
+    }
+}
+
+function renderCurrentPage() {
+    const total = displayedPartners.length;
+    const totalPages = Math.ceil(total / pageSize) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    const startIdx = (currentPage - 1) * pageSize;
+    const pageItems = displayedPartners.slice(startIdx, startIdx + pageSize);
+
+    const info = document.getElementById("partnerPageInfo");
+    if (info) {
+        if (total === 0) {
+            info.textContent = "Showing 0 associates";
+        } else {
+            const endIdx = Math.min(startIdx + pageSize, total);
+            info.textContent = `Showing ${startIdx + 1} to ${endIdx} of ${total} associates`;
+        }
+    }
+    const pageNum = document.getElementById("partnerCurrentPageNum");
+    if (pageNum) pageNum.textContent = `Page ${currentPage} of ${totalPages}`;
+
+    const prevBtn = document.getElementById("btnPrevPage");
+    if (prevBtn) prevBtn.disabled = currentPage <= 1;
+    const nextBtn = document.getElementById("btnNextPage");
+    if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+
+    renderTable(pageItems);
 }
 
 function renderTable(list) {

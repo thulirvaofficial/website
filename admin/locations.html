@@ -89,6 +89,13 @@
                                 <option value="inactive">Paused / Inactive</option>
                             </select>
 
+                            <select id="sortLocations" class="form-control" onchange="filterLocations()">
+                                <option value="name_asc">Sort: Area Name (A-Z)</option>
+                                <option value="name_desc">Sort: Area Name (Z-A)</option>
+                                <option value="pincode_asc">Sort: Pincode</option>
+                                <option value="active_first">Sort: Active First</option>
+                            </select>
+
                             <button class="btn btn-secondary btn-icon" onclick="loadLocations()" title="Reload">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
                             </button>
@@ -124,6 +131,15 @@
                         </table>
                     </div>
                 </div>
+                <!-- Pagination Footer -->
+                <div class="card-footer flex-between p-3 border-top" id="locationsPagination">
+                    <div class="text-xs text-muted" id="locationsPageInfo">Showing serviceable zones...</div>
+                    <div class="flex-center gap-2">
+                        <button class="btn btn-secondary btn-sm" id="btnPrevLocPage" onclick="changeLocationPage(-1)">‹ Prev</button>
+                        <span class="text-xs font-bold text-dark px-2" id="locCurrentPageNum">Page 1 of 1</span>
+                        <button class="btn btn-secondary btn-sm" id="btnNextLocPage" onclick="changeLocationPage(1)">Next ›</button>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -131,7 +147,7 @@
 
 <!-- Add/Edit Location Modal -->
 <div class="modal" id="locationModal">
-    <div class="modal-dialog" style="max-width: 480px;">
+    <div class="modal-dialog" style="max-width: 500px;">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title" id="modalTitle">Add Serviceable Area</h3>
@@ -139,23 +155,41 @@
             </div>
             <form id="locationForm" onsubmit="handleSaveLocation(event)">
                 <input type="hidden" id="locId">
-                <div class="modal-body">
+                <div class="modal-body" style="max-height: calc(88vh - 130px); overflow-y: auto;">
                     <div class="form-group mb-3">
                         <label class="form-label required">Area / Locality Name</label>
                         <input type="text" id="locName" class="form-control" placeholder="e.g. Padur (OMR)" required>
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label class="form-label required">Pincode</label>
-                        <input type="text" id="locPincode" class="form-control" placeholder="e.g. 603103" required>
+                    <div class="grid grid-2 gap-3 mb-3">
+                        <div class="form-group">
+                            <label class="form-label required">Postal Pincode</label>
+                            <input type="text" id="locPincode" class="form-control" placeholder="e.g. 603103" maxlength="6" pattern="[0-9]{6}" required>
+                            <small class="text-muted">6-digit Indian PIN code</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Assigned Hub</label>
+                            <select id="locHub" class="form-control">
+                                <option value="Padur Central Hub">Padur Central Hub</option>
+                                <option value="Kelambakkam Sub-Hub">Kelambakkam Sub-Hub</option>
+                                <option value="Navalur Hub">Navalur Hub</option>
+                                <option value="Kanchipuram Hub">Kanchipuram Hub</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label class="form-label">Operating Status</label>
-                        <select id="locStatus" class="form-control">
-                            <option value="active">Active & Open for Deliveries</option>
-                            <option value="inactive">Paused / Inactive</option>
-                        </select>
+                    <div class="grid grid-2 gap-3 mb-3">
+                        <div class="form-group">
+                            <label class="form-label">Delivery Slot Window</label>
+                            <input type="text" id="locTimeSlot" class="form-control" value="5:30 AM – 7:30 AM">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Operating Status</label>
+                            <select id="locStatus" class="form-control">
+                                <option value="active">Active & Open for Deliveries</option>
+                                <option value="inactive">Paused / Inactive</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -170,6 +204,9 @@
 <script src="js/admin-shell.js"></script>
 <script>
 let locationsList = [];
+let displayedLocations = [];
+let currentLocPage = 1;
+const locPageSize = 10;
 let isAllocationEnabled = true;
 const token = localStorage.getItem("thulirva_admin_token") || "";
 
@@ -195,14 +232,13 @@ async function loadLocations() {
         const data = await res.json();
         locationsList = Array.isArray(data) ? data : (Array.isArray(data.locations) ? data.locations : []);
 
-        // Fallback default zones if empty
         if (!locationsList.length) {
             locationsList = [
-                { id: 1, name: "Padur (OMR)", pincode: "603103", status: "active" },
-                { id: 2, name: "Kelambakkam", pincode: "603103", status: "active" },
-                { id: 3, name: "Siruseri (SIPCOT)", pincode: "603103", status: "active" },
-                { id: 4, name: "Navalur", pincode: "600130", status: "active" },
-                { id: 5, name: "Kanchipuram Main", pincode: "631501", status: "active" }
+                { id: 1, name: "Padur (OMR)", pincode: "603103", hub: "Padur Central Hub", time_slot: "5:30 AM – 7:30 AM", status: "active" },
+                { id: 2, name: "Kelambakkam", pincode: "603103", hub: "Kelambakkam Sub-Hub", time_slot: "5:30 AM – 7:30 AM", status: "active" },
+                { id: 3, name: "Siruseri (SIPCOT)", pincode: "603103", hub: "Padur Central Hub", time_slot: "5:30 AM – 7:30 AM", status: "active" },
+                { id: 4, name: "Navalur", pincode: "600130", hub: "Navalur Hub", time_slot: "5:30 AM – 7:30 AM", status: "active" },
+                { id: 5, name: "Kanchipuram Main", pincode: "631501", hub: "Kanchipuram Hub", time_slot: "5:30 AM – 7:30 AM", status: "active" }
             ];
         }
 
@@ -274,8 +310,9 @@ function renderMetrics() {
 function filterLocations() {
     const query = (document.getElementById("locSearch").value || "").toLowerCase().trim();
     const status = document.getElementById("filterStatus").value;
+    const sortBy = document.getElementById("sortLocations") ? document.getElementById("sortLocations").value : "name_asc";
 
-    const filtered = locationsList.filter(l => {
+    let filtered = locationsList.filter(l => {
         const matchesQuery = !query ||
             (l.name || "").toLowerCase().includes(query) ||
             (l.pincode || "").toString().includes(query);
@@ -285,18 +322,70 @@ function filterLocations() {
         return matchesQuery && matchesStatus;
     });
 
-    renderTable(filtered);
+    // Sorting
+    filtered.sort((a, b) => {
+        if (sortBy === "name_asc") return (a.name || "").localeCompare(b.name || "");
+        if (sortBy === "name_desc") return (b.name || "").localeCompare(a.name || "");
+        if (sortBy === "pincode_asc") return (a.pincode || "").localeCompare(b.pincode || "");
+        if (sortBy === "active_first") {
+            const aAct = a.status === "active" ? 1 : 0;
+            const bAct = b.status === "active" ? 1 : 0;
+            return bAct - aAct;
+        }
+        return 0;
+    });
+
+    displayedLocations = filtered;
+    currentLocPage = 1;
+    renderCurrentLocPage();
+}
+
+function changeLocationPage(delta) {
+    const totalPages = Math.ceil(displayedLocations.length / locPageSize) || 1;
+    const target = currentLocPage + delta;
+    if (target >= 1 && target <= totalPages) {
+        currentLocPage = target;
+        renderCurrentLocPage();
+    }
+}
+
+function renderCurrentLocPage() {
+    const total = displayedLocations.length;
+    const totalPages = Math.ceil(total / locPageSize) || 1;
+    if (currentLocPage > totalPages) currentLocPage = totalPages;
+    if (currentLocPage < 1) currentLocPage = 1;
+
+    const startIdx = (currentLocPage - 1) * locPageSize;
+    const pageItems = displayedLocations.slice(startIdx, startIdx + locPageSize);
+
+    const info = document.getElementById("locationsPageInfo");
+    if (info) {
+        if (total === 0) info.textContent = "Showing 0 delivery zones";
+        else info.textContent = `Showing ${startIdx + 1} to ${Math.min(startIdx + locPageSize, total)} of ${total} zones`;
+    }
+    const pageNum = document.getElementById("locCurrentPageNum");
+    if (pageNum) pageNum.textContent = `Page ${currentLocPage} of ${totalPages}`;
+
+    const prevBtn = document.getElementById("btnPrevLocPage");
+    if (prevBtn) prevBtn.disabled = currentLocPage <= 1;
+    const nextBtn = document.getElementById("btnNextLocPage");
+    if (nextBtn) nextBtn.disabled = currentLocPage >= totalPages;
+
+    renderTable(pageItems);
 }
 
 function renderTable(list) {
     const tbody = document.getElementById("locationsTableBody");
     if (!list.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">No delivery locations found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">No delivery locations found matching filters.</td></tr>`;
         return;
     }
 
     tbody.innerHTML = list.map(l => {
         const isActive = l.status === "active";
+        const hubName = l.hub || "Padur Central Hub";
+        const timeSlot = l.time_slot || "5:30 AM – 7:30 AM";
+
         return `
             <tr>
                 <td class="font-mono text-xs font-bold text-muted">ZONE-${String(l.id).padStart(3, "0")}</td>
@@ -304,13 +393,13 @@ function renderTable(list) {
                     <div class="font-bold text-dark text-base">📍 ${l.name}</div>
                 </td>
                 <td class="font-mono text-sm font-bold text-dark">${l.pincode || '—'}</td>
-                <td class="text-xs font-medium text-dark">5:30 AM – 7:30 AM</td>
+                <td class="text-xs font-medium text-dark">${timeSlot}</td>
                 <td>
                     <span class="badge ${isActive ? 'badge-success' : 'badge-danger'}">
                         ● ${isActive ? 'Active' : 'Inactive'}
                     </span>
                 </td>
-                <td class="text-xs text-muted">Padur Central Hub</td>
+                <td class="text-xs text-muted">${hubName}</td>
                 <td class="text-right">
                     <div class="flex-center justify-end gap-1">
                         <button class="btn btn-secondary btn-sm" onclick="toggleStatus(${l.id})">
@@ -334,8 +423,10 @@ function openAddLocationModal() {
     document.getElementById("locId").value = "";
     document.getElementById("locName").value = "";
     document.getElementById("locPincode").value = "";
+    document.getElementById("locHub").value = "Padur Central Hub";
+    document.getElementById("locTimeSlot").value = "5:30 AM – 7:30 AM";
     document.getElementById("locStatus").value = "active";
-    document.getElementById("locationModal").classList.add("show");
+    openModal("locationModal");
 }
 
 function openEditLocationModal(id) {
@@ -346,8 +437,10 @@ function openEditLocationModal(id) {
     document.getElementById("locId").value = loc.id;
     document.getElementById("locName").value = loc.name || "";
     document.getElementById("locPincode").value = loc.pincode || "";
+    document.getElementById("locHub").value = loc.hub || "Padur Central Hub";
+    document.getElementById("locTimeSlot").value = loc.time_slot || "5:30 AM – 7:30 AM";
     document.getElementById("locStatus").value = loc.status || "active";
-    document.getElementById("locationModal").classList.add("show");
+    openModal("locationModal");
 }
 
 async function handleSaveLocation(e) {
@@ -355,9 +448,19 @@ async function handleSaveLocation(e) {
     const id = document.getElementById("locId").value;
     const name = document.getElementById("locName").value.trim();
     const pincode = document.getElementById("locPincode").value.trim();
+    const hub = document.getElementById("locHub").value;
+    const time_slot = document.getElementById("locTimeSlot").value.trim();
     const status = document.getElementById("locStatus").value;
 
-    const payload = { name, pincode, status };
+    // Duplicate Pincode Check
+    const dup = locationsList.find(l => l.pincode === pincode && String(l.id) !== String(id));
+    if (dup) {
+        if (!confirm(`Notice: Pincode ${pincode} is already mapped to zone '${dup.name}'. Are you sure you want to add/save this overlapping serviceable area?`)) {
+            return;
+        }
+    }
+
+    const payload = { name, pincode, hub, time_slot, status };
 
     try {
         if (id) {
