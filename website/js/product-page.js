@@ -12,10 +12,17 @@ async function loadProductDetail() {
     let product;
     try {
         const res = await fetch(`/api/products/${id}`);
+        if (!res.ok) throw new Error("API status " + res.status);
         const data = await res.json();
         product = data.product;
     } catch {
-        product = getSampleProducts().find(p => p.id === id) || getSampleProducts()[2];
+        const samples = typeof getSampleProducts === 'function' ? getSampleProducts() : [];
+        product = samples.find(p => p.id === id) || samples[2];
+    }
+
+    if (!product && typeof getSampleProducts === 'function') {
+        const samples = getSampleProducts();
+        product = samples.find(p => p.id === id) || samples[0];
     }
 
     if (!product) {

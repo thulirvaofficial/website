@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THULIRVA Enterprise — Delivery Partner KYC Verification</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <style>
+        .doc-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: #F4F6F0;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary-green);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .doc-chip:hover {
+            background: #E8EDE6;
+            border-color: var(--primary-green);
+        }
+        .doc-chip.missing {
+            background: #FFF2F2;
+            color: #C62828;
+            border-color: #FFCDD2;
+            cursor: not-allowed;
+        }
+        .doc-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+        }
+        .doc-preview-card {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            background: #FAFCF8;
+            text-align: center;
+        }
+        .doc-preview-img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            border: 1px solid #E0E0E0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-layout">
+    <aside class="sidebar" id="adminSidebar"></aside>
+
+    <main class="main-content">
+        <header class="topbar" id="adminTopbar"></header>
+
+        <div class="page-container">
+            <div class="page-header flex-between">
+                <div>
+                    <h1 class="page-title">Partner KYC & Compliance</h1>
+                    <p class="page-subtitle">Government ID validation, Aadhaar front & back verification, driving licenses & background compliance</p>
+                </div>
+                <div class="flex-center gap-3">
+                    <button class="btn btn-secondary btn-icon" onclick="loadKycData()" title="Refresh KYC Queue">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Metrics Overview -->
+            <div class="metrics-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Pending Verification Queue</div>
+                    <div class="stat-value text-gold" id="statPendingKyc">—</div>
+                    <div class="stat-sub">Requires admin action</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Approved & Active Partners</div>
+                    <div class="stat-value text-success" id="statApprovedKyc">—</div>
+                    <div class="stat-sub">Fully verified delivery fleet</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Under Review / Clarification</div>
+                    <div class="stat-value" id="statReviewKyc">—</div>
+                    <div class="stat-sub">Resubmitted document proofs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Rejected / Suspended KYC</div>
+                    <div class="stat-value text-danger" id="statRejectedKyc">—</div>
+                    <div class="stat-sub">Failed verification checks</div>
+                </div>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="card mb-4">
+                <div class="card-body p-3">
+                    <div class="table-actions">
+                        <div class="search-input-wrap">
+                            <span class="search-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            </span>
+                            <input type="text" id="kycSearch" class="form-control" placeholder="Search by partner name, phone, or Aadhaar..." oninput="filterKyc()">
+                        </div>
+
+                        <div class="filter-group">
+                            <select id="filterKycStatus" class="form-control" onchange="filterKyc()">
+                                <option value="">All KYC Statuses</option>
+                                <option value="PENDING">Pending Approval</option>
+                                <option value="APPROVED">Approved & Verified</option>
+                                <option value="REJECTED">Rejected</option>
+                                <option value="UNDER_REVIEW">Under Review</option>
+                            </select>
+
+                            <button class="btn btn-secondary btn-icon" onclick="loadKycData()" title="Reload">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KYC Data Table -->
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table" id="kycTable">
+                            <thead>
+                                <tr>
+                                    <th>Associate Details</th>
+                                    <th>Contact & Area</th>
+                                    <th>Aadhaar Documentation</th>
+                                    <th>Driving License</th>
+                                    <th>PAN Document</th>
+                                    <th>KYC Status</th>
+                                    <th>Submitted Date</th>
+                                    <th class="text-right">Verification Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="kycTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center py-5">
+                                        <div class="spinner"></div>
+                                        <div class="mt-2 text-muted">Retrieving partner KYC submissions...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Document Inspection Modal -->
+<div class="modal" id="docInspectionModal">
+    <div class="modal-dialog" style="max-width: 800px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="inspectModalTitle">KYC Document Inspection</h3>
+                <button class="modal-close" onclick="closeModal('docInspectionModal')">&times;</button>
+            </div>
+            <div class="modal-body p-4" id="inspectModalBody">
+                <!-- Injected via JS -->
+            </div>
+            <div class="modal-footer flex-between">
+                <span class="text-muted text-xs">Verify photo resolution, legal name match and validity date before approving.</span>
+                <div class="flex-center gap-2">
+                    <button class="btn btn-secondary" onclick="closeModal('docInspectionModal')">Close</button>
+                    <button class="btn btn-danger" id="btnInspectReject" onclick="promptRejectModal()">Reject KYC</button>
+                    <button class="btn btn-primary" id="btnInspectApprove" onclick="approveKycFromModal()">Approve KYC</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject KYC Modal -->
+<div class="modal" id="rejectKycModal">
+    <div class="modal-dialog" style="max-width: 480px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Reject KYC Submission</h3>
+                <button class="modal-close" onclick="closeModal('rejectKycModal')">&times;</button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-sm text-muted mb-3">Please specify the exact reason for rejecting this partner's KYC. This will be sent as a notification to the delivery partner app.</p>
+                <div class="form-group mb-3">
+                    <label class="form-label required">Rejection Reason</label>
+                    <select id="rejectReasonSelect" class="form-control mb-2" onchange="handlePresetReason()">
+                        <option value="Aadhaar document image is blurred or unreadable.">Aadhaar image blurred or unreadable</option>
+                        <option value="Driving License is expired or invalid.">Driving License expired or invalid</option>
+                        <option value="Name on ID does not match registration credentials.">Name mismatch with bank / profile</option>
+                        <option value="Document is cropped or missing back side.">Missing Aadhaar back side</option>
+                        <option value="Custom">Other (Specify below)</option>
+                    </select>
+                    <textarea id="rejectReasonText" class="form-control" rows="3" placeholder="Enter detailed clarification for the delivery associate..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('rejectKycModal')">Cancel</button>
+                <button class="btn btn-danger" onclick="submitKycRejection()">Confirm Rejection</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/admin-shell.js"></script>
+<script>
+let allKycList = [];
+let activePartnerId = null;
+const token = localStorage.getItem("thulirva_admin_token") || "";
+
+document.addEventListener("DOMContentLoaded", () => {
+    initAdminShell({
+        activePage: "kyc",
+        breadcrumbs: [
+            { label: "Overview", url: "dashboard.html" },
+            { label: "Logistics & Fleet", url: "delivery-partners.html" },
+            { label: "Partner KYC", url: "partner-kyc.html" }
+        ]
+    });
+
+    loadKycData();
+});
+
+async function loadKycData() {
+    try {
+        const res = await fetch("/api/v1/partners", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        allKycList = Array.isArray(data.partners) ? data.partners : [];
+
+        renderMetrics();
+        filterKyc();
+    } catch (err) {
+        showToast("Failed to load KYC records: " + err.message, "danger");
+        document.getElementById("kycTableBody").innerHTML = `
+            <tr><td colspan="8" class="text-center py-4 text-danger">Error retrieving KYC submissions.</td></tr>
+        `;
+    }
+}
+
+function renderMetrics() {
+    const pending = allKycList.filter(p => !p.kyc_status || p.kyc_status === "PENDING" || p.kyc_status === "UNDER_REVIEW").length;
+    const approved = allKycList.filter(p => p.kyc_status === "APPROVED").length;
+    const review = allKycList.filter(p => p.kyc_status === "UNDER_REVIEW").length;
+    const rejected = allKycList.filter(p => p.kyc_status === "REJECTED").length;
+
+    document.getElementById("statPendingKyc").textContent = pending;
+    document.getElementById("statApprovedKyc").textContent = approved;
+    document.getElementById("statReviewKyc").textContent = review;
+    document.getElementById("statRejectedKyc").textContent = rejected;
+
+    // Update shell badge
+    const badge = document.getElementById("badge-kyc");
+    if (badge) {
+        badge.textContent = pending;
+        badge.style.display = pending > 0 ? "inline-block" : "none";
+    }
+}
+
+function filterKyc() {
+    const query = (document.getElementById("kycSearch").value || "").toLowerCase().trim();
+    const status = document.getElementById("filterKycStatus").value;
+
+    const filtered = allKycList.filter(p => {
+        const matchesQuery = !query ||
+            (p.name || "").toLowerCase().includes(query) ||
+            (p.phone || "").includes(query) ||
+            (p.partner_id || "").toLowerCase().includes(query) ||
+            (p.aadhaar_number || "").includes(query);
+
+        let matchesStatus = true;
+        if (status) {
+            const currentStatus = p.kyc_status || "PENDING";
+            matchesStatus = currentStatus.toUpperCase() === status.toUpperCase();
+        }
+
+        return matchesQuery && matchesStatus;
+    });
+
+    renderTable(filtered);
+}
+
+function renderTable(list) {
+    const tbody = document.getElementById("kycTableBody");
+    if (!list.length) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-5 text-muted">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+                    <div>No KYC records match the current filter.</div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = list.map(p => {
+        const kycStatus = (p.kyc_status || "PENDING").toUpperCase();
+        let statusBadge = `<span class="badge badge-warning">Pending Review</span>`;
+        if (kycStatus === "APPROVED") statusBadge = `<span class="badge badge-success">✓ Approved</span>`;
+        else if (kycStatus === "REJECTED") statusBadge = `<span class="badge badge-danger">✗ Rejected</span>`;
+        else if (kycStatus === "UNDER_REVIEW") statusBadge = `<span class="badge badge-info">Under Review</span>`;
+
+        const hasAadhaar = Boolean(p.aadhaar_front_url || p.aadhaar_back_url || p.aadhaar_number);
+        const hasDl = Boolean(p.driving_license_url || p.driving_license_number);
+        const hasPan = Boolean(p.pan_url || p.pan_number);
+
+        return `
+            <tr>
+                <td>
+                    <div class="font-bold text-dark">${p.name || 'Delivery Partner'}</div>
+                    <div class="text-xs text-muted font-mono">${p.partner_id || 'ID-N/A'}</div>
+                </td>
+                <td>
+                    <div class="font-medium text-sm">${p.phone || '—'}</div>
+                    <div class="text-xs text-muted">📍 ${p.assigned_area || 'Padur'}</div>
+                </td>
+                <td>
+                    <div class="flex-center justify-start gap-1">
+                        ${hasAadhaar ? `
+                            <span class="doc-chip" onclick="inspectPartnerDocs('${p.partner_id}')">
+                                🪪 ${p.aadhaar_number ? `••• ${p.aadhaar_number.slice(-4)}` : 'Aadhaar Images'}
+                            </span>
+                        ` : '<span class="doc-chip missing">Missing</span>'}
+                    </div>
+                </td>
+                <td>
+                    ${hasDl ? `
+                        <span class="doc-chip" onclick="inspectPartnerDocs('${p.partner_id}')">
+                            🚗 ${p.driving_license_number || 'DL Uploaded'}
+                        </span>
+                    ` : '<span class="doc-chip missing">Missing</span>'}
+                </td>
+                <td>
+                    ${hasPan ? `
+                        <span class="doc-chip" onclick="inspectPartnerDocs('${p.partner_id}')">
+                            📄 ${p.pan_number || 'PAN Uploaded'}
+                        </span>
+                    ` : '<span class="text-muted text-xs">Optional</span>'}
+                </td>
+                <td>${statusBadge}</td>
+                <td class="text-xs text-muted">${new Date(p.created_at || Date.now()).toLocaleDateString('en-IN')}</td>
+                <td class="text-right">
+                    <div class="flex-center justify-end gap-1">
+                        <button class="btn btn-secondary btn-sm" onclick="inspectPartnerDocs('${p.partner_id}')">
+                            Inspect
+                        </button>
+                        ${kycStatus !== 'APPROVED' ? `
+                            <button class="btn btn-primary btn-sm" onclick="quickApproveKyc('${p.partner_id}')">
+                                Approve
+                            </button>
+                        ` : ''}
+                        ${kycStatus !== 'REJECTED' ? `
+                            <button class="btn btn-danger btn-sm" onclick="openRejectModal('${p.partner_id}')">
+                                Reject
+                            </button>
+                        ` : ''}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+function inspectPartnerDocs(id) {
+    const p = allKycList.find(x => x.partner_id === id);
+    if (!p) return;
+
+    activePartnerId = p.partner_id;
+    document.getElementById("inspectModalTitle").textContent = `${p.name} (${p.partner_id}) — Document Portfolio`;
+
+    const aadhaarFront = p.aadhaar_front_url || "images/logo.jpg";
+    const aadhaarBack = p.aadhaar_back_url || "images/logo.jpg";
+    const dlImg = p.driving_license_url || "images/logo.jpg";
+    const panImg = p.pan_url || "images/logo.jpg";
+
+    document.getElementById("inspectModalBody").innerHTML = `
+        <div class="mb-4">
+            <h5 class="font-bold text-dark mb-1">Identity & Driving Credentials</h5>
+            <p class="text-xs text-muted">Verify document details against official government database specifications.</p>
+        </div>
+
+        <div class="doc-preview-grid">
+            <div class="doc-preview-card">
+                <div class="font-bold text-xs mb-2">Aadhaar Card (Front)</div>
+                <img src="${aadhaarFront}" class="doc-preview-img" onclick="window.open('${aadhaarFront}')" title="Click to open full size">
+                <div class="text-xs font-mono text-muted">${p.aadhaar_number ? `Aadhaar: ${p.aadhaar_number}` : 'Front photo'}</div>
+            </div>
+
+            <div class="doc-preview-card">
+                <div class="font-bold text-xs mb-2">Aadhaar Card (Back)</div>
+                <img src="${aadhaarBack}" class="doc-preview-img" onclick="window.open('${aadhaarBack}')" title="Click to open full size">
+                <div class="text-xs font-mono text-muted">Address verification side</div>
+            </div>
+
+            <div class="doc-preview-card">
+                <div class="font-bold text-xs mb-2">Driving License</div>
+                <img src="${dlImg}" class="doc-preview-img" onclick="window.open('${dlImg}')" title="Click to open full size">
+                <div class="text-xs font-mono text-muted">${p.driving_license_number ? `DL: ${p.driving_license_number}` : 'Valid license proof'}</div>
+            </div>
+
+            <div class="doc-preview-card">
+                <div class="font-bold text-xs mb-2">PAN Card</div>
+                <img src="${panImg}" class="doc-preview-img" onclick="window.open('${panImg}')" title="Click to open full size">
+                <div class="text-xs font-mono text-muted">${p.pan_number ? `PAN: ${p.pan_number}` : 'Tax identification'}</div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById("docInspectionModal").classList.add("show");
+}
+
+async function quickApproveKyc(partnerId) {
+    if (!confirm(`Are you sure you want to approve KYC for partner ${partnerId}?`)) return;
+
+    try {
+        const res = await fetch(`/api/v1/kyc/admin/${partnerId}/review`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                status: "APPROVED",
+                notes: "Verified by Operations Admin via Admin Portal"
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Partner KYC approved successfully!", "success");
+            loadKycData();
+        } else {
+            showToast(data.message || "Failed to approve KYC", "danger");
+        }
+    } catch (err) {
+        showToast("Error approving KYC: " + err.message, "danger");
+    }
+}
+
+function approveKycFromModal() {
+    if (activePartnerId) {
+        closeModal("docInspectionModal");
+        quickApproveKyc(activePartnerId);
+    }
+}
+
+function promptRejectModal() {
+    closeModal("docInspectionModal");
+    if (activePartnerId) {
+        openRejectModal(activePartnerId);
+    }
+}
+
+function openRejectModal(id) {
+    activePartnerId = id;
+    document.getElementById("rejectReasonSelect").value = "Aadhaar document image is blurred or unreadable.";
+    handlePresetReason();
+    document.getElementById("rejectKycModal").classList.add("show");
+}
+
+function handlePresetReason() {
+    const val = document.getElementById("rejectReasonSelect").value;
+    const txtArea = document.getElementById("rejectReasonText");
+    if (val !== "Custom") {
+        txtArea.value = val;
+    } else {
+        txtArea.value = "";
+        txtArea.focus();
+    }
+}
+
+async function submitKycRejection() {
+    const reason = document.getElementById("rejectReasonText").value.trim();
+    if (!reason) {
+        showToast("Please provide a reason for rejection.", "warning");
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/v1/kyc/admin/${activePartnerId}/review`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                status: "REJECTED",
+                rejection_reason: reason,
+                notes: "Rejected via KYC portal"
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Partner KYC rejected. Notification dispatched.", "warning");
+            closeModal("rejectKycModal");
+            loadKycData();
+        } else {
+            showToast(data.message || "Failed to reject KYC", "danger");
+        }
+    } catch (err) {
+        showToast("Error rejecting KYC: " + err.message, "danger");
+    }
+}
+</script>
+</body>
+</html>

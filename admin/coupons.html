@@ -3,71 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THULIRVA Admin — Promo Codes & Offers</title>
+    <title>THULIRVA Enterprise — Promo Codes & Marketing Campaigns</title>
     <link rel="stylesheet" href="css/admin.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
     <style>
-        .badge-active {
-            background: #E8F5E9;
-            color: #2E7D32;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .badge-inactive {
-            background: #FFEBEE;
-            color: #C62828;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .stat-cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        .stat-card-item {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-        }
-        .stat-card-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            background: #F4F6F0;
-            color: #2E7D32;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-        }
-        .code-pill {
+        .coupon-code-pill {
             font-family: monospace;
-            font-size: 13.5px;
-            font-weight: 800;
-            background: #eaf2e4;
-            color: #1a4a2e;
-            padding: 3px 8px;
-            border-radius: 4px;
-            border: 1px dashed #2E7D32;
-            letter-spacing: .5px;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 1px;
+            background: #E8EDE6;
+            color: var(--primary-green);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px dashed var(--primary-green);
             display: inline-block;
         }
     </style>
@@ -75,407 +26,403 @@
 <body>
 
 <div class="admin-layout">
-    <aside class="sidebar">
-        <div class="sidebar-logo">
-            <img src="images/logo.jpg" alt="THULIRVA Logo" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 1.5px solid #d4af37; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-            <div style="font-family:'Playfair Display',serif; color:#E9EBD9; font-size:18px; font-weight:700; letter-spacing:1.5px;">THULIRVA</div>
-            <span>ADMIN CONSOLE</span>
-        </div>
+    <aside class="sidebar" id="adminSidebar"></aside>
 
-        <a href="dashboard.html">📊 Dashboard</a>
-        <a href="products.html">🛍 Products</a>
-        <a href="categories.html">🏷 Categories</a>
-        <a href="subscriptions.html">🔄 Subscriptions</a>
-        <a href="orders.html">📦 Orders</a>
-        <a href="customers.html">👥 Customers</a>
-        <a href="locations.html">📍 Delivery Locations</a>
-        <a href="coupons.html" class="active">🎟️ Promo Codes</a>
-        <a href="recipes.html">🍳 Recipes</a>
-        <a href="/" target="_blank">🌐 View Website ↗</a>
+    <main class="main-content">
+        <header class="topbar" id="adminTopbar"></header>
 
-        <div style="margin-top: auto; padding: 20px 0;">
-            <button class="logout-btn" style="width:100%" onclick="logout()">Logout</button>
-        </div>
-    </aside>
-
-    <main class="admin-main">
-        <div class="admin-header">
-            <div>
-                <h1 style="font-family:'Playfair Display',serif; font-size: 26px;">Promo Codes &amp; Offer Deals</h1>
-                <p>Generate promo codes, configure percentage/flat discounts, and display active farm deals to customers.</p>
-            </div>
-            <div style="display:flex; gap:12px; align-items:center;">
-                <button class="add-btn" onclick="openAddModal()">＋ Generate Promo Code</button>
-                <button class="logout-btn" onclick="logout()">Logout</button>
-            </div>
-        </div>
-
-        <!-- STAT CARDS -->
-        <div class="stat-cards-grid">
-            <div class="stat-card-item">
-                <div class="stat-card-icon">🎟️</div>
+        <div class="page-container">
+            <div class="page-header flex-between">
                 <div>
-                    <div style="font-size: 12px; color: var(--muted); text-transform: uppercase;">ACTIVE PROMO CODES</div>
-                    <div style="font-size: 24px; font-weight: 700; color: var(--green);" id="activeCouponsCount">0</div>
+                    <h1 class="page-title">Promo Codes & Discounts</h1>
+                    <p class="page-subtitle">Configure seasonal discount vouchers, customer acquisition coupons & order incentives</p>
                 </div>
-            </div>
-            <div class="stat-card-item">
-                <div class="stat-card-icon">🏷️</div>
-                <div>
-                    <div style="font-size: 12px; color: var(--muted); text-transform: uppercase;">TOTAL OFFERS</div>
-                    <div style="font-size: 24px; font-weight: 700; color: #1a4a2e;" id="totalCouponsCount">0</div>
-                </div>
-            </div>
-            <div class="stat-card-item">
-                <div class="stat-card-icon">👥</div>
-                <div>
-                    <div style="font-size: 12px; color: var(--muted); text-transform: uppercase;">TIMES REDEEMED</div>
-                    <div style="font-size: 24px; font-weight: 700; color: #2E7D32;" id="totalUsedCount">0</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="admin-panel">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap:wrap; gap:12px;">
-                <div>
-                    <h2 style="margin:0 0 4px 0;">Configured Promo Codes (<span id="couponCountDisplay">0</span>)</h2>
-                    <p style="font-size:12.5px; color:var(--muted); margin:0;">Customers enter these codes during checkout or subscription to get instant price reductions.</p>
-                </div>
-                <div style="display:flex; gap:10px;">
-                    <input type="text" id="searchInput" placeholder="Search coupon code or description..." onkeyup="filterCoupons()" style="padding: 8px 14px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px; width: 260px;">
-                    <select id="statusFilter" onchange="filterCoupons()" style="padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px;">
-                        <option value="all">All Statuses</option>
-                        <option value="active">Active Only</option>
-                        <option value="inactive">Inactive Only</option>
-                    </select>
+                <div class="flex-center gap-3">
+                    <button class="btn btn-primary" onclick="openAddCouponModal()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="12" y1="12" y2="12"/></svg>
+                        Generate Promo Code
+                    </button>
                 </div>
             </div>
 
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Promo Code</th>
-                        <th>Discount Value</th>
-                        <th>Min Order</th>
-                        <th>Offer Details &amp; Headline</th>
-                        <th>Redemptions</th>
-                        <th>Valid Until</th>
-                        <th>Status</th>
-                        <th style="text-align: right;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="couponsTable">
-                    <!-- Populated dynamically -->
-                </tbody>
-            </table>
+            <!-- Metrics Overview -->
+            <div class="metrics-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Active Promo Codes</div>
+                    <div class="stat-value text-gold" id="statActiveCoupons">—</div>
+                    <div class="stat-sub">Valid at customer checkout</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Redemptions</div>
+                    <div class="stat-value text-success" id="statTotalRedemptions">—</div>
+                    <div class="stat-sub">Lifetime code usages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Average Discount Rate</div>
+                    <div class="stat-value" id="statAvgDiscount">15%</div>
+                    <div class="stat-sub">Order savings average</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Campaign Reach</div>
+                    <div class="stat-value" id="statCampaignReach">All Families</div>
+                    <div class="stat-sub">App & website store</div>
+                </div>
+            </div>
+
+            <!-- Table Actions -->
+            <div class="card mb-4">
+                <div class="card-body p-3">
+                    <div class="table-actions">
+                        <div class="search-input-wrap">
+                            <span class="search-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            </span>
+                            <input type="text" id="couponSearch" class="form-control" placeholder="Search coupon code or description..." oninput="filterCoupons()">
+                        </div>
+
+                        <div class="filter-group">
+                            <select id="filterStatus" class="form-control" onchange="filterCoupons()">
+                                <option value="">All Statuses</option>
+                                <option value="active">Active Only</option>
+                                <option value="inactive">Disabled / Expired</option>
+                            </select>
+
+                            <button class="btn btn-secondary btn-icon" onclick="loadCoupons()" title="Reload">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coupons Table -->
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table" id="couponsTable">
+                            <thead>
+                                <tr>
+                                    <th>Voucher Code</th>
+                                    <th>Offer & Benefit</th>
+                                    <th>Min Order Requirement</th>
+                                    <th>Max Cap</th>
+                                    <th>Redemptions</th>
+                                    <th>Validity Expiry</th>
+                                    <th>Campaign State</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="couponsTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center py-5">
+                                        <div class="spinner"></div>
+                                        <div class="mt-2 text-muted">Retrieving promo codes...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 </div>
 
-<!-- ADD / EDIT PROMO CODE MODAL -->
-<div class="modal-overlay" id="couponModal">
-    <div class="modal-box" style="max-width:540px;">
-        <div class="modal-header">
-            <h3 id="modalTitle">Generate New Promo Code</h3>
-            <button class="modal-close" onclick="closeModal()">✕</button>
-        </div>
-        <div class="modal-body">
-            <form id="couponForm" onsubmit="handleCouponSubmit(event)">
+<!-- Add/Edit Coupon Modal -->
+<div class="modal" id="couponModal">
+    <div class="modal-dialog" style="max-width: 520px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="couponModalTitle">Generate Promo Code</h3>
+                <button class="modal-close" onclick="closeModal('couponModal')">&times;</button>
+            </div>
+            <form id="couponForm" onsubmit="handleSaveCoupon(event)">
                 <input type="hidden" id="couponId">
-                <div class="form-grid">
-                    <div class="form-field full">
-                        <label>Promo Code *</label>
-                        <input type="text" id="couponCode" required placeholder="e.g. FARM10, THULIRVA50, DIWALI20" style="text-transform:uppercase; font-family:monospace; font-weight:700; font-size:15px; letter-spacing:1px;" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
-                        <small style="color:var(--muted); font-size:11px;">Uppercase letters and numbers only (e.g. SUMMER15, PUREMILK).</small>
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label class="form-label required">Voucher Code (Uppercase)</label>
+                        <input type="text" id="couponCode" class="form-control font-mono uppercase" placeholder="e.g. WELCOME50" required style="text-transform: uppercase;">
                     </div>
 
-                    <div class="form-field">
-                        <label>Discount Type *</label>
-                        <select id="couponType" required onchange="onDiscountTypeChange()">
-                            <option value="percent">Percentage (%) Discount</option>
-                            <option value="flat">Flat Cash Amount (₹) Off</option>
-                        </select>
+                    <div class="grid grid-2 gap-3 mb-3">
+                        <div class="form-group">
+                            <label class="form-label required">Discount Type</label>
+                            <select id="couponType" class="form-control" onchange="onTypeChange()" required>
+                                <option value="percent">Percentage (%) Off</option>
+                                <option value="flat">Flat Cash (₹) Off</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required" id="valLabel">Discount Value (%)</label>
+                            <input type="number" id="couponValue" class="form-control" placeholder="e.g. 20" required min="1">
+                        </div>
                     </div>
 
-                    <div class="form-field">
-                        <label id="discountValueLabel">Discount Value (%) *</label>
-                        <input type="number" id="couponValue" required min="1" placeholder="e.g. 10">
+                    <div class="grid grid-2 gap-3 mb-3">
+                        <div class="form-group">
+                            <label class="form-label">Minimum Order Value (₹)</label>
+                            <input type="number" id="couponMinOrder" class="form-control" placeholder="e.g. 299" min="0">
+                        </div>
+                        <div class="form-group" id="maxCapGroup">
+                            <label class="form-label">Max Discount Cap (₹)</label>
+                            <input type="number" id="couponMaxDiscount" class="form-control" placeholder="e.g. 100" min="0">
+                        </div>
                     </div>
 
-                    <div class="form-field">
-                        <label>Min Order Value (₹)</label>
-                        <input type="number" id="couponMinOrder" min="0" placeholder="e.g. 299 (0 for no minimum)">
+                    <div class="grid grid-2 gap-3 mb-3">
+                        <div class="form-group">
+                            <label class="form-label required">Expiry Date</label>
+                            <input type="date" id="couponExpiry" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select id="couponStatus" class="form-control">
+                                <option value="active">Active & Redeemable</option>
+                                <option value="inactive">Disabled / Paused</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="form-field" id="maxDiscountField">
-                        <label>Max Discount Cap (₹)</label>
-                        <input type="number" id="couponMaxDiscount" min="0" placeholder="e.g. 200 (optional)">
-                    </div>
-
-                    <div class="form-field full">
-                        <label>Offer Headline *</label>
-                        <input type="text" id="couponHeadline" required placeholder="e.g. Special Farm 10% Discount">
-                    </div>
-
-                    <div class="form-field full">
-                        <label>Offer Description / Terms</label>
-                        <textarea id="couponDescription" rows="2" placeholder="e.g. 10% OFF on all fresh cow milk, bilona ghee & farm produce"></textarea>
-                    </div>
-
-                    <div class="form-field">
-                        <label>Expiry Date</label>
-                        <input type="date" id="couponExpiry">
-                    </div>
-
-                    <div class="form-field">
-                        <label>Status *</label>
-                        <select id="couponStatus">
-                            <option value="active">Active (Available for Customers)</option>
-                            <option value="inactive">Inactive (Disabled)</option>
-                        </select>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Customer Headline / Description</label>
+                        <input type="text" id="couponDescription" class="form-control" placeholder="e.g. Flat ₹50 off on first farm milk order">
                     </div>
                 </div>
-
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="add-btn" id="modalSubmitBtn">Save Promo Code</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('couponModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveCoupon">Save Promo Code</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<script src="js/admin-shell.js"></script>
 <script>
-const token = localStorage.getItem("thulirva_admin_token");
-let couponsList = [];
+let allCoupons = [];
+const token = localStorage.getItem("thulirva_admin_token") || "";
+
+document.addEventListener("DOMContentLoaded", () => {
+    initAdminShell({
+        activePage: "coupons",
+        breadcrumbs: [
+            { label: "Overview", url: "dashboard.html" },
+            { label: "Marketing & Content", url: "coupons.html" },
+            { label: "Promo Codes", url: "coupons.html" }
+        ]
+    });
+
+    // Default expiry 6 months from now
+    const exp = new Date();
+    exp.setMonth(exp.getMonth() + 6);
+    document.getElementById("couponExpiry").value = exp.toISOString().split("T")[0];
+
+    loadCoupons();
+});
 
 async function loadCoupons() {
     try {
-        const res = await fetch("/api/coupons/admin");
-        if (res.ok) {
-            const data = await res.json();
-            if (data.coupons && data.coupons.length) {
-                couponsList = data.coupons;
-            }
-        }
-    } catch {
-        couponsList = [];
-    }
+        const res = await fetch("/api/coupons", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        allCoupons = Array.isArray(data) ? data : (Array.isArray(data.coupons) ? data.coupons : []);
 
-    renderTable(couponsList);
+        renderMetrics();
+        filterCoupons();
+    } catch (err) {
+        showToast("Error retrieving coupons: " + err.message, "danger");
+    }
+}
+
+function renderMetrics() {
+    const active = allCoupons.filter(c => c.status === "active").length;
+    const redemptions = allCoupons.reduce((acc, c) => acc + (c.usage_count || c.times_used || 0), 0);
+
+    document.getElementById("statActiveCoupons").textContent = active;
+    document.getElementById("statTotalRedemptions").textContent = redemptions;
+}
+
+function onTypeChange() {
+    const type = document.getElementById("couponType").value;
+    const label = document.getElementById("valLabel");
+    const maxCap = document.getElementById("maxCapGroup");
+    if (type === "percent") {
+        label.textContent = "Discount Value (%)";
+        maxCap.style.display = "block";
+    } else {
+        label.textContent = "Flat Discount (₹)";
+        maxCap.style.display = "none";
+    }
+}
+
+function filterCoupons() {
+    const query = (document.getElementById("couponSearch").value || "").toLowerCase().trim();
+    const status = document.getElementById("filterStatus").value;
+
+    const filtered = allCoupons.filter(c => {
+        const matchesQuery = !query ||
+            (c.code || "").toLowerCase().includes(query) ||
+            (c.description || "").toLowerCase().includes(query);
+
+        const matchesStatus = !status || c.status === status;
+
+        return matchesQuery && matchesStatus;
+    });
+
+    renderTable(filtered);
 }
 
 function renderTable(list) {
-    const table = document.getElementById("couponsTable");
-    document.getElementById("couponCountDisplay").textContent = list.length;
-    document.getElementById("totalCouponsCount").textContent = list.length;
-
-    const active = list.filter(c => c.status === "active");
-    document.getElementById("activeCouponsCount").textContent = active.length;
-
-    const totalUsed = list.reduce((sum, c) => sum + (c.usage_count || 0), 0);
-    document.getElementById("totalUsedCount").textContent = totalUsed;
-
-    table.innerHTML = "";
+    const tbody = document.getElementById("couponsTableBody");
     if (!list.length) {
-        table.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:32px; color:var(--muted); font-size:13.5px;">No promo codes found. Click "＋ Generate Promo Code" to create one.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5 text-muted">No promo codes found matching criteria.</td></tr>`;
         return;
     }
 
-    list.forEach(c => {
-        const row = document.createElement("tr");
-        const isPercent = c.discount_type === "percent";
-        const discountDisplay = isPercent ? `${c.discount_value}% OFF` : `₹${c.discount_value} OFF`;
-        const capDisplay = (isPercent && c.max_discount) ? `<small style="color:var(--muted); display:block;">(Up to ₹${c.max_discount})</small>` : '';
+    tbody.innerHTML = list.map(c => {
+        const isActive = c.status === "active";
+        const isPercent = c.type === "percent" || c.discount_type === "percent" || (!c.discount_type && (c.discount_value <= 100));
+        const discountDisplay = isPercent ? `${c.discount_value || c.value || 10}% OFF` : `₹${c.discount_value || c.value || 50} OFF`;
 
-        row.innerHTML = `
-            <td>
-                <span class="code-pill">${c.code}</span>
-                <button type="button" onclick="navigator.clipboard.writeText('${c.code}'); alert('Copied promo code: ${c.code}');" style="border:none; background:none; cursor:pointer; font-size:12px; margin-left:4px;" title="Copy code">📋</button>
-            </td>
-            <td>
-                <strong style="color:var(--green); font-size:13.5px;">${discountDisplay}</strong>
-                ${capDisplay}
-            </td>
-            <td>
-                ${c.min_order ? `₹${c.min_order}` : '<span style="color:var(--muted);">No Minimum</span>'}
-            </td>
-            <td>
-                <div style="font-weight:700; color:var(--text); font-size:13px;">${c.headline || c.code}</div>
-                <small style="color:var(--muted); font-size:11.5px;">${c.description || 'Special farm discount'}</small>
-            </td>
-            <td>
-                <span style="font-weight:700; color:#2E7D32;">${c.usage_count || 0} times</span>
-            </td>
-            <td>
-                <span style="font-size:12px; color:var(--muted);">${c.expiry_date || 'Ongoing'}</span>
-            </td>
-            <td>
-                <span class="${c.status === 'active' ? 'badge-active' : 'badge-inactive'}">
-                    ● ${c.status === 'active' ? 'Active' : 'Inactive'}
-                </span>
-            </td>
-            <td style="text-align: right;">
-                <div style="display:inline-flex; gap:6px;">
-                    <button class="action-btn" onclick="toggleCouponStatus(${c.id})" style="background:#E9EBD9; color:var(--green); font-size:11px; padding:4px 8px; border-radius:4px;">
-                        ${c.status === 'active' ? '⏸ Disable' : '▶ Activate'}
-                    </button>
-                    <button class="action-btn" onclick="openEditModal(${c.id})" style="background:#FFF3CD; color:#856404; font-size:11px; padding:4px 8px; border-radius:4px;">
-                        ✏ Edit
-                    </button>
-                    <button class="action-btn delete-btn" onclick="deleteCoupon(${c.id})" style="font-size:11px; padding:4px 8px; border-radius:4px;">
-                        🗑 Delete
-                    </button>
-                </div>
-            </td>
+        return `
+            <tr>
+                <td>
+                    <span class="coupon-code-pill">${c.code}</span>
+                </td>
+                <td>
+                    <div class="font-bold text-dark text-sm">${discountDisplay}</div>
+                    <div class="text-xs text-muted">${c.description || 'Special farm voucher'}</div>
+                </td>
+                <td>${c.min_order ? `₹${c.min_order}` : '<span class="text-muted text-xs">No Minimum</span>'}</td>
+                <td>${c.max_discount ? `₹${c.max_discount}` : '<span class="text-muted text-xs">—</span>'}</td>
+                <td class="font-bold text-success">${c.usage_count || c.times_used || 0} uses</td>
+                <td class="text-xs text-muted">${c.expiry_date || 'No Expiry'}</td>
+                <td>
+                    <span class="badge ${isActive ? 'badge-success' : 'badge-danger'}">
+                        ● ${isActive ? 'Active' : 'Disabled'}
+                    </span>
+                </td>
+                <td class="text-right">
+                    <div class="flex-center justify-end gap-1">
+                        <button class="btn btn-secondary btn-sm" onclick="toggleCouponStatus(${c.id})">
+                            ${isActive ? 'Pause' : 'Activate'}
+                        </button>
+                        <button class="btn btn-secondary btn-icon" onclick="openEditCouponModal(${c.id})" title="Edit">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                        </button>
+                        <button class="btn btn-danger btn-icon" onclick="deleteCoupon(${c.id})" title="Delete">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        </button>
+                    </div>
+                </td>
+            </tr>
         `;
-        table.appendChild(row);
-    });
+    }).join("");
 }
 
-function onDiscountTypeChange() {
-    const type = document.getElementById("couponType").value;
-    const label = document.getElementById("discountValueLabel");
-    const maxField = document.getElementById("maxDiscountField");
-    if (type === "percent") {
-        label.textContent = "Discount Value (%) *";
-        maxField.style.display = "block";
-    } else {
-        label.textContent = "Discount Value (₹ Flat Amount) *";
-        maxField.style.display = "none";
-    }
-}
-
-function openAddModal() {
-    document.getElementById("modalTitle").textContent = "Generate New Promo Code";
-    document.getElementById("modalSubmitBtn").textContent = "Create Promo Code";
+function openAddCouponModal() {
+    document.getElementById("couponModalTitle").textContent = "Generate Promo Code";
     document.getElementById("couponId").value = "";
-    document.getElementById("couponForm").reset();
+    document.getElementById("couponCode").value = "";
+    document.getElementById("couponValue").value = "";
+    document.getElementById("couponMinOrder").value = "";
+    document.getElementById("couponMaxDiscount").value = "";
+    document.getElementById("couponDescription").value = "";
     document.getElementById("couponStatus").value = "active";
-    
-    // Default expiry 1 year ahead
-    const exp = new Date();
-    exp.setFullYear(exp.getFullYear() + 1);
-    document.getElementById("couponExpiry").value = exp.toISOString().split("T")[0];
-
-    onDiscountTypeChange();
-    document.getElementById("couponModal").classList.add("active");
+    onTypeChange();
+    document.getElementById("couponModal").classList.add("show");
 }
 
-function openEditModal(id) {
-    const c = couponsList.find(item => item.id == id);
+function openEditCouponModal(id) {
+    const c = allCoupons.find(x => x.id == id);
     if (!c) return;
 
-    document.getElementById("modalTitle").textContent = "Edit Promo Code: " + c.code;
-    document.getElementById("modalSubmitBtn").textContent = "Update Promo Code";
+    document.getElementById("couponModalTitle").textContent = "Edit Promo Code";
     document.getElementById("couponId").value = c.id;
     document.getElementById("couponCode").value = c.code || "";
-    document.getElementById("couponType").value = c.discount_type || "percent";
-    document.getElementById("couponValue").value = c.discount_value || "";
+    document.getElementById("couponType").value = c.type || c.discount_type || "percent";
+    document.getElementById("couponValue").value = c.discount_value || c.value || "";
     document.getElementById("couponMinOrder").value = c.min_order || "";
     document.getElementById("couponMaxDiscount").value = c.max_discount || "";
-    document.getElementById("couponHeadline").value = c.headline || "";
-    document.getElementById("couponDescription").value = c.description || "";
     document.getElementById("couponExpiry").value = c.expiry_date || "";
+    document.getElementById("couponDescription").value = c.description || "";
     document.getElementById("couponStatus").value = c.status || "active";
-
-    onDiscountTypeChange();
-    document.getElementById("couponModal").classList.add("active");
+    onTypeChange();
+    document.getElementById("couponModal").classList.add("show");
 }
 
-function closeModal() {
-    document.getElementById("couponModal").classList.remove("active");
-}
-
-async function handleCouponSubmit(e) {
+async function handleSaveCoupon(e) {
     e.preventDefault();
     const id = document.getElementById("couponId").value;
-    const isEdit = Boolean(id);
+    const code = document.getElementById("couponCode").value.trim().toUpperCase();
+    const type = document.getElementById("couponType").value;
+    const discount_value = Number(document.getElementById("couponValue").value);
+    const min_order = Number(document.getElementById("couponMinOrder").value) || 0;
+    const max_discount = Number(document.getElementById("couponMaxDiscount").value) || 0;
+    const expiry_date = document.getElementById("couponExpiry").value;
+    const description = document.getElementById("couponDescription").value.trim();
+    const status = document.getElementById("couponStatus").value;
 
-    const payload = {
-        code: document.getElementById("couponCode").value.trim().toUpperCase(),
-        discount_type: document.getElementById("couponType").value,
-        discount_value: Number(document.getElementById("couponValue").value),
-        min_order: Number(document.getElementById("couponMinOrder").value) || 0,
-        max_discount: document.getElementById("couponMaxDiscount").value ? Number(document.getElementById("couponMaxDiscount").value) : null,
-        headline: document.getElementById("couponHeadline").value.trim(),
-        description: document.getElementById("couponDescription").value.trim(),
-        expiry_date: document.getElementById("couponExpiry").value || "2027-12-31",
-        status: document.getElementById("couponStatus").value
-    };
+    const payload = { code, type, discount_type: type, discount_value, min_order, max_discount, expiry_date, description, status };
 
     try {
-        const url = isEdit ? `/api/coupons/${id}` : "/api/coupons";
-        const method = isEdit ? "PUT" : "POST";
-        const res = await fetch(url, {
-            method,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (data.success) {
-            closeModal();
-            loadCoupons();
-            alert(isEdit ? "Promo code updated successfully!" : "Promo code created successfully!");
+        if (id) {
+            await fetch(`/api/coupons/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify(payload)
+            });
+            showToast("Promo code updated successfully.", "success");
         } else {
-            alert(data.message || "Failed to save promo code.");
+            await fetch("/api/coupons", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify(payload)
+            });
+            showToast("New promo code generated successfully.", "success");
         }
-    } catch {
-        if (isEdit) {
-            const idx = couponsList.findIndex(item => item.id == id);
-            if (idx !== -1) couponsList[idx] = { ...couponsList[idx], ...payload };
-        } else {
-            couponsList.unshift({ id: Date.now(), ...payload, usage_count: 0 });
-        }
-        closeModal();
-        renderTable(couponsList);
-        alert(isEdit ? "Promo code updated locally!" : "Promo code created locally!");
+        closeModal("couponModal");
+        loadCoupons();
+    } catch (err) {
+        showToast("Error saving promo code: " + err.message, "danger");
     }
 }
 
 async function toggleCouponStatus(id) {
-    const c = couponsList.find(item => item.id == id);
+    const c = allCoupons.find(x => x.id == id);
     if (!c) return;
     const newStatus = c.status === "active" ? "inactive" : "active";
+
     try {
         await fetch(`/api/coupons/${id}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
             body: JSON.stringify({ status: newStatus })
         });
-    } catch {}
-    c.status = newStatus;
-    renderTable(couponsList);
+        c.status = newStatus;
+        renderMetrics();
+        filterCoupons();
+        showToast("Voucher status updated.", "success");
+    } catch (err) {
+        showToast("Error toggling status: " + err.message, "danger");
+    }
 }
 
 async function deleteCoupon(id) {
-    const c = couponsList.find(item => item.id == id);
-    if (!confirm(`Are you sure you want to delete promo code "${c ? c.code : id}"?`)) return;
+    if (!confirm("Are you sure you want to delete this promo code?")) return;
+
     try {
-        await fetch(`/api/coupons/${id}`, { method: "DELETE" });
-    } catch {}
-    couponsList = couponsList.filter(item => item.id != id);
-    renderTable(couponsList);
+        await fetch(`/api/coupons/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        showToast("Promo code deleted.", "success");
+        loadCoupons();
+    } catch (err) {
+        showToast("Error deleting coupon: " + err.message, "danger");
+    }
 }
-
-function filterCoupons() {
-    const q = document.getElementById("searchInput").value.toLowerCase();
-    const status = document.getElementById("statusFilter").value;
-    const filtered = couponsList.filter(c => {
-        const matchesQ = c.code.toLowerCase().includes(q) || (c.description && c.description.toLowerCase().includes(q)) || (c.headline && c.headline.toLowerCase().includes(q));
-        const matchesStatus = status === "all" ? true : c.status === status;
-        return matchesQ && matchesStatus;
-    });
-    renderTable(filtered);
-}
-
-function logout() {
-    localStorage.removeItem("thulirva_admin_token");
-    window.location.href = "index.html";
-}
-
-loadCoupons();
 </script>
 </body>
 </html>
-

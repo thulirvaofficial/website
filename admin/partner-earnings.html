@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THULIRVA Enterprise — Partner Earnings & Settlement Ledger</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <style>
+        .amount-pos {
+            color: #2E7D32;
+            font-weight: 700;
+        }
+        .amount-neg {
+            color: #C62828;
+            font-weight: 700;
+        }
+        .entry-type-pill {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+        .type-delivery { background: #E8F5E9; color: #2E7D32; }
+        .type-subscription { background: #E3F2FD; color: #1565C0; }
+        .type-settlement { background: #FFF3E0; color: #E65100; }
+        .type-incentive { background: #F3E5F5; color: #7B1FA2; }
+    </style>
+</head>
+<body>
+
+<div class="admin-layout">
+    <aside class="sidebar" id="adminSidebar"></aside>
+
+    <main class="main-content">
+        <header class="topbar" id="adminTopbar"></header>
+
+        <div class="page-container">
+            <div class="page-header flex-between">
+                <div>
+                    <h1 class="page-title">Fleet Earnings & Settlements</h1>
+                    <p class="page-subtitle">Partner wallet balances, immutable transaction ledger, and weekly bank salary disbursements</p>
+                </div>
+                <div class="flex-center gap-3">
+                    <button class="btn btn-primary" onclick="openSettlementModal()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                        Execute Weekly Settlement
+                    </button>
+                </div>
+            </div>
+
+            <!-- Metrics Overview -->
+            <div class="metrics-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Gross Earnings Dispatched</div>
+                    <div class="stat-value text-gold" id="statGrossEarned">₹0.00</div>
+                    <div class="stat-sub">Cumulative trip earnings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Pending Payable Balance</div>
+                    <div class="stat-value text-success" id="statPendingPayable">₹0.00</div>
+                    <div class="stat-sub">Available for payout</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Settled to Bank</div>
+                    <div class="stat-value" id="statTotalSettled">₹0.00</div>
+                    <div class="stat-sub">Disbursed with bank UTR</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Settlements Executed</div>
+                    <div class="stat-value" id="statSettlementCount">0</div>
+                    <div class="stat-sub">Bank payout cycles completed</div>
+                </div>
+            </div>
+
+            <!-- Tab Switcher -->
+            <div class="card mb-4">
+                <div class="card-body p-2">
+                    <div class="flex-between">
+                        <div class="flex-center gap-2">
+                            <button class="btn btn-primary btn-sm" id="tabWalletsBtn" onclick="switchTab('wallets')">
+                                Partner Wallets & Balances
+                            </button>
+                            <button class="btn btn-secondary btn-sm" id="tabSettlementsBtn" onclick="switchTab('settlements')">
+                                Past Weekly Settlements (Bank Logs)
+                            </button>
+                        </div>
+                        <button class="btn btn-secondary btn-icon" onclick="loadEarningsData()" title="Reload">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View 1: Partner Wallets Table -->
+            <div id="viewWallets" class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table" id="walletsTable">
+                            <thead>
+                                <tr>
+                                    <th>Associate Details</th>
+                                    <th>Operating Area</th>
+                                    <th>Lifetime Earned (₹)</th>
+                                    <th>Available Payable (₹)</th>
+                                    <th>Reserved Payout (₹)</th>
+                                    <th>Total Settled (₹)</th>
+                                    <th class="text-right">Settlement Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="walletsTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center py-5">
+                                        <div class="spinner"></div>
+                                        <div class="mt-2 text-muted">Retrieving partner wallet balances...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View 2: Past Settlements Log Table -->
+            <div id="viewSettlements" class="card" style="display: none;">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table" id="settlementsTable">
+                            <thead>
+                                <tr>
+                                    <th>Settlement ID</th>
+                                    <th>Associate Details</th>
+                                    <th>Billing Period</th>
+                                    <th>Disbursed Amount</th>
+                                    <th>Payment Mode</th>
+                                    <th>Bank UTR Reference</th>
+                                    <th>Disbursed Date</th>
+                                    <th>Admin Auth</th>
+                                </tr>
+                            </thead>
+                            <tbody id="settlementsTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center py-5 text-muted">No settlements logged yet.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Execute Settlement Modal -->
+<div class="modal" id="settlementModal">
+    <div class="modal-dialog" style="max-width: 520px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Disburse Weekly Settlement</h3>
+                <button class="modal-close" onclick="closeModal('settlementModal')">&times;</button>
+            </div>
+            <form id="settlementForm" onsubmit="handleExecuteSettlement(event)">
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label class="form-label required">Select Delivery Associate</label>
+                        <select id="settlePartnerId" class="form-control" required onchange="onPartnerSelectedForSettlement()">
+                            <option value="">-- Choose Partner --</option>
+                        </select>
+                        <div id="settleAvailableHint" class="text-xs text-muted mt-1">Available Payable: ₹0.00</div>
+                    </div>
+
+                    <div class="grid grid-2 gap-3 mb-3">
+                        <div class="form-group">
+                            <label class="form-label required">Period Start</label>
+                            <input type="date" id="settlePeriodStart" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required">Period End</label>
+                            <input type="date" id="settlePeriodEnd" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2 gap-3 mb-3">
+                        <div class="form-group">
+                            <label class="form-label required">Payment Mode</label>
+                            <select id="settlePaymentMode" class="form-control" required>
+                                <option value="IMPS / NEFT Bank Transfer">IMPS / NEFT</option>
+                                <option value="UPI Transfer">UPI Transfer</option>
+                                <option value="Cash Disbursement">Cash Hub Handover</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required">Bank UTR / Transaction Ref</label>
+                            <input type="text" id="settleUtrNumber" class="form-control" placeholder="e.g. UTR492817492819" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Internal Operations Notes</label>
+                        <textarea id="settleNotes" class="form-control" rows="2" placeholder="e.g. Weekly settlement including Padur milk route incentive..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('settlementModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitSettlement">Confirm & Disburse</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="js/admin-shell.js"></script>
+<script>
+let partnerWallets = [];
+let pastSettlements = [];
+const token = localStorage.getItem("thulirva_admin_token") || "";
+
+document.addEventListener("DOMContentLoaded", () => {
+    initAdminShell({
+        activePage: "earnings",
+        breadcrumbs: [
+            { label: "Overview", url: "dashboard.html" },
+            { label: "Logistics & Fleet", url: "delivery-partners.html" },
+            { label: "Partner Earnings", url: "partner-earnings.html" }
+        ]
+    });
+
+    // Set default dates for settlement (past 7 days)
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - 7);
+    document.getElementById("settlePeriodEnd").value = end.toISOString().split("T")[0];
+    document.getElementById("settlePeriodStart").value = start.toISOString().split("T")[0];
+
+    loadEarningsData();
+});
+
+async function loadEarningsData() {
+    try {
+        const [repRes, settleRes] = await Promise.all([
+            fetch("/api/v1/reports/financial", { headers: { Authorization: `Bearer ${token}` } }),
+            fetch("/api/v1/settlements/admin/all", { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+
+        const repData = await repRes.json();
+        const settleData = await settleRes.json();
+
+        if (repData.success && repData.report) {
+            const r = repData.report;
+            document.getElementById("statGrossEarned").textContent = `₹${(r.gross_earned_rupees || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+            document.getElementById("statPendingPayable").textContent = `₹${(r.pending_payable_rupees || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+            document.getElementById("statTotalSettled").textContent = `₹${(r.total_settled_rupees || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+            document.getElementById("statSettlementCount").textContent = r.total_settlements_processed || 0;
+
+            partnerWallets = r.partner_wallet_summaries || [];
+            renderWalletsTable();
+            populatePartnerDropdown();
+        }
+
+        if (settleData.success && Array.isArray(settleData.settlements)) {
+            pastSettlements = settleData.settlements;
+            renderSettlementsTable();
+        }
+    } catch (err) {
+        showToast("Error retrieving financial ledgers: " + err.message, "danger");
+    }
+}
+
+function renderWalletsTable() {
+    const tbody = document.getElementById("walletsTableBody");
+    if (!partnerWallets.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">No partner wallets found.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = partnerWallets.map(w => {
+        const available = Number(w.available_payable_rupees || 0);
+        const lifetime = Number(w.lifetime_earned_rupees || 0);
+        const settled = Number(w.total_settled_rupees || 0);
+        const reserved = Number(w.reserved_withdrawal_rupees || 0);
+
+        return `
+            <tr>
+                <td>
+                    <div class="font-bold text-dark">${w.name || 'Associate'}</div>
+                    <div class="text-xs text-muted font-mono">${w.partner_id || 'ID-N/A'}</div>
+                </td>
+                <td><span class="badge badge-neutral">📍 ${w.assigned_area || 'Padur'}</span></td>
+                <td class="font-bold">₹${lifetime.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                <td class="font-bold text-success">₹${available.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                <td class="font-mono text-muted">₹${reserved.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                <td class="font-bold text-muted">₹${settled.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                <td class="text-right">
+                    <button class="btn btn-primary btn-sm" onclick="quickSettleForPartner('${w.partner_id}', ${available})">
+                        Disburse Payout
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+function renderSettlementsTable() {
+    const tbody = document.getElementById("settlementsTableBody");
+    if (!pastSettlements.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5 text-muted">No weekly settlements recorded yet.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = pastSettlements.map(s => `
+        <tr>
+            <td class="font-mono font-bold text-dark text-xs">${s.settlement_id || s.id}</td>
+            <td>
+                <div class="font-bold text-dark">${s.partner_name || s.partner_id}</div>
+                <div class="text-xs text-muted font-mono">${s.partner_id}</div>
+            </td>
+            <td class="text-xs text-muted">
+                ${s.period_start || '—'} → ${s.period_end || '—'}
+            </td>
+            <td class="font-bold text-success">₹${Number(s.net_amount_rupees || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+            <td><span class="badge badge-neutral">${s.payment_mode || 'Bank Transfer'}</span></td>
+            <td><span class="font-mono text-xs font-bold text-dark">${s.utr_number || '—'}</span></td>
+            <td class="text-xs text-muted">${new Date(s.created_at || Date.now()).toLocaleDateString('en-IN')}</td>
+            <td class="text-xs font-medium text-muted">${s.admin_name || 'Ops Admin'}</td>
+        </tr>
+    `).join("");
+}
+
+function populatePartnerDropdown() {
+    const sel = document.getElementById("settlePartnerId");
+    sel.innerHTML = `<option value="">-- Choose Partner --</option>` +
+        partnerWallets.map(w => `<option value="${w.partner_id}">${w.name} (${w.partner_id}) — Avail: ₹${Number(w.available_payable_rupees||0).toFixed(2)}</option>`).join("");
+}
+
+function onPartnerSelectedForSettlement() {
+    const pid = document.getElementById("settlePartnerId").value;
+    const w = partnerWallets.find(x => x.partner_id === pid);
+    const hint = document.getElementById("settleAvailableHint");
+    if (w) {
+        hint.textContent = `Available Payable: ₹${Number(w.available_payable_rupees || 0).toFixed(2)}`;
+    } else {
+        hint.textContent = "Available Payable: ₹0.00";
+    }
+}
+
+function quickSettleForPartner(partnerId, available) {
+    if (available <= 0) {
+        showToast("Associate has ₹0.00 available balance to settle.", "warning");
+        return;
+    }
+    document.getElementById("settlePartnerId").value = partnerId;
+    onPartnerSelectedForSettlement();
+    openSettlementModal();
+}
+
+function openSettlementModal() {
+    document.getElementById("settlementModal").classList.add("show");
+}
+
+async function handleExecuteSettlement(e) {
+    e.preventDefault();
+    const btn = document.getElementById("btnSubmitSettlement");
+    btn.disabled = true;
+    btn.textContent = "Processing Settlement...";
+
+    const payload = {
+        partner_id: document.getElementById("settlePartnerId").value,
+        period_start: document.getElementById("settlePeriodStart").value,
+        period_end: document.getElementById("settlePeriodEnd").value,
+        payment_mode: document.getElementById("settlePaymentMode").value,
+        utr_number: document.getElementById("settleUtrNumber").value.trim(),
+        notes: document.getElementById("settleNotes").value.trim()
+    };
+
+    try {
+        const res = await fetch("/api/v1/settlements/admin/process", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Settlement executed successfully and funds disbursed.", "success");
+            closeModal("settlementModal");
+            loadEarningsData();
+        } else {
+            showToast(data.message || "Failed to execute settlement", "danger");
+        }
+    } catch (err) {
+        showToast("Error processing settlement: " + err.message, "danger");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Confirm & Disburse";
+    }
+}
+
+function switchTab(tab) {
+    if (tab === "wallets") {
+        document.getElementById("viewWallets").style.display = "block";
+        document.getElementById("viewSettlements").style.display = "none";
+        document.getElementById("tabWalletsBtn").className = "btn btn-primary btn-sm";
+        document.getElementById("tabSettlementsBtn").className = "btn btn-secondary btn-sm";
+    } else {
+        document.getElementById("viewWallets").style.display = "none";
+        document.getElementById("viewSettlements").style.display = "block";
+        document.getElementById("tabWalletsBtn").className = "btn btn-secondary btn-sm";
+        document.getElementById("tabSettlementsBtn").className = "btn btn-primary btn-sm";
+    }
+}
+</script>
+</body>
+</html>

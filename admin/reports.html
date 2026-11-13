@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THULIRVA Enterprise — Executive Reports & Financial Analytics</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="admin-layout">
+    <aside class="sidebar" id="adminSidebar"></aside>
+
+    <main class="main-content">
+        <header class="topbar" id="adminTopbar"></header>
+
+        <div class="page-container">
+            <div class="page-header flex-between">
+                <div>
+                    <h1 class="page-title">Executive Reports & Business Analytics</h1>
+                    <p class="page-subtitle">Consolidated operational metrics, fleet delivery efficiency & partner financial balances</p>
+                </div>
+                <div class="flex-center gap-3">
+                    <button class="btn btn-secondary" onclick="exportFinancialReportCsv()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                        Export Financial Summary
+                    </button>
+                    <button class="btn btn-secondary btn-icon" onclick="loadReports()" title="Refresh Reports">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Financial Metrics Grid -->
+            <div class="metrics-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Fleet Gross Earned</div>
+                    <div class="stat-value text-gold" id="repGrossEarned">₹0.00</div>
+                    <div class="stat-sub">Cumulative associate earnings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Bank Settlements Settled</div>
+                    <div class="stat-value text-success" id="repTotalSettled">₹0.00</div>
+                    <div class="stat-sub">Completed salary transfers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Pending Payout Liability</div>
+                    <div class="stat-value" id="repPendingPayable">₹0.00</div>
+                    <div class="stat-sub">Accrued partner wallet liability</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Combined Completed Deliveries</div>
+                    <div class="stat-value text-gold" id="repTotalDeliveries">—</div>
+                    <div class="stat-sub">Instant orders + Morning subscriptions</div>
+                </div>
+            </div>
+
+            <!-- Operations Breakdown Cards -->
+            <div class="grid grid-2 gap-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Fleet Dispatch Productivity</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <td class="font-medium text-dark">Active Delivery Partners</td>
+                                        <td class="text-right font-bold" id="repFleetCount">—</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-medium text-dark">Currently Online on Shift</td>
+                                        <td class="text-right font-bold text-success" id="repOnlineCount">—</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-medium text-dark">Verified & KYC Approved Partners</td>
+                                        <td class="text-right font-bold text-gold" id="repKycCount">—</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-medium text-dark">Delivered Cart Product Orders</td>
+                                        <td class="text-right font-bold font-mono" id="repOrderDeliveries">—</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-medium text-dark">Morning Milk Subscription Deliveries</td>
+                                        <td class="text-right font-bold font-mono" id="repSubDeliveries">—</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-medium text-dark">Total Attendance Shift Logs</td>
+                                        <td class="text-right font-bold" id="repAttendanceLogs">—</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Financial Health & Audit Metrics</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <td class="font-medium text-dark">Total Financial Ledger Records</td>
+                                        <td class="text-right font-bold font-mono" id="repLedgerCount">—</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-medium text-dark">Weekly Settlement Cycles Executed</td>
+                                        <td class="text-right font-bold" id="repSettlementsCount">—</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-medium text-dark">Order Delivery Commission Rate</td>
+                                        <td class="text-right font-bold text-success">₹40.00 / drop</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-medium text-dark">Subscription Delivery Rate</td>
+                                        <td class="text-right font-bold text-success">₹25.00 / bottle</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-medium text-dark">Primary Operating Hub</td>
+                                        <td class="text-right font-bold">Padur, Chennai OMR</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Partner Wallet Summaries Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Associate Financial Balances</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table" id="reportBalancesTable">
+                            <thead>
+                                <tr>
+                                    <th>Associate Details</th>
+                                    <th>Operating Area</th>
+                                    <th>Lifetime Earned (₹)</th>
+                                    <th>Available Payable (₹)</th>
+                                    <th>Reserved Cash-Out (₹)</th>
+                                    <th>Settled Payouts (₹)</th>
+                                    <th class="text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportBalancesBody">
+                                <tr>
+                                    <td colspan="7" class="text-center py-5">
+                                        <div class="spinner"></div>
+                                        <div class="mt-2 text-muted">Retrieving partner balance audits...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="js/admin-shell.js"></script>
+<script>
+let financialReport = null;
+let fleetReport = null;
+const token = localStorage.getItem("thulirva_admin_token") || "";
+
+document.addEventListener("DOMContentLoaded", () => {
+    initAdminShell({
+        activePage: "reports",
+        breadcrumbs: [
+            { label: "Overview", url: "dashboard.html" },
+            { label: "Reports & Analytics", url: "reports.html" }
+        ]
+    });
+
+    loadReports();
+});
+
+async function loadReports() {
+    try {
+        const [finRes, fltRes] = await Promise.all([
+            fetch("/api/v1/reports/financial", { headers: { Authorization: `Bearer ${token}` } }),
+            fetch("/api/v1/reports/fleet", { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+
+        const finData = await finRes.json();
+        const fltData = await fltRes.json();
+
+        if (finData.success && finData.report) {
+            financialReport = finData.report;
+            renderFinancialMetrics(financialReport);
+        }
+
+        if (fltData.success && fltData.report) {
+            fleetReport = fltData.report;
+            renderFleetMetrics(fleetReport);
+        }
+    } catch (err) {
+        showToast("Error retrieving executive reports: " + err.message, "danger");
+    }
+}
+
+function renderFinancialMetrics(r) {
+    document.getElementById("repGrossEarned").textContent = `₹${(r.gross_earned_rupees || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    document.getElementById("repTotalSettled").textContent = `₹${(r.total_settled_rupees || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    document.getElementById("repPendingPayable").textContent = `₹${(r.pending_payable_rupees || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    document.getElementById("repLedgerCount").textContent = r.total_ledger_entries || 0;
+    document.getElementById("repSettlementsCount").textContent = r.total_settlements_processed || 0;
+
+    const tbody = document.getElementById("reportBalancesBody");
+    const list = r.partner_wallet_summaries || [];
+
+    if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No associate balances found.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = list.map(p => `
+        <tr>
+            <td>
+                <div class="font-bold text-dark">${p.name || 'Associate'}</div>
+                <div class="text-xs text-muted font-mono">${p.partner_id || 'ID-N/A'}</div>
+            </td>
+            <td><span class="badge badge-neutral">📍 ${p.assigned_area || 'Padur'}</span></td>
+            <td class="font-bold">₹${Number(p.lifetime_earned_rupees || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+            <td class="font-bold text-success">₹${Number(p.available_payable_rupees || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+            <td class="font-mono text-muted">₹${Number(p.reserved_withdrawal_rupees || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+            <td class="font-bold text-muted">₹${Number(p.total_settled_rupees || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+            <td class="text-right">
+                <a href="partner-earnings.html" class="btn btn-secondary btn-sm">Inspect Wallet</a>
+            </td>
+        </tr>
+    `).join("");
+}
+
+function renderFleetMetrics(f) {
+    document.getElementById("repTotalDeliveries").textContent = f.total_combined_deliveries || 0;
+    document.getElementById("repFleetCount").textContent = f.total_fleet_count || 0;
+    document.getElementById("repOnlineCount").textContent = `${f.online_fleet_count || 0} Online`;
+    document.getElementById("repKycCount").textContent = f.approved_kyc_count || 0;
+    document.getElementById("repOrderDeliveries").textContent = f.total_product_deliveries || 0;
+    document.getElementById("repSubDeliveries").textContent = f.total_subscription_deliveries || 0;
+    document.getElementById("repAttendanceLogs").textContent = f.attendance_logs_count || 0;
+}
+
+function exportFinancialReportCsv() {
+    if (!financialReport || !financialReport.partner_wallet_summaries) {
+        showToast("No report data available to export", "warning");
+        return;
+    }
+
+    const headers = ["Partner ID", "Name", "Assigned Area", "Phone", "Lifetime Earned (INR)", "Total Settled (INR)", "Available Payable (INR)", "Reserved Withdrawal (INR)"];
+    const rows = financialReport.partner_wallet_summaries.map(p => [
+        p.partner_id || "",
+        `"${(p.name || "").replace(/"/g, '""')}"`,
+        `"${p.assigned_area || ""}"`,
+        p.phone || "",
+        p.lifetime_earned_rupees || 0,
+        p.total_settled_rupees || 0,
+        p.available_payable_rupees || 0,
+        p.reserved_withdrawal_rupees || 0
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", `Thulirva_Financial_Executive_Report_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+</script>
+</body>
+</html>

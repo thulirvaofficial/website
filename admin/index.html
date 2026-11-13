@@ -1,90 +1,173 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>
-        THULIRVA Admin
-    </title>
-
-    <link
-        rel="stylesheet"
-        href="css/admin.css"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THULIRVA Enterprise — Operations Administration Portal</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #173F2D 0%, #0F2D1E 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            font-family: 'DM Sans', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+        body::before {
+            content: "";
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%);
+            top: -150px;
+            right: -150px;
+            pointer-events: none;
+        }
+        body::after {
+            content: "";
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(212,175,55,0.05) 0%, transparent 70%);
+            bottom: -100px;
+            left: -100px;
+            pointer-events: none;
+        }
+        .login-card-enterprise {
+            background: #FFFFFF;
+            border: 1px solid rgba(212,175,55,0.25);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 440px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 10;
+        }
+        .login-brand-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .login-logo {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: 3px solid #D4AF37;
+            padding: 2px;
+            background: #FFFFFF;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+            margin: 0 auto 12px;
+            display: block;
+            object-fit: cover;
+        }
+        .login-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #173F2D;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .login-subtitle {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #8C7851;
+        }
+        .login-error {
+            background: #FFF2F2;
+            border: 1px solid #FFCDD2;
+            color: #C62828;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+    </style>
 </head>
-
-
 <body>
 
-<div class="login-page">
-
-    <div class="login-card">
-
-        <div class="admin-logo">
-            <img src="images/logo.jpg" alt="THULIRVA" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #d4af37; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-            <h1>THULIRVA</h1>
-            <span>ADMIN PANEL</span>
-        </div>
-
-
-        <h2>
-            Admin Login
-        </h2>
-
-
-        <form id="adminLoginForm">
-
-            <label>
-                Email
-            </label>
-
-            <input
-                type="email"
-                id="email"
-                value="admin@thulirva.com"
-                required
-            >
-
-
-            <label>
-                Password
-            </label>
-
-            <input
-                type="password"
-                id="password"
-                value="admin123"
-                required
-            >
-
-
-            <button
-                type="submit"
-            >
-                Login to Dashboard
-            </button>
-
-        </form>
-
-
-        <p id="loginMessage"></p>
-
+<div class="login-card-enterprise">
+    <div class="login-brand-header">
+        <img src="images/logo.jpg" alt="THULIRVA" class="login-logo">
+        <h1 class="login-title">THULIRVA</h1>
+        <div class="login-subtitle">Enterprise Administration</div>
     </div>
 
+    <div class="login-error" id="loginError"></div>
+
+    <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+        <div class="form-group mb-3">
+            <label class="form-label required">Administrator Email</label>
+            <input type="email" id="email" class="form-control" value="admin@thulirva.com" placeholder="name@thulirva.com" required autocomplete="username">
+        </div>
+
+        <div class="form-group mb-4">
+            <label class="form-label required">Password</label>
+            <input type="password" id="password" class="form-control" value="admin123" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="btn btn-primary w-full py-3" id="btnLoginSubmit" style="font-size: 15px; font-weight: 700;">
+            Sign In to Dashboard
+        </button>
+    </form>
+
+    <div class="mt-4 text-center">
+        <span class="text-xs text-muted">Single Source of Truth • Padur Hub Fleet Engine • Port 5500</span>
+    </div>
 </div>
 
+<script>
+// If already logged in, redirect straight to dashboard
+if (localStorage.getItem("thulirva_admin_token")) {
+    window.location.href = "dashboard.html";
+}
 
-<script src="js/admin-login.js"></script>
+async function handleAdminLogin(event) {
+    event.preventDefault();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const errorEl = document.getElementById("loginError");
+    const btn = document.getElementById("btnLoginSubmit");
 
+    errorEl.style.display = "none";
+    btn.disabled = true;
+    btn.textContent = "Authenticating...";
+
+    try {
+        const response = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await response.json();
+
+        if (data.success && (data.user?.role === "admin" || !data.user?.role || data.token)) {
+            localStorage.setItem("thulirva_admin_token", data.token);
+            window.location.href = "dashboard.html";
+        } else {
+            errorEl.textContent = data.message || "Invalid credentials or unauthorized administrative access.";
+            errorEl.style.display = "block";
+        }
+    } catch (err) {
+        errorEl.textContent = "Unable to connect to backend server on port 5500.";
+        errorEl.style.display = "block";
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Sign In to Dashboard";
+    }
+}
+</script>
 </body>
-
 </html>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>THULIRVA | Pure Goodness from Our Farms</title>
     <meta name="description" content="THULIRVA - Fresh, Natural and Healthy Dairy and Agro Products delivered to your home.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -182,35 +182,35 @@
 </section>
 
 <!-- SUBSCRIPTION HIGHLIGHT BANNER -->
-<section style="background: linear-gradient(135deg, #1A4A2E 0%, #0D2818 100%); color:white; padding:55px 0;">
+<section class="sub-highlight-section">
     <div class="container">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:30px;">
-            <div style="max-width:560px;">
-                <span style="background:rgba(212,175,55,0.25); color:#E5C97A; font-size:12px; font-weight:700; padding:4px 12px; border-radius:15px; letter-spacing:1px; text-transform:uppercase;">🌿 Doorstep Morning Plan</span>
-                <h2 style="font-family:'Playfair Display',serif; font-size:32px; color:white; margin:12px 0 14px;">Daily Fresh Cow Milk &amp; Dairy Subscriptions</h2>
-                <p style="font-size:15px; color:#c8dbbf; line-height:1.6; margin-bottom:20px;">
+        <div class="sub-highlight-grid">
+            <div class="sub-highlight-info">
+                <span class="sub-highlight-badge">🌿 Doorstep Morning Plan</span>
+                <h2 class="sub-highlight-title">Daily Fresh Cow Milk &amp; Dairy Subscriptions</h2>
+                <p class="sub-highlight-desc">
                     Never run out of pure, unadulterated farm milk. Delivered to your doorstep in Kanchipuram &amp; Chennai before 7:00 AM every single morning. Zero delivery charges &bull; Pause or cancel anytime.
                 </p>
-                <div style="display:flex; gap:14px; flex-wrap:wrap;">
-                    <a href="pages/subscriptions.html" class="btn btn-primary" style="background:#d4af37; color:#1A4A2E; font-weight:700; border:none; padding:12px 26px;">
+                <div class="sub-highlight-actions">
+                    <a href="pages/subscriptions.html" class="btn btn-gold sub-highlight-btn">
                         🥛 Buy Subscription Plan &rarr;
                     </a>
-                    <a href="pages/shop.html" class="btn btn-outline" style="color:white; border-color:rgba(255,255,255,0.4); padding:12px 22px;">
+                    <a href="pages/shop.html" class="btn btn-outline sub-highlight-btn-outline">
                         Browse All Products
                     </a>
                 </div>
             </div>
-            <div style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:16px; padding:24px; min-width:280px; max-width:340px;">
-                <div style="font-size:13px; color:#e5c97a; font-weight:700; margin-bottom:6px;">POPULAR PLAN</div>
-                <div style="font-size:20px; font-weight:700; color:white; margin-bottom:4px;">Fresh Cow Milk (500ml)</div>
-                <div style="font-size:13px; color:#c8dbbf; margin-bottom:12px;">Daily Morning &bull; 30 Days</div>
-                <div style="font-size:28px; font-weight:800; color:#d4af37; font-family:'Playfair Display',serif; margin-bottom:14px;">₹1,320 <span style="font-size:14px; color:#c8dbbf; font-weight:normal;">/ month</span></div>
-                <div style="font-size:12px; color:#e0ede0; line-height:1.6; margin-bottom:16px;">
-                    ✓ Farm chilled &amp; delivered fresh<br>
-                    ✓ Free delivery before 7:00 AM<br>
-                    ✓ 1-click pause when out of town
+            <div class="sub-highlight-card">
+                <div class="sub-card-tag">POPULAR PLAN</div>
+                <div class="sub-card-name">Fresh Cow Milk (500ml)</div>
+                <div class="sub-card-duration">Daily Morning &bull; 30 Days</div>
+                <div class="sub-card-price">₹1,320 <span class="sub-card-period">/ month</span></div>
+                <div class="sub-card-perks">
+                    <div>✓ Farm chilled &amp; delivered fresh</div>
+                    <div>✓ Free delivery before 7:00 AM</div>
+                    <div>✓ 1-click pause when out of town</div>
                 </div>
-                <a href="pages/subscriptions.html" class="btn btn-primary" style="width:100%; text-align:center; display:block;">
+                <a href="pages/subscriptions.html" class="btn btn-primary sub-card-cta">
                     Subscribe Now &rarr;
                 </a>
             </div>
@@ -228,8 +228,8 @@
             <a href="pages/shop.html" class="view-all">View All &rarr;</a>
         </div>
         <div class="product-search-bar-wrap" style="max-width: 520px; margin: 20px auto 20px; position: relative;">
-            <input type="text" id="homeProductSearch" placeholder="🔍 Search milk, ghee, paneer, butter, honey, oils..." oninput="handleHomeProductSearch(this.value)" style="width: 100%; padding: 12px 20px 12px 42px; border: 2px solid var(--border); border-radius: 30px; font-size: 13.5px; outline: none; box-shadow: 0 2px 10px rgba(0,0,0,0.04); background: white;">
-            <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 15px; color: var(--forest-green);">🔍</span>
+            <input type="text" id="homeProductSearch" class="thulirva-pill-search" placeholder="Search milk, ghee, paneer, butter, honey, oils..." oninput="handleHomeProductSearch(this.value)">
+            <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 15px; color: var(--forest-green); pointer-events: none;">🔍</span>
         </div>
         <div class="product-filter-tabs">
             <button class="filter-tab active" data-filter="all">All</button>

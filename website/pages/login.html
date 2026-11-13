@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Account Login &amp; Register | THULIRVA</title>
     <meta name="description" content="Sign in or register for your THULIRVA account to manage subscriptions, track fresh farm deliveries, and earn rewards.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,6 +36,7 @@
         <nav class="main-navigation">
             <a href="../index.html" class="nav-link">Home</a>
             <a href="shop.html" class="nav-link">Shop</a>
+            <a href="subscriptions.html" class="nav-link">Subscriptions</a>
             <a href="about.html" class="nav-link">About Us</a>
             <a href="farms.html" class="nav-link">Our Farms</a>
             <a href="recipes.html" class="nav-link">Recipes</a>
@@ -52,6 +53,7 @@
     <nav class="mobile-navigation" id="mobileNavigation">
         <a href="../index.html">Home</a>
         <a href="shop.html">Shop</a>
+        <a href="subscriptions.html">Subscriptions</a>
         <a href="about.html">About Us</a>
         <a href="farms.html">Our Farms</a>
         <a href="recipes.html">Recipes</a>
@@ -235,6 +237,7 @@
 <div class="toast" id="toast">Signed in successfully!</div>
 
 <script src="../js/main.js"></script>
+<script src="../js/validators.js"></script>
 <script>
 function switchAuthTab(tab) {
     const tabSignIn = document.getElementById('tabSignIn');
@@ -255,7 +258,7 @@ function switchAuthTab(tab) {
     }
 }
 
-function handleAuthSubmit(e, type) {
+async function handleAuthSubmit(e, type) {
     e.preventDefault();
     const toast = document.getElementById('toast');
     let registeredUsers = JSON.parse(localStorage.getItem('thulirva_registered_users') || '[]');
@@ -264,70 +267,93 @@ function handleAuthSubmit(e, type) {
     const oldErr = document.getElementById('authErrorNotice');
     if (oldErr) oldErr.remove();
 
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const origBtnText = submitBtn ? submitBtn.innerHTML : '';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Processing... 🌾';
+    }
+
+    function showError(msg) {
+        const errDiv = document.createElement('div');
+        errDiv.id = 'authErrorNotice';
+        errDiv.style.cssText = 'background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; border-radius:8px; padding:12px; margin-bottom:16px; font-size:13.5px; font-weight:600; text-align:center;';
+        errDiv.innerHTML = msg;
+        form.insertBefore(errDiv, form.firstChild);
+
+        if (toast) {
+            toast.textContent = msg.replace(/<[^>]*>?/gm, '');
+            toast.style.background = "#c0392b";
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = origBtnText;
+        }
+    }
+
     if (type === 'login') {
         const identifier = document.getElementById('loginIdentifier').value.trim();
         const password = document.getElementById('loginPassword').value;
-        const form = e.target;
 
-        // Find user by email or phone
-        const user = registeredUsers.find(u => 
-            (u.email && u.email.toLowerCase() === identifier.toLowerCase()) || 
-            (u.phone && u.phone === identifier)
-        );
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: identifier, password: password })
+            });
+            const data = await res.json();
 
-        if (!user) {
-            // User does NOT exist - DO NOT CREATE USER
-            const errDiv = document.createElement('div');
-            errDiv.id = 'authErrorNotice';
-            errDiv.style.cssText = 'background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; border-radius:8px; padding:12px; margin-bottom:16px; font-size:13.5px; font-weight:600; text-align:center;';
-            errDiv.innerHTML = `⚠️ User not found. Please <a href="#" onclick="switchAuthTab('register')" style="color:#721c24; text-decoration:underline; font-weight:700;">register first</a> to create your account.`;
-            form.insertBefore(errDiv, form.firstChild);
+            if (res.ok && data.success) {
+                if (data.token) localStorage.setItem('thulirva_token', data.token);
+                const userObj = {
+                    id: data.user.id,
+                    name: data.user.name,
+                    phone: data.user.phone || identifier,
+                    email: data.user.email || ''
+                };
+                localStorage.setItem('thulirva_user', JSON.stringify(userObj));
 
-            if (toast) {
-                toast.textContent = "User not found. Please register to create an account.";
-                toast.style.background = "#c0392b";
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 3500);
+                // Also update local cache
+                const existIdx = registeredUsers.findIndex(u => u.id == userObj.id || (u.phone && u.phone === userObj.phone));
+                if (existIdx >= 0) {
+                    registeredUsers[existIdx] = { ...registeredUsers[existIdx], ...userObj };
+                } else {
+                    registeredUsers.push(userObj);
+                }
+                localStorage.setItem('thulirva_registered_users', JSON.stringify(registeredUsers));
+
+                if (toast) {
+                    toast.textContent = `Welcome back, ${data.user.name}! Opening your account... 🌿`;
+                    toast.style.background = "var(--forest-green)";
+                    toast.classList.add('show');
+                }
+                setTimeout(() => { window.location.href = 'account.html'; }, 800);
+                return;
+            } else {
+                // If backend rejected with specific message, show it
+                showError(data.message || 'Invalid credentials. Please check your phone/email and password.');
+                return;
             }
-            return;
-        }
-
-        // User exists: verify password
-        if (user.password !== password) {
-            const errDiv = document.createElement('div');
-            errDiv.id = 'authErrorNotice';
-            errDiv.style.cssText = 'background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; border-radius:8px; padding:12px; margin-bottom:16px; font-size:13.5px; font-weight:600; text-align:center;';
-            errDiv.innerHTML = `❌ Incorrect password. Please check and try again.`;
-            form.insertBefore(errDiv, form.firstChild);
-
-            if (toast) {
-                toast.textContent = "Incorrect password. Please try again.";
-                toast.style.background = "#c0392b";
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 3500);
+        } catch (fetchErr) {
+            console.warn('[AUTH] Offline or direct local fallback:', fetchErr);
+            // Local fallback
+            const user = registeredUsers.find(u => 
+                (u.email && u.email.toLowerCase() === identifier.toLowerCase()) || 
+                (u.phone && u.phone === identifier)
+            );
+            if (!user) {
+                showError(`⚠️ Account not found. Please <a href="#" onclick="switchAuthTab('register')" style="color:#721c24; text-decoration:underline; font-weight:700;">register first</a>.`);
+                return;
             }
-            return;
-        }
-
-        // Credentials valid! Log in
-        const userId = user.id ? (String(user.id).startsWith("USR-") ? user.id : "USR-" + user.id) : "USR-" + Math.floor(1000 + Math.random() * 9000);
-        user.id = userId;
-        localStorage.setItem('thulirva_registered_users', JSON.stringify(registeredUsers));
-        localStorage.setItem('thulirva_user', JSON.stringify({
-            id: userId,
-            name: user.name,
-            phone: user.phone,
-            email: user.email
-        }));
-
-        if (toast) {
-            toast.textContent = `Welcome back, ${user.name}! Opening your account... 🌿`;
-            toast.style.background = "var(--forest-green)";
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-                window.location.href = 'account.html';
-            }, 1000);
+            if (user.password && user.password !== password) {
+                showError('❌ Incorrect password. Please check and try again.');
+                return;
+            }
+            localStorage.setItem('thulirva_user', JSON.stringify(user));
+            window.location.href = 'account.html';
         }
     } else {
         // Register account
@@ -336,55 +362,74 @@ function handleAuthSubmit(e, type) {
         const email = document.getElementById('regEmail').value.trim();
         const password = document.getElementById('regPassword').value;
 
-        // Check if phone or email already registered
-        const existing = registeredUsers.find(u => (phone && u.phone === phone) || (email && u.email && u.email.toLowerCase() === email.toLowerCase()));
-        if (existing) {
-            const errDiv = document.createElement('div');
-            errDiv.id = 'authErrorNotice';
-            errDiv.style.cssText = 'background:#fff3cd; color:#856404; border:1px solid #ffeeba; border-radius:8px; padding:12px; margin-bottom:16px; font-size:13.5px; font-weight:600; text-align:center;';
-            errDiv.innerHTML = `An account already exists with this phone/email. <a href="#" onclick="switchAuthTab('login')" style="color:#856404; text-decoration:underline;">Click to Sign In</a>`;
-            e.target.insertBefore(errDiv, e.target.firstChild);
-            return;
+        // Validation using ThulirvaValidators
+        if (typeof ThulirvaValidators !== 'undefined') {
+            const nameCheck = ThulirvaValidators.validateName(name);
+            if (!nameCheck.valid) { showError(nameCheck.message); return; }
+
+            const phoneCheck = ThulirvaValidators.validatePhone(phone);
+            if (!phoneCheck.valid) { showError(phoneCheck.message); return; }
+
+            if (email) {
+                const emailCheck = ThulirvaValidators.validateEmail(email);
+                if (!emailCheck.valid) { showError(emailCheck.message); return; }
+            }
+
+            const passCheck = ThulirvaValidators.validatePassword(password);
+            if (!passCheck.valid) { showError(passCheck.message); return; }
         }
 
-        const newUserId = "USR-" + (Math.floor(1000 + Math.random() * 9000));
-        const newUser = {
-            id: newUserId,
-            name: name,
-            phone: phone,
-            email: email,
-            password: password,
-            created_at: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-            orders_count: 0,
-            total_spent: 0
-        };
-
-        registeredUsers.push(newUser);
-        localStorage.setItem('thulirva_registered_users', JSON.stringify(registeredUsers));
-        localStorage.setItem('thulirva_user', JSON.stringify({
-            id: newUserId,
-            name: newUser.name,
-            phone: newUser.phone,
-            email: newUser.email
-        }));
-
-        // Try syncing with backend API if available
         try {
-            fetch('/api/auth/register', {
+            const res = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, phone, email, password })
-            }).catch(() => {});
-        } catch (err) {}
+                body: JSON.stringify({ 
+                    name: name, 
+                    phone: phone, 
+                    email: email || `${phone}@thulirva.customer`, 
+                    password: password 
+                })
+            });
+            const data = await res.json();
 
-        if (toast) {
-            toast.textContent = `Account created successfully! Welcome to THULIRVA, ${name}! 🎉`;
-            toast.style.background = "var(--forest-green)";
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-                window.location.href = 'account.html';
-            }, 1000);
+            if (res.ok && data.success) {
+                if (data.token) localStorage.setItem('thulirva_token', data.token);
+                const userObj = {
+                    id: data.user.id,
+                    name: data.user.name,
+                    phone: data.user.phone || phone,
+                    email: data.user.email || email
+                };
+                localStorage.setItem('thulirva_user', JSON.stringify(userObj));
+                registeredUsers.push({ ...userObj, password: password });
+                localStorage.setItem('thulirva_registered_users', JSON.stringify(registeredUsers));
+
+                if (toast) {
+                    toast.textContent = `Account created successfully! Welcome to THULIRVA, ${name}! 🎉`;
+                    toast.style.background = "var(--forest-green)";
+                    toast.classList.add('show');
+                }
+                setTimeout(() => { window.location.href = 'account.html'; }, 900);
+                return;
+            } else {
+                showError(data.message || 'Registration failed. Please check your inputs.');
+                return;
+            }
+        } catch (fetchErr) {
+            console.warn('[AUTH] Offline local registration fallback:', fetchErr);
+            const newUserId = "USR-" + (Math.floor(1000 + Math.random() * 9000));
+            const newUser = {
+                id: newUserId,
+                name: name,
+                phone: phone,
+                email: email,
+                password: password,
+                created_at: new Date().toLocaleDateString('en-IN')
+            };
+            registeredUsers.push(newUser);
+            localStorage.setItem('thulirva_registered_users', JSON.stringify(registeredUsers));
+            localStorage.setItem('thulirva_user', JSON.stringify(newUser));
+            window.location.href = 'account.html';
         }
     }
 }

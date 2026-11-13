@@ -26,7 +26,8 @@ const DEFAULT_LOCATIONS = [
     { name: "Koyambedu", pincode: "600107" },
     { name: "KK Nagar", pincode: "600078" },
     { name: "Alapakkam", pincode: "600116" },
-    { name: "Maduravoyal", pincode: "600095" }
+    { name: "Maduravoyal", pincode: "600095" },
+    { name: "Thiruverkadu", pincode: "600077" }
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -574,6 +575,14 @@ async function placeOrder() {
         showToast("Please enter the UPI Transaction ID / UTR Number", "error");
         document.getElementById("orderTransactionId")?.focus();
         return;
+    }
+    if (typeof ThulirvaValidators !== "undefined") {
+        const utrVal = ThulirvaValidators.validateUtr(transactionId);
+        if (!utrVal.valid) {
+            showToast(utrVal.message, "error");
+            document.getElementById("orderTransactionId")?.focus();
+            return;
+        }
     }
     if (!orderProofBase64) {
         showToast("Please upload your payment screenshot proof", "error");

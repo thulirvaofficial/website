@@ -3,191 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THULIRVA Admin — Customer Directory</title>
+    <title>THULIRVA Admin — Customer Directory &amp; Accounts</title>
     <link rel="stylesheet" href="css/admin.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <div class="admin-layout">
-    <aside class="sidebar">
-        <div class="sidebar-logo">
-            <img src="images/logo.jpg" alt="THULIRVA Logo" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 1.5px solid #d4af37; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-            <div style="font-family:'Playfair Display',serif; color:#E9EBD9; font-size:18px; font-weight:700; letter-spacing:1.5px;">THULIRVA</div>
-            <span>ADMIN CONSOLE</span>
-        </div>
+    <aside class="sidebar" id="adminSidebar"></aside>
 
-        <a href="dashboard.html">📊 Dashboard</a>
-        <a href="products.html">🛍 Products</a>
-        <a href="categories.html">🏷 Categories</a>
-        <a href="subscriptions.html">🔄 Subscriptions</a>
-        <a href="orders.html">📦 Orders</a>
-        <a href="customers.html" class="active">👥 Customers</a>
-        <a href="locations.html">📍 Delivery Locations</a>
-        <a href="coupons.html">🎟️ Promo Codes</a>
-        <a href="recipes.html">🍳 Recipes</a>
-        <a href="/" target="_blank">🌐 View Website ↗</a>
+    <div class="admin-container">
+        <header class="topbar" id="adminTopbar"></header>
 
-        <div style="margin-top: auto; padding: 20px 0;">
-            <button class="logout-btn" style="width:100%" onclick="logout()">Logout</button>
-        </div>
-    </aside>
-
-    <main class="admin-main">
-        <div class="admin-header">
-            <div>
-                <h1 style="font-family:'Playfair Display',serif; font-size: 26px;">Real-time Customer Directory</h1>
-                <p>Live registered customers, verified doorstep addresses, and verified order history.</p>
-            </div>
-            <div style="display:flex; gap:12px; align-items:center;">
-                <button class="add-btn" onclick="openAddCustomerModal()" style="padding: 8px 16px; font-weight:700; cursor:pointer;">＋ Add New Customer</button>
-                <span class="badge badge-active" id="activeCustomersBadge">0 Customers</span>
-                <button class="logout-btn" onclick="logout()">Logout</button>
-            </div>
-        </div>
-
-        <div class="admin-panel">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                <h2>Active Customer Profiles (<span id="totalCustCount">0</span>)</h2>
+        <main class="admin-main">
+            <!-- Header -->
+            <div class="page-header">
                 <div>
-                    <input type="text" id="custSearch" placeholder="Search customer, phone, or address..." onkeyup="filterCustomers()" style="padding: 8px 14px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px; width: 260px;">
+                    <h1 class="page-title">Customer Directory</h1>
+                    <p class="page-subtitle">Manage customer profiles, verified delivery addresses, order history, and account security.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="exportCustomersCSV()">
+                        📥 Export CSV
+                    </button>
+                    <button class="btn btn-primary" onclick="openAddCustomerModal()">
+                        ＋ Add New Customer
+                    </button>
                 </div>
             </div>
 
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Customer ID</th>
-                        <th>Name</th>
-                        <th>Phone</th>
-                        <th>Email</th>
-                        <th>Doorstep Delivery Address</th>
-                        <th>Orders / Subs</th>
-                        <th>Total Spent</th>
-                        <th>Last Activity</th>
-                        <th>Contact</th>
-                        <th style="text-align: right;">Admin Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="customersTable">
-                    <!-- Injected dynamically -->
-                </tbody>
-            </table>
+            <!-- Customer Stat Summary Cards -->
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Total Registered</span>
+                        <div class="stat-icon">👥</div>
+                    </div>
+                    <div class="stat-value" id="totalCustCount">0</div>
+                    <div class="stat-meta"><span>All verified accounts</span></div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Active Buyers</span>
+                        <div class="stat-icon" style="background:#EBF3EE; color:var(--thulirva-forest);">🛍️</div>
+                    </div>
+                    <div class="stat-value" id="activeBuyersCount">0</div>
+                    <div class="stat-meta"><span class="stat-trend-up">With 1+ orders</span></div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Total Spending (LTV)</span>
+                        <div class="stat-icon" style="background:#FFF9E6; color:var(--thulirva-gold-dark);">₹</div>
+                    </div>
+                    <div class="stat-value" id="totalLtvAmount">₹0</div>
+                    <div class="stat-meta"><span>Cumulative spend</span></div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Padur / OMR Region</span>
+                        <div class="stat-icon" style="background:#E0F2FE; color:#0369A1;">📍</div>
+                    </div>
+                    <div class="stat-value" id="padurCustCount">0</div>
+                    <div class="stat-meta"><span>Priority delivery zone</span></div>
+                </div>
+            </div>
+
+            <!-- Main Panel -->
+            <div class="panel-card">
+                <!-- Filters Bar -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <input type="text" id="custSearch" placeholder="Search by name, phone, email, address..." onkeyup="filterCustomers()" class="form-control" style="width:280px;">
+                        
+                        <select id="areaFilter" onchange="filterCustomers()" class="form-select" style="width:160px;">
+                            <option value="">All Regions</option>
+                            <option value="padur">Padur</option>
+                            <option value="kanchipuram">Kanchipuram</option>
+                            <option value="chennai">Chennai</option>
+                        </select>
+
+                        <select id="sortBy" onchange="filterCustomers()" class="form-select" style="width:160px;">
+                            <option value="newest">Sort: Newest First</option>
+                            <option value="highest_spent">Sort: Highest Spent</option>
+                            <option value="name_asc">Sort: Name (A-Z)</option>
+                        </select>
+                    </div>
+
+                    <div style="font-size:12px; color:var(--thulirva-text-muted);">
+                        Showing <strong id="visibleCount">0</strong> customers
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Contact Information</th>
+                                <th>Primary Address</th>
+                                <th>Orders / Subs</th>
+                                <th>Total Spent</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customersTable">
+                            <!-- Injected by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Footer -->
+                <div class="pagination-wrap">
+                    <div>Page <strong id="currentPageNum">1</strong> of <strong id="totalPagesNum">1</strong></div>
+                    <div class="pagination-controls">
+                        <button class="page-btn" id="prevPageBtn" onclick="changePage(-1)">&larr; Previous</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn" id="nextPageBtn" onclick="changePage(1)">Next &rarr;</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- CUSTOMER DETAILS SLIDE-OUT DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeCustomerDrawer()"></div>
+<div class="drawer-panel" id="customerDrawer">
+    <div class="drawer-header">
+        <div>
+            <h3 style="margin:0; font-family:'Playfair Display',serif; color:var(--thulirva-forest-deep); font-size:18px;">Customer Profile</h3>
+            <span style="font-size:11px; color:var(--thulirva-text-muted);" id="drawerCustId">USR-0000</span>
         </div>
-    </main>
+        <button class="modal-close-btn" onclick="closeCustomerDrawer()">✕</button>
+    </div>
+    <div class="drawer-body" id="drawerContent">
+        <!-- Injected via JavaScript -->
+    </div>
+    <div class="drawer-footer">
+        <button class="btn btn-secondary btn-sm" onclick="closeCustomerDrawer()">Close</button>
+        <button class="btn btn-primary btn-sm" id="drawerEditBtn">Edit Profile</button>
+    </div>
 </div>
 
 <!-- ADD CUSTOMER MODAL -->
-<div id="addCustomerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
-    <div style="background:white; border-radius:12px; max-width:480px; width:92%; padding:24px; box-shadow:0 8px 30px rgba(0,0,0,0.25);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:8px;">
-            <h3 style="margin:0; font-family:'Playfair Display',serif; color:var(--green); font-size:19px;">＋ Add New Customer</h3>
-            <button onclick="closeAddCustomerModal()" style="background:none; border:none; font-size:22px; cursor:pointer; color:#666;">✕</button>
+<div class="modal-overlay" id="addCustomerModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">＋ Add New Customer</h3>
+            <button class="modal-close-btn" onclick="closeAddCustomerModal()">✕</button>
         </div>
         <form onsubmit="handleAddCustomerSubmit(event)">
-            <div style="margin-bottom:12px;">
-                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Full Name *</label>
-                <input type="text" id="addCustName" required placeholder="e.g. Ramesh Kumar" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Full Name *</label>
+                    <input type="text" id="addCustName" required placeholder="e.g. Ramesh Kumar" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number *</label>
+                    <input type="tel" id="addCustPhone" required placeholder="e.g. 9840123456" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="addCustEmail" placeholder="customer@example.com" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Doorstep Delivery Address</label>
+                    <input type="text" id="addCustAddress" placeholder="Flat No, Apartment, Street Name, Padur, Chennai" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">City / Region</label>
+                    <input type="text" id="addCustCity" value="Padur" class="form-control">
+                </div>
             </div>
-            <div style="margin-bottom:12px;">
-                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Phone Number *</label>
-                <input type="tel" id="addCustPhone" required placeholder="e.g. 9876543210" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
-            </div>
-            <div style="margin-bottom:12px;">
-                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Email Address</label>
-                <input type="email" id="addCustEmail" placeholder="customer@example.com" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
-            </div>
-            <div style="margin-bottom:12px;">
-                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Delivery Address</label>
-                <input type="text" id="addCustAddress" placeholder="Flat No, Street, Landmark, City" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
-            </div>
-            <div style="margin-bottom:18px;">
-                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Preferred Pickup Location</label>
-                <select id="addCustPickup" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
-                    <option value="">None (Doorstep Delivery)</option>
-                    <option value="Thulirva Main Branch (Kanchipuram)">Thulirva Main Branch (Kanchipuram)</option>
-                    <option value="Thulirva Anna Nagar (Chennai)">Thulirva Anna Nagar (Chennai)</option>
-                    <option value="Thulirva Velachery (Chennai)">Thulirva Velachery (Chennai)</option>
-                </select>
-            </div>
-            <div style="display:flex; gap:10px; justify-content:flex-end;">
-                <button type="button" class="action-btn" onclick="closeAddCustomerModal()" style="padding:7px 14px;">Cancel</button>
-                <button type="submit" class="add-btn" style="padding:7px 18px;">Save Customer</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeAddCustomerModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Customer Profile</button>
             </div>
         </form>
     </div>
 </div>
 
 <!-- EDIT CUSTOMER MODAL -->
-<div id="editCustomerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
-    <div style="background:white; border-radius:12px; max-width:480px; width:92%; padding:24px; box-shadow:0 8px 30px rgba(0,0,0,0.25);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:8px;">
-            <h3 style="margin:0; font-family:'Playfair Display',serif; color:var(--green); font-size:19px;">✏️ Edit Customer Profile</h3>
-            <button onclick="closeEditCustomerModal()" style="background:none; border:none; font-size:22px; cursor:pointer; color:#666;">✕</button>
+<div class="modal-overlay" id="editCustomerModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">✏️ Edit Customer Profile</h3>
+            <button class="modal-close-btn" onclick="closeEditCustomerModal()">✕</button>
         </div>
         <form onsubmit="handleEditCustomerSubmit(event)">
             <input type="hidden" id="editCustTargetId">
-            <div style="margin-bottom:12px;">
-                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Full Name *</label>
-                <input type="text" id="editCustName" required style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Full Name *</label>
+                    <input type="text" id="editCustName" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number *</label>
+                    <input type="tel" id="editCustPhone" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="editCustEmail" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Delivery Address</label>
+                    <input type="text" id="editCustAddress" class="form-control">
+                </div>
             </div>
-            <div style="margin-bottom:12px;">
-                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Phone Number *</label>
-                <input type="tel" id="editCustPhone" required style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
-            </div>
-            <div style="margin-bottom:12px;">
-                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Email Address</label>
-                <input type="email" id="editCustEmail" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
-            </div>
-            <div style="margin-bottom:12px;">
-                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Delivery Address</label>
-                <input type="text" id="editCustAddress" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
-            </div>
-            <div style="margin-bottom:18px;">
-                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--text);">Preferred Pickup Location</label>
-                <select id="editCustPickup" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px;">
-                    <option value="">None (Doorstep Delivery)</option>
-                    <option value="Thulirva Main Branch (Kanchipuram)">Thulirva Main Branch (Kanchipuram)</option>
-                    <option value="Thulirva Anna Nagar (Chennai)">Thulirva Anna Nagar (Chennai)</option>
-                    <option value="Thulirva Velachery (Chennai)">Thulirva Velachery (Chennai)</option>
-                </select>
-            </div>
-            <div style="display:flex; gap:10px; justify-content:flex-end;">
-                <button type="button" class="action-btn" onclick="closeEditCustomerModal()" style="padding:7px 14px;">Cancel</button>
-                <button type="submit" class="add-btn" style="padding:7px 18px;">Save Changes</button>
-            </div>
-        </form>
-    </div>
-</div>
-<div id="resetPassModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
-    <div style="background:white; border-radius:12px; max-width:440px; width:90%; padding:24px; box-shadow:0 8px 30px rgba(0,0,0,0.25);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:8px;">
-            <h3 style="margin:0; font-family:'Playfair Display',serif; color:var(--green); font-size:18px;">🔑 Reset Customer Password</h3>
-            <button onclick="closeResetPassModal()" style="background:none; border:none; font-size:22px; cursor:pointer; color:#666;">✕</button>
-        </div>
-        <p style="font-size:13px; color:var(--muted); margin-bottom:16px;">
-            Set a new login password for <strong id="resetPassUserName">Customer</strong> (<span id="resetPassUserId" style="font-family:monospace; color:var(--green);">#USR-101</span>).
-        </p>
-        <form onsubmit="handleResetPasswordSubmit(event)">
-            <input type="hidden" id="resetPassTargetId">
-            <div style="margin-bottom:18px;">
-                <label style="display:block; font-size:12.5px; font-weight:700; margin-bottom:6px; color:var(--text);">Enter New Password *</label>
-                <input type="text" id="newCustomerPassword" required minlength="4" placeholder="Enter new password (e.g. 123456)" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13.5px; font-family:monospace;">
-                <small style="color:var(--muted); font-size:11px; display:block; margin-top:4px;">Minimum 4 characters. The customer can log in with this new password immediately.</small>
-            </div>
-            <div style="display:flex; gap:10px; justify-content:flex-end;">
-                <button type="button" class="action-btn" onclick="closeResetPassModal()" style="padding:7px 14px;">Cancel</button>
-                <button type="submit" class="add-btn" style="padding:7px 16px;">Update Password</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeEditCustomerModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
             </div>
         </form>
     </div>
 </div>
 
+<!-- RESET PASSWORD MODAL -->
+<div class="modal-overlay" id="resetPassModal">
+    <div class="modal-content" style="max-width: 440px;">
+        <div class="modal-header">
+            <h3 class="modal-title">🔑 Reset Password</h3>
+            <button class="modal-close-btn" onclick="closeResetPassModal()">✕</button>
+        </div>
+        <form onsubmit="handleResetPasswordSubmit(event)">
+            <input type="hidden" id="resetPassTargetId">
+            <div class="modal-body">
+                <p style="font-size:13px; color:var(--thulirva-text-muted); margin-bottom:14px;">
+                    Set a new password for <strong id="resetPassUserName">Customer</strong> (<span id="resetPassUserId" class="font-mono">#USR-101</span>).
+                </p>
+                <div class="form-group">
+                    <label class="form-label">Enter New Password *</label>
+                    <input type="text" id="newCustomerPassword" required minlength="4" placeholder="Enter new password" class="form-control font-mono">
+                    <small style="font-size:11px; color:var(--thulirva-text-muted); margin-top:4px; display:block;">Customer can log in with this new password immediately.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeResetPassModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="js/admin-shell.js"></script>
 <script>
+initAdminShell({
+    activePage: "customers",
+    breadcrumbs: [{ label: "Customer Directory" }]
+});
+
 const token = localStorage.getItem("thulirva_admin_token");
 let customersList = [];
+let filteredCustomers = [];
+let currentPage = 1;
+const pageSize = 10;
 
 async function loadCustomers() {
     customersList = [];
@@ -195,160 +268,122 @@ async function loadCustomers() {
         const res = await fetch("/api/admin/customers", {
             headers: { Authorization: `Bearer ${token}` }
         });
-        const data = await res.json();
-        if (data.customers && data.customers.length) {
-            customersList = data.customers;
+        if (res.ok) {
+            const data = await res.json();
+            customersList = data.customers || [];
         }
-    } catch {}
+    } catch (_) {}
 
-    // Merge active user from localStorage if logged in
-    const activeUser = JSON.parse(localStorage.getItem('thulirva_user') || 'null');
-    if (activeUser && (activeUser.phone || activeUser.email)) {
-        const existing = customersList.find(c => (activeUser.phone && c.phone === activeUser.phone) || (activeUser.email && c.email === activeUser.email));
-        if (!existing) {
-            customersList.push({
-                id: activeUser.id || 'USR-1001',
-                name: activeUser.name || "Customer",
-                phone: activeUser.phone || "—",
-                email: activeUser.email || "—",
-                address: activeUser.address || "Doorstep Address Saved",
-                orders_count: 0,
-                total_spent: 0,
-                last_order: "Active User"
-            });
-        }
-    }
-
-    // Merge registered users from localStorage
+    // Merge registered accounts
     const regUsers = JSON.parse(localStorage.getItem('thulirva_registered_users') || '[]');
     regUsers.forEach(u => {
-        const key = u.phone || u.email;
-        if (!key) return;
-        const existing = customersList.find(c => (u.phone && c.phone === u.phone) || (u.email && c.email === u.email));
-        if (!existing) {
+        if (!u.phone && !u.email) return;
+        const exists = customersList.find(c => (u.phone && c.phone === u.phone) || (u.email && c.email === u.email));
+        if (!exists) {
             customersList.push({
                 id: u.id || `USR-${Math.floor(1000 + Math.random() * 9000)}`,
                 name: u.name || "Customer",
                 phone: u.phone || "—",
                 email: u.email || "—",
                 address: u.address || "Doorstep Address Saved",
+                city: u.city || "Padur",
                 orders_count: 0,
                 total_spent: 0,
-                last_order: u.created_at || "Registered"
+                created_at: u.created_at || "Recent"
             });
         }
     });
 
-    // Merge customer information from placed orders in localStorage
-    const localOrders = JSON.parse(localStorage.getItem('thulirva_my_orders') || '[]');
-    localOrders.forEach(o => {
-        const phone = o.customer_phone || o.customerPhone;
-        const email = o.customer_email || o.customerEmail;
-        const name = o.customer_name || o.customerName || "Valued Customer";
-        const total = (o.total !== undefined && o.total !== null) ? o.total : ((o.total_price !== undefined && o.total_price !== null) ? o.total_price : (o.totalPrice || 0));
-        const uId = o.user_id || o.userId;
-        if (!phone && !email) return;
-
-        const existing = customersList.find(c => (phone && c.phone === phone) || (email && c.email === email));
-        if (existing) {
-            existing.orders_count = (existing.orders_count || 0) + 1;
-            existing.total_spent = (Number(existing.total_spent || 0) + Number(total || 0));
-            if (o.address) existing.address = `${o.address}, ${o.city || 'Kanchipuram'} - ${o.pincode || ''}`;
-            existing.last_order = o.created_at || "Recent Order";
-            if (uId && !existing.id) existing.id = uId;
-        } else {
-            customersList.push({
-                id: uId || (o.id ? `ORD-${o.id}` : `USR-${Math.floor(1000 + Math.random() * 9000)}`),
-                name: name,
-                phone: phone || "—",
-                email: email || "—",
-                address: o.address ? `${o.address}, ${o.city || 'Kanchipuram'} - ${o.pincode || ''}` : "Doorstep Delivery",
-                orders_count: 1,
-                total_spent: Number(total || 0),
-                last_order: o.created_at || "Recent Order"
-            });
-        }
-    });
-
-    // Merge subscriptions from localStorage
-    const localSubs = JSON.parse(localStorage.getItem('thulirva_subscriptions') || '[]');
-    localSubs.forEach(s => {
-        const phone = s.customer_phone || s.customerPhone;
-        const email = s.customer_email || s.customerEmail;
-        const name = s.customer_name || s.customerName || "Subscriber";
-        const totalPrice = (s.total_price !== undefined && s.total_price !== null) ? s.total_price : ((s.totalPrice !== undefined && s.totalPrice !== null) ? s.totalPrice : (s.price || 0));
-        const uId = s.user_id || s.userId;
-        if (!phone && !email) return;
-
-        const existing = customersList.find(c => (phone && c.phone === phone) || (email && c.email === email));
-        if (existing) {
-            existing.orders_count = (existing.orders_count || 0) + 1;
-            existing.total_spent = (Number(existing.total_spent || 0) + Number(totalPrice || 0));
-            if (s.address) existing.address = s.address;
-            existing.last_order = s.start_date || s.startDate || "Subscription Active";
-            if (uId && !existing.id) existing.id = uId;
-        } else {
-            customersList.push({
-                id: uId || s.id || `USR-${Math.floor(1000 + Math.random() * 9000)}`,
-                name: name,
-                phone: phone || "—",
-                email: email || "—",
-                address: s.address || "Doorstep Address",
-                orders_count: 1,
-                total_spent: Number(totalPrice || 0),
-                last_order: s.start_date || s.startDate || "Subscription Active"
-            });
-        }
-    });
-
-    renderCustomers(customersList);
+    calculateStats();
+    filterCustomers();
 }
 
-function renderCustomers(list) {
+function calculateStats() {
+    document.getElementById("totalCustCount").textContent = customersList.length;
+    const buyers = customersList.filter(c => (Number(c.orders_count) || 0) > 0);
+    document.getElementById("activeBuyersCount").textContent = buyers.length;
+    const ltv = customersList.reduce((acc, c) => acc + (Number(c.total_spent) || 0), 0);
+    document.getElementById("totalLtvAmount").textContent = "₹" + ltv.toLocaleString();
+    const padurCount = customersList.filter(c => (c.address || "").toLowerCase().includes("padur") || (c.city || "").toLowerCase().includes("padur")).length;
+    document.getElementById("padurCustCount").textContent = padurCount;
+}
+
+function filterCustomers() {
+    const q = (document.getElementById("custSearch").value || "").trim().toLowerCase();
+    const area = (document.getElementById("areaFilter").value || "").trim().toLowerCase();
+    const sort = document.getElementById("sortBy").value;
+
+    filteredCustomers = customersList.filter(c => {
+        const matchesQ = !q || (c.name || "").toLowerCase().includes(q) || (c.phone || "").includes(q) || (c.email || "").toLowerCase().includes(q) || (c.address || "").toLowerCase().includes(q);
+        const matchesArea = !area || (c.address || "").toLowerCase().includes(area) || (c.city || "").toLowerCase().includes(area);
+        return matchesQ && matchesArea;
+    });
+
+    if (sort === "highest_spent") {
+        filteredCustomers.sort((a, b) => (Number(b.total_spent) || 0) - (Number(a.total_spent) || 0));
+    } else if (sort === "name_asc") {
+        filteredCustomers.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    }
+
+    currentPage = 1;
+    renderTable();
+}
+
+function renderTable() {
     const table = document.getElementById("customersTable");
-    document.getElementById("totalCustCount").textContent = list.length;
-    document.getElementById("activeCustomersBadge").textContent = `${list.length} Customers`;
+    document.getElementById("visibleCount").textContent = filteredCustomers.length;
+
+    const totalPages = Math.ceil(filteredCustomers.length / pageSize) || 1;
+    document.getElementById("currentPageNum").textContent = currentPage;
+    document.getElementById("totalPagesNum").textContent = totalPages;
+    document.getElementById("prevPageBtn").disabled = currentPage <= 1;
+    document.getElementById("nextPageBtn").disabled = currentPage >= totalPages;
+
+    const start = (currentPage - 1) * pageSize;
+    const paged = filteredCustomers.slice(start, start + pageSize);
 
     table.innerHTML = "";
-    if (!list.length) {
-        table.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:36px; color:var(--muted); font-size:14px;">No customer records found yet. Real-time customer profiles will appear here as users register, order farm products, or subscribe to daily milk delivery.</td></tr>`;
+    if (!paged.length) {
+        table.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:36px; color:var(--thulirva-text-muted);">No customer profiles found matching your search.</td></tr>`;
         return;
     }
 
-    list.forEach(c => {
+    paged.forEach(c => {
         const row = document.createElement("tr");
-        const cleanPhone = (c.phone || "").replace(/\D/g, "");
-        const waLink = cleanPhone ? `https://wa.me/91${cleanPhone.slice(-10)}?text=Hello%20${encodeURIComponent(c.name || 'Customer')},%20greetings%20from%20THULIRVA%20Dairy!` : "#";
-        const userTag = (c.id + '').startsWith('USR-') ? `#${c.id}` : ((c.id + '').startsWith('CUST-') ? `#${c.id}` : `#USR-${c.id || '101'}`);
-        const safeName = (c.name || 'Customer').replace(/'/g, "\\'");
+        const initials = (c.name || "Customer").split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+        const uId = c.id ? (String(c.id).startsWith("USR-") ? c.id : "USR-" + c.id) : "USR-0000";
 
         row.innerHTML = `
-            <td><strong style="color:var(--green); font-family:monospace; font-size:13px;">${userTag}</strong></td>
             <td>
-                <div style="font-weight:700; color:var(--green);">${c.name || "Customer"}</div>
+                <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openCustomerDrawer('${c.id}')">
+                    <div style="width:34px; height:34px; border-radius:50%; background:var(--thulirva-forest-subtle); color:var(--thulirva-forest); font-weight:700; display:flex; align-items:center; justify-content:center; font-size:12px;">${initials}</div>
+                    <div>
+                        <strong style="color:var(--thulirva-forest-deep);">${c.name}</strong>
+                        <div class="font-mono" style="font-size:11px; color:var(--thulirva-text-muted);">${uId}</div>
+                    </div>
+                </div>
             </td>
-            <td><strong>${c.phone || "—"}</strong></td>
-            <td><small style="color:var(--muted);">${c.email || "—"}</small></td>
-            <td style="max-width:240px; font-size:11.5px; line-height:1.4;">
-                ${c.address || "—"}
-            </td>
-            <td><span class="badge badge-shipped">${c.orders_count || 0} orders</span></td>
-            <td><strong>₹${Number(c.total_spent || 0).toLocaleString()}</strong></td>
-            <td><small style="color:var(--muted);">${c.last_order || "Recent"}</small></td>
             <td>
-                ${cleanPhone ? `<a href="${waLink}" target="_blank" class="action-btn" style="text-decoration:none; display:inline-block; font-size:11px; background:#D4EDDA; color:#155724; padding:4px 8px; border-radius:4px; font-weight:600;">💬 WhatsApp</a>` : '—'}
+                <div>${c.phone || "—"}</div>
+                <small style="color:var(--thulirva-text-muted);">${c.email || "—"}</small>
             </td>
-            <td style="text-align: right;">
-                <div style="display:inline-flex; gap:6px; align-items:center;">
-                    <button class="action-btn" onclick="openEditCustomerModal('${c.id}')" style="background:#E2F0DE; color:#1B4332; font-size:11px; padding:4px 8px; border-radius:4px; font-weight:700;" title="Edit customer details & pickup store">
-                        ✏️ Edit
-                    </button>
-                    <button class="action-btn" onclick="openResetPasswordModal('${c.id}', '${safeName}')" style="background:#FFF3CD; color:#856404; font-size:11px; padding:4px 8px; border-radius:4px; font-weight:600;" title="Reset password for this customer">
-                        🔑 Reset Pass
-                    </button>
-                    <button class="action-btn delete-btn" onclick="deleteCustomer('${c.id}', '${safeName}')" style="font-size:11px; padding:4px 8px; border-radius:4px;" title="Delete this customer profile">
-                        🗑 Delete
-                    </button>
+            <td style="max-width:200px; font-size:12px; line-height:1.35;">
+                ${c.address || "Doorstep Address Saved"}
+            </td>
+            <td>
+                <strong>${c.orders_count || 0}</strong> orders
+            </td>
+            <td>
+                <strong style="color:var(--thulirva-forest);">₹${(c.total_spent || 0).toLocaleString()}</strong>
+            </td>
+            <td>
+                <span class="badge badge-active">Active</span>
+            </td>
+            <td style="text-align:right;">
+                <div style="display:flex; justify-content:flex-end; gap:6px;">
+                    <button class="btn btn-secondary btn-sm" onclick="openCustomerDrawer('${c.id}')" title="View Profile">Details</button>
+                    <button class="btn btn-secondary btn-sm" onclick="openResetPasswordModal('${c.id}', '${encodeURIComponent(c.name)}')">🔑</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteCustomer('${c.id}', '${encodeURIComponent(c.name)}')">🗑</button>
                 </div>
             </td>
         `;
@@ -356,118 +391,75 @@ function renderCustomers(list) {
     });
 }
 
-function openResetPasswordModal(id, name) {
-    document.getElementById("resetPassTargetId").value = id;
-    document.getElementById("resetPassUserName").textContent = name || "Customer";
-    document.getElementById("resetPassUserId").textContent = String(id).startsWith("USR-") ? `#${id}` : `#USR-${id}`;
-    document.getElementById("newCustomerPassword").value = "";
-    document.getElementById("resetPassModal").style.display = "flex";
+function changePage(delta) {
+    currentPage += delta;
+    renderTable();
 }
 
-function closeResetPassModal() {
-    document.getElementById("resetPassModal").style.display = "none";
-}
-
-async function handleResetPasswordSubmit(e) {
-    e.preventDefault();
-    const id = document.getElementById("resetPassTargetId").value;
-    const newPassword = document.getElementById("newCustomerPassword").value.trim();
+function openCustomerDrawer(id) {
     const cust = customersList.find(c => c.id == id);
-    const custName = cust ? cust.name : "Customer";
+    if (!cust) return;
 
-    if (!newPassword || newPassword.length < 4) {
-        alert("Please enter a valid password (minimum 4 characters).");
-        return;
-    }
+    document.getElementById("drawerCustId").textContent = String(cust.id).startsWith("USR-") ? cust.id : "USR-" + cust.id;
+    const body = document.getElementById("drawerContent");
+    const initials = (cust.name || "C").split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
 
-    try {
-        await fetch(`/api/admin/customers/${id}/reset-password`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({ new_password: newPassword })
-        });
-    } catch {}
+    body.innerHTML = `
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px; padding-bottom:18px; border-bottom:1px solid var(--thulirva-border);">
+            <div style="width:52px; height:52px; border-radius:50%; background:var(--thulirva-forest); color:#FFFFFF; font-size:18px; font-weight:700; display:flex; align-items:center; justify-content:center;">${initials}</div>
+            <div>
+                <h2 style="font-size:18px; color:var(--thulirva-forest-deep); margin-bottom:2px;">${cust.name}</h2>
+                <span class="badge badge-active">Active Customer</span>
+            </div>
+        </div>
 
-    // Update in localStorage registered users
-    try {
-        const regUsers = JSON.parse(localStorage.getItem('thulirva_registered_users') || '[]');
-        const userMatch = regUsers.find(u => u.id == id || (cust && ((u.phone && u.phone === cust.phone) || (u.email && u.email === cust.email))));
-        if (userMatch) {
-            userMatch.password = newPassword;
-            localStorage.setItem('thulirva_registered_users', JSON.stringify(regUsers));
-        }
-    } catch {}
+        <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:24px;">
+            <div>
+                <span class="stat-title">Contact Information</span>
+                <div style="font-size:13px; margin-top:4px;"><strong>Phone:</strong> ${cust.phone || '—'}</div>
+                <div style="font-size:13px;"><strong>Email:</strong> ${cust.email || '—'}</div>
+            </div>
 
-    closeResetPassModal();
-    alert(`✓ Password for ${custName} (${id}) has been updated successfully to: "${newPassword}"!`);
+            <div>
+                <span class="stat-title">Verified Delivery Address</span>
+                <div style="font-size:13px; margin-top:4px; line-height:1.4; background:#FAF8F2; padding:10px 12px; border-radius:6px; border:1px solid var(--thulirva-border);">
+                    ${cust.address || 'Doorstep Delivery Address in Padur'}
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div style="background:#FAF8F2; padding:12px; border-radius:6px; border:1px solid var(--thulirva-border);">
+                    <span class="stat-title">Total Orders</span>
+                    <div style="font-size:18px; font-weight:700; color:var(--thulirva-forest);">${cust.orders_count || 0}</div>
+                </div>
+                <div style="background:#FAF8F2; padding:12px; border-radius:6px; border:1px solid var(--thulirva-border);">
+                    <span class="stat-title">Cumulative LTV</span>
+                    <div style="font-size:18px; font-weight:700; color:var(--thulirva-forest);">₹${(cust.total_spent || 0).toLocaleString()}</div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById("drawerEditBtn").onclick = () => {
+        closeCustomerDrawer();
+        openEditCustomerModal(cust.id);
+    };
+
+    document.getElementById("drawerOverlay").classList.add("active");
+    document.getElementById("customerDrawer").classList.add("open");
 }
 
-async function deleteCustomer(id, name) {
-    if (!confirm(`Are you sure you want to permanently delete customer "${name}" (${id})?\nThis action cannot be undone.`)) {
-        return;
-    }
-
-    try {
-        await fetch(`/api/admin/customers/${id}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` }
-        });
-    } catch {}
-
-    // Remove from in-memory list
-    const deletedCust = customersList.find(c => c.id == id);
-    customersList = customersList.filter(c => c.id != id);
-
-    // Remove from localStorage registered users
-    try {
-        let regUsers = JSON.parse(localStorage.getItem('thulirva_registered_users') || '[]');
-        regUsers = regUsers.filter(u => u.id != id && (!deletedCust || ((!u.phone || u.phone !== deletedCust.phone) && (!u.email || u.email !== deletedCust.email))));
-        localStorage.setItem('thulirva_registered_users', JSON.stringify(regUsers));
-    } catch {}
-
-    // If currently logged in user in browser is this deleted user, clear user session
-    try {
-        const cur = JSON.parse(localStorage.getItem('thulirva_user') || 'null');
-        if (cur && (cur.id == id || (deletedCust && ((cur.phone && cur.phone === deletedCust.phone) || (cur.email && cur.email === deletedCust.email))))) {
-            localStorage.removeItem('thulirva_user');
-        }
-    } catch {}
-
-    renderCustomers(customersList);
-    alert(`✓ Customer "${name}" has been removed successfully.`);
-}
-
-function filterCustomers() {
-    const q = document.getElementById("custSearch").value.toLowerCase();
-    const filtered = customersList.filter(c => 
-        (c.name && c.name.toLowerCase().includes(q)) ||
-        (c.phone && c.phone.includes(q)) ||
-        (c.email && c.email.toLowerCase().includes(q)) ||
-        (c.address && c.address.toLowerCase().includes(q)) ||
-        (c.id && String(c.id).toLowerCase().includes(q))
-    );
-    renderCustomers(filtered);
-}
-
-function logout() {
-    localStorage.removeItem("thulirva_admin_token");
-    window.location.href = "index.html";
+function closeCustomerDrawer() {
+    document.getElementById("drawerOverlay").classList.remove("active");
+    document.getElementById("customerDrawer").classList.remove("open");
 }
 
 function openAddCustomerModal() {
-    document.getElementById("addCustName").value = "";
-    document.getElementById("addCustPhone").value = "";
-    document.getElementById("addCustEmail").value = "";
-    document.getElementById("addCustAddress").value = "";
-    document.getElementById("addCustPickup").value = "";
-    document.getElementById("addCustomerModal").style.display = "flex";
+    document.getElementById("addCustomerModal").classList.add("active");
 }
 
 function closeAddCustomerModal() {
-    document.getElementById("addCustomerModal").style.display = "none";
+    document.getElementById("addCustomerModal").classList.remove("active");
 }
 
 async function handleAddCustomerSubmit(e) {
@@ -476,7 +468,7 @@ async function handleAddCustomerSubmit(e) {
     const phone = document.getElementById("addCustPhone").value.trim();
     const email = document.getElementById("addCustEmail").value.trim();
     const address = document.getElementById("addCustAddress").value.trim();
-    const pickup_store = document.getElementById("addCustPickup").value;
+    const city = document.getElementById("addCustCity").value.trim() || "Padur";
 
     try {
         const res = await fetch("/api/admin/customers", {
@@ -485,65 +477,34 @@ async function handleAddCustomerSubmit(e) {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`
             },
-            body: JSON.stringify({ name, phone, email, address, pickup_store })
+            body: JSON.stringify({ name, phone, email, address, city })
         });
         const data = await res.json();
-        if (data.success && data.customer) {
-            customersList.unshift(data.customer);
+        if (data.success) {
+            showToast("Customer created successfully.");
+            closeAddCustomerModal();
+            loadCustomers();
         } else {
-            customersList.unshift({
-                id: `USR-${Math.floor(1000 + Math.random() * 9000)}`,
-                name,
-                phone: phone || "—",
-                email: email || "—",
-                address: pickup_store ? `${address} [Pickup: ${pickup_store}]` : (address || "Doorstep Address"),
-                orders_count: 0,
-                total_spent: 0,
-                last_order: "Newly Added"
-            });
+            showToast(data.message || "Failed to create customer.", "error");
         }
-    } catch {
-        customersList.unshift({
-            id: `USR-${Math.floor(1000 + Math.random() * 9000)}`,
-            name,
-            phone: phone || "—",
-            email: email || "—",
-            address: pickup_store ? `${address} [Pickup: ${pickup_store}]` : (address || "Doorstep Address"),
-            orders_count: 0,
-            total_spent: 0,
-            last_order: "Newly Added"
-        });
+    } catch (err) {
+        showToast("Error creating customer: " + err.message, "error");
     }
-
-    closeAddCustomerModal();
-    renderCustomers(customersList);
-    alert(`✓ Customer "${name}" added successfully!`);
 }
 
 function openEditCustomerModal(id) {
     const cust = customersList.find(c => c.id == id);
     if (!cust) return;
-
-    document.getElementById("editCustTargetId").value = id;
-    document.getElementById("editCustName").value = cust.name || "";
-    document.getElementById("editCustPhone").value = cust.phone != "—" ? cust.phone : "";
-    document.getElementById("editCustEmail").value = cust.email != "—" ? cust.email : "";
+    document.getElementById("editCustTargetId").value = cust.id;
+    document.getElementById("editCustName").value = cust.name;
+    document.getElementById("editCustPhone").value = cust.phone || "";
+    document.getElementById("editCustEmail").value = cust.email || "";
     document.getElementById("editCustAddress").value = cust.address || "";
-    
-    const sel = document.getElementById("editCustPickup");
-    sel.value = "";
-    for (let opt of sel.options) {
-        if (opt.value && cust.address && cust.address.includes(opt.value)) {
-            sel.value = opt.value;
-            break;
-        }
-    }
-
-    document.getElementById("editCustomerModal").style.display = "flex";
+    document.getElementById("editCustomerModal").classList.add("active");
 }
 
 function closeEditCustomerModal() {
-    document.getElementById("editCustomerModal").style.display = "none";
+    document.getElementById("editCustomerModal").classList.remove("active");
 }
 
 async function handleEditCustomerSubmit(e) {
@@ -553,30 +514,100 @@ async function handleEditCustomerSubmit(e) {
     const phone = document.getElementById("editCustPhone").value.trim();
     const email = document.getElementById("editCustEmail").value.trim();
     const address = document.getElementById("editCustAddress").value.trim();
-    const pickup_store = document.getElementById("editCustPickup").value;
-
-    const cust = customersList.find(c => c.id == id);
-    if (cust) {
-        cust.name = name;
-        cust.phone = phone;
-        cust.email = email;
-        cust.address = pickup_store ? `${address} [Pickup: ${pickup_store}]` : address;
-    }
 
     try {
-        await fetch(`/api/admin/customers/${id}`, {
+        const res = await fetch(`/api/admin/customers/${id}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`
             },
-            body: JSON.stringify({ name, phone, email, address, pickup_store })
+            body: JSON.stringify({ name, phone, email, address })
         });
-    } catch {}
+        const data = await res.json();
+        if (data.success) {
+            showToast("Customer profile updated.");
+            closeEditCustomerModal();
+            loadCustomers();
+        } else {
+            showToast(data.message || "Failed to update profile.", "error");
+        }
+    } catch (err) {
+        showToast("Error updating customer: " + err.message, "error");
+    }
+}
 
-    closeEditCustomerModal();
-    renderCustomers(customersList);
-    alert(`✓ Customer "${name}" (${id}) updated successfully!`);
+function openResetPasswordModal(id, encodedName) {
+    const name = decodeURIComponent(encodedName);
+    document.getElementById("resetPassTargetId").value = id;
+    document.getElementById("resetPassUserName").textContent = name;
+    document.getElementById("resetPassUserId").textContent = `#${id}`;
+    document.getElementById("newCustomerPassword").value = "";
+    document.getElementById("resetPassModal").classList.add("active");
+}
+
+function closeResetPassModal() {
+    document.getElementById("resetPassModal").classList.remove("active");
+}
+
+async function handleResetPasswordSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById("resetPassTargetId").value;
+    const newPass = document.getElementById("newCustomerPassword").value.trim();
+
+    try {
+        const res = await fetch(`/api/admin/customers/${id}/reset-password`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ password: newPass })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Password updated successfully.");
+            closeResetPassModal();
+        } else {
+            showToast(data.message || "Failed to reset password.", "error");
+        }
+    } catch (err) {
+        showToast("Error updating password: " + err.message, "error");
+    }
+}
+
+async function deleteCustomer(id, encodedName) {
+    const name = decodeURIComponent(encodedName);
+    if (!confirm(`Are you sure you want to permanently delete customer account '${name}' (${id})?`)) return;
+
+    try {
+        const res = await fetch(`/api/admin/customers/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Customer account deleted.");
+            loadCustomers();
+        } else {
+            showToast(data.message || "Failed to delete customer.", "error");
+        }
+    } catch (err) {
+        showToast("Error deleting customer: " + err.message, "error");
+    }
+}
+
+function exportCustomersCSV() {
+    let csv = "ID,Name,Phone,Email,Address,Orders,Total Spent\n";
+    customersList.forEach(c => {
+        csv += `"${c.id}","${c.name}","${c.phone || ''}","${c.email || ''}","${(c.address || '').replace(/"/g, '""')}","${c.orders_count || 0}","${c.total_spent || 0}"\n`;
+    });
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `thulirva_customers_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
 }
 
 loadCustomers();

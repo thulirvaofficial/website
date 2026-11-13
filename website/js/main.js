@@ -4,44 +4,192 @@
 
 const API = "/api";
 
-/* ---- Mobile Menu with Backdrop & Smooth Dismiss ---- */
-const menuBtn  = document.getElementById("mobileMenuButton");
-const mobileNav = document.getElementById("mobileNavigation");
-let mobileBackdrop = document.querySelector(".mobile-nav-backdrop");
+/* ---- Premium Mobile Navigation Drawer with Backdrop & Touch Controls ---- */
+function initMobileNavigationDrawer() {
+    const mobileNav = document.getElementById("mobileNavigation");
+    const menuBtn = document.getElementById("mobileMenuButton");
+    if (!mobileNav) return;
 
-if (!mobileBackdrop) {
-    mobileBackdrop = document.createElement("div");
-    mobileBackdrop.className = "mobile-nav-backdrop";
-    document.body.appendChild(mobileBackdrop);
-}
+    // Ensure mobile navigation drawer is a direct child of document.body for correct z-index stacking above backdrop
+    if (mobileNav.parentElement !== document.body) {
+        document.body.appendChild(mobileNav);
+    }
 
-function openMobileNav() {
-    if (mobileNav) mobileNav.classList.add("show");
-    if (mobileBackdrop) mobileBackdrop.classList.add("active");
-    if (menuBtn) menuBtn.textContent = "✕";
-}
+    // Detect if current page is within /pages/ or at root
+    const pathname = window.location.pathname.replace(/\\/g, "/");
+    const isPages = pathname.includes("/pages/");
+    const rootPrefix = isPages ? "../" : "";
+    const pagesPrefix = isPages ? "" : "pages/";
 
-function closeMobileNav() {
-    if (mobileNav) mobileNav.classList.remove("show");
-    if (mobileBackdrop) mobileBackdrop.classList.remove("active");
-    if (menuBtn) menuBtn.textContent = "☰";
-}
+    const filename = pathname.split("/").pop() || "index.html";
 
-if (menuBtn && mobileNav) {
-    menuBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (mobileNav.classList.contains("show")) {
-            closeMobileNav();
-        } else {
-            openMobileNav();
+    // Build the elite mobile drawer layout
+    mobileNav.innerHTML = `
+        <div class="mobile-nav-drawer-header">
+            <div class="mobile-nav-drawer-brand">
+                <img src="${rootPrefix}assets/images/logo/logo.jpg" alt="THULIRVA" class="mobile-nav-drawer-logo">
+                <div class="mobile-nav-drawer-brand-text">
+                    <span class="mobile-nav-drawer-title">THULIRVA</span>
+                    <span class="mobile-nav-drawer-subtitle">ROOTED IN NATURE</span>
+                </div>
+            </div>
+            <button class="mobile-nav-drawer-close" id="mobileNavCloseBtn" aria-label="Close navigation menu" title="Close menu">✕</button>
+        </div>
+
+        <div class="mobile-nav-trust-banner">
+            <span>🌿 Pure Dairy &amp; Agro &bull; Farm Fresh Daily</span>
+        </div>
+
+        <div class="mobile-nav-scroll-area">
+            <div class="mobile-nav-group-label">EXPLORE &amp; SHOP</div>
+            <nav class="mobile-nav-menu-list">
+                <a href="${rootPrefix}index.html" class="mobile-nav-link ${filename === 'index.html' || filename === '' ? 'active' : ''}">
+                    <span class="nav-link-icon">🏠</span>
+                    <span class="nav-link-label">Home</span>
+                    <span class="nav-link-chevron">›</span>
+                </a>
+                <a href="${pagesPrefix}shop.html" class="mobile-nav-link ${filename === 'shop.html' ? 'active' : ''}">
+                    <span class="nav-link-icon">🛍️</span>
+                    <span class="nav-link-label">Shop</span>
+                    <span class="nav-link-chevron">›</span>
+                </a>
+                <a href="${pagesPrefix}subscriptions.html" class="mobile-nav-link ${filename === 'subscriptions.html' ? 'active' : ''}">
+                    <span class="nav-link-icon">🥛</span>
+                    <span class="nav-link-label">Subscriptions</span>
+                    <span class="nav-link-badge">Daily Morning</span>
+                    <span class="nav-link-chevron">›</span>
+                </a>
+                <a href="${pagesPrefix}about.html" class="mobile-nav-link ${filename === 'about.html' ? 'active' : ''}">
+                    <span class="nav-link-icon">🌿</span>
+                    <span class="nav-link-label">About Us</span>
+                    <span class="nav-link-chevron">›</span>
+                </a>
+                <a href="${pagesPrefix}farms.html" class="mobile-nav-link ${filename === 'farms.html' ? 'active' : ''}">
+                    <span class="nav-link-icon">🐄</span>
+                    <span class="nav-link-label">Our Farms</span>
+                    <span class="nav-link-chevron">›</span>
+                </a>
+                <a href="${pagesPrefix}recipes.html" class="mobile-nav-link ${filename === 'recipes.html' ? 'active' : ''}">
+                    <span class="nav-link-icon">🍲</span>
+                    <span class="nav-link-label">Recipes</span>
+                    <span class="nav-link-chevron">›</span>
+                </a>
+                <a href="${pagesPrefix}contact.html" class="mobile-nav-link ${filename === 'contact.html' ? 'active' : ''}">
+                    <span class="nav-link-icon">📞</span>
+                    <span class="nav-link-label">Contact Us</span>
+                    <span class="nav-link-chevron">›</span>
+                </a>
+            </nav>
+
+            <div class="mobile-nav-group-label" style="margin-top: 14px;">MY ACCOUNT &amp; CART</div>
+            <nav class="mobile-nav-menu-list">
+                <a href="${pagesPrefix}account.html" class="mobile-nav-link ${filename === 'account.html' ? 'active' : ''}">
+                    <span class="nav-link-icon">👤</span>
+                    <span class="nav-link-label">My Orders &amp; Account</span>
+                    <span class="nav-link-chevron">›</span>
+                </a>
+                <a href="${pagesPrefix}cart.html" class="mobile-nav-link ${filename === 'cart.html' ? 'active' : ''}">
+                    <span class="nav-link-icon">🛒</span>
+                    <span class="nav-link-label">Shopping Cart</span>
+                    <span class="nav-link-cart-count" id="drawerCartCount">0</span>
+                    <span class="nav-link-chevron">›</span>
+                </a>
+            </nav>
+
+            <div class="mobile-nav-drawer-footer">
+                <a href="tel:9360671533" class="mobile-nav-phone-pill">
+                    <span class="phone-pill-icon">📞</span>
+                    <div class="phone-pill-text">
+                        <span class="phone-pill-title">Doorstep Order Helpline</span>
+                        <span class="phone-pill-num">93606 71533</span>
+                    </div>
+                </a>
+                <div class="mobile-nav-hours">
+                    <span>🕐 Daily Morning Dispatch: 6:00 AM – 8:00 PM</span>
+                    <span>📍 Kanchipuram &bull; Chennai</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Ensure backdrop element exists
+    let backdrop = document.querySelector(".mobile-nav-backdrop");
+    if (!backdrop) {
+        backdrop = document.createElement("div");
+        backdrop.className = "mobile-nav-backdrop";
+        document.body.appendChild(backdrop);
+    }
+
+    function openMobileDrawer() {
+        mobileNav.classList.add("open");
+        backdrop.classList.add("active");
+        document.body.classList.add("mobile-nav-open");
+        if (menuBtn) {
+            menuBtn.setAttribute("aria-expanded", "true");
+            menuBtn.textContent = "✕";
+        }
+        updateDrawerCartCount();
+    }
+
+    function closeMobileDrawer() {
+        mobileNav.classList.remove("open");
+        backdrop.classList.remove("active");
+        document.body.classList.remove("mobile-nav-open");
+        if (menuBtn) {
+            menuBtn.setAttribute("aria-expanded", "false");
+            menuBtn.textContent = "☰";
+        }
+    }
+
+    function updateDrawerCartCount() {
+        const count = getCart().reduce((s, i) => s + Number(i.quantity), 0);
+        const drawerBadge = document.getElementById("drawerCartCount");
+        if (drawerBadge) drawerBadge.textContent = count;
+    }
+
+    if (menuBtn) {
+        menuBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (mobileNav.classList.contains("open")) {
+                closeMobileDrawer();
+            } else {
+                openMobileDrawer();
+            }
+        };
+    }
+
+    const closeBtn = document.getElementById("mobileNavCloseBtn");
+    if (closeBtn) {
+        closeBtn.onclick = (e) => {
+            e.stopPropagation();
+            closeMobileDrawer();
+        };
+    }
+
+    backdrop.onclick = closeMobileDrawer;
+
+    // Close when tapping links
+    mobileNav.querySelectorAll(".mobile-nav-link").forEach(link => {
+        link.onclick = () => {
+            closeMobileDrawer();
+        };
+    });
+
+    // Close on Escape key
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && mobileNav.classList.contains("open")) {
+            closeMobileDrawer();
         }
     });
 
-    mobileBackdrop.addEventListener("click", closeMobileNav);
+    updateDrawerCartCount();
+}
 
-    mobileNav.querySelectorAll("a").forEach(link => {
-        link.addEventListener("click", closeMobileNav);
-    });
+// Initialize on DOM ready
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initMobileNavigationDrawer);
+} else {
+    initMobileNavigationDrawer();
 }
 
 // Mark cart & checkout pages to avoid floating elements overlapping buttons
@@ -98,7 +246,7 @@ function saveCart(cart) {
 
 function updateCartCount() {
     const count = getCart().reduce((s, i) => s + Number(i.quantity), 0);
-    document.querySelectorAll("#cartCount").forEach(el => el.textContent = count);
+    document.querySelectorAll("#cartCount, #drawerCartCount, #mobileNavCartCount").forEach(el => el.textContent = count);
 }
 
 function addToCart(product, qty = 1) {
@@ -173,7 +321,7 @@ function buildProductCard(product, isShop = false) {
             </div>
             <button class="add-to-cart" id="btn-${product.id}">Add to Cart</button>
             ${(product.category === 'Milk' || product.name.toLowerCase().includes('milk')) ? `
-                <a href="${isPagesDir ? 'account.html?openSub=true' : 'pages/account.html?openSub=true'}" class="btn btn-outline btn-sm" style="width:100%; justify-content:center; margin-top:6px; font-size:11.5px; padding:6px 0; border:1px solid var(--forest-green); color:var(--forest-green); font-weight:700;">
+                <a href="${isPagesDir ? 'subscriptions.html' : 'pages/subscriptions.html'}" class="btn btn-outline btn-sm sub-card-btn" style="width:100%; justify-content:center; margin-top:6px; font-size:11.5px; padding:6px 0; border:1px solid var(--forest-green); color:var(--forest-green); font-weight:700; text-decoration:none;">
                     🥛 Daily Morning Subscription
                 </a>
             ` : ''}
@@ -202,8 +350,9 @@ async function loadProducts() {
 
     try {
         const res = await fetch(`${API}/products`);
+        if (!res.ok) throw new Error("API status " + res.status);
         const data = await res.json();
-        allProducts = data.products || [];
+        allProducts = (data && data.products && data.products.length > 0) ? data.products : getSampleProducts();
         renderProductGrid(allProducts.slice(0, 8), grid);
         setupFilterTabs();
     } catch {
@@ -395,7 +544,9 @@ async function loadOffersDrawerCoupons() {
 
     // Render coupons in drawer
     body.innerHTML = activeCouponsCache.map(c => {
-        const discBadge = c.type === 'percent' ? `${c.value}% OFF` : `₹${c.value} OFF`;
+        const discType = c.discount_type || c.type || 'percent';
+        const discVal = c.discount_value !== undefined ? c.discount_value : (c.value || 0);
+        const discBadge = discType === 'percent' ? `${discVal}% OFF` : `₹${discVal} OFF`;
         return `
             <div class="offer-coupon-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -414,7 +565,7 @@ async function loadOffersDrawerCoupons() {
                     <span style="font-family:monospace; font-size:14px; font-weight:800; color:var(--forest-green); letter-spacing:1px;">
                         ${c.code}
                     </span>
-                    <button type="button" onclick="copyOfferCode('${c.code}', ${c.value})" style="background:var(--forest-green); color:#e5c97a; border:none; border-radius:6px; padding:5px 12px; font-size:11.5px; font-weight:700; cursor:pointer;">
+                    <button type="button" onclick="copyOfferCode('${c.code}', ${discVal})" style="background:var(--forest-green); color:#e5c97a; border:none; border-radius:6px; padding:5px 12px; font-size:11.5px; font-weight:700; cursor:pointer;">
                         📋 Copy Code
                     </button>
                 </div>
@@ -425,13 +576,16 @@ async function loadOffersDrawerCoupons() {
     // Also update announcement bar with top coupon if present
     const topCoupon = activeCouponsCache[0];
     if (topCoupon) {
+        const topType = topCoupon.discount_type || topCoupon.type || 'percent';
+        const topVal = topCoupon.discount_value !== undefined ? topCoupon.discount_value : (topCoupon.value || 0);
+        const topDiscText = topType === 'percent' ? `${topVal}%` : `₹${topVal}`;
         document.querySelectorAll(".announcement-content").forEach(bar => {
             if (!bar.querySelector(".promo-announcement-pill")) {
                 const span = document.createElement("span");
                 span.className = "promo-announcement-pill";
                 span.style.cssText = "background:rgba(229,201,122,0.25); border:1px solid #e5c97a; padding:2px 8px; border-radius:12px; cursor:pointer;";
                 span.onclick = toggleOffersDrawer;
-                span.innerHTML = `🎟️ Use Code <b>${topCoupon.code}</b> for ${topCoupon.type === 'percent' ? topCoupon.value + '%' : '₹' + topCoupon.value} OFF!`;
+                span.innerHTML = `🎟️ Use Code <b>${topCoupon.code}</b> for ${topDiscText} OFF!`;
                 bar.appendChild(span);
             }
         });

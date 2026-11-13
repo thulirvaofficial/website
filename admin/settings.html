@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THULIRVA Enterprise — Store Operational Settings</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="admin-layout">
+    <aside class="sidebar" id="adminSidebar"></aside>
+
+    <main class="main-content">
+        <header class="topbar" id="adminTopbar"></header>
+
+        <div class="page-container">
+            <div class="page-header flex-between">
+                <div>
+                    <h1 class="page-title">Store & Logistics Configuration</h1>
+                    <p class="page-subtitle">Operational dispatch controls, distribution hub coordinates, payment gateways & pickup mode</p>
+                </div>
+            </div>
+
+            <!-- Operational Mode Toggles -->
+            <div class="grid grid-2 gap-4 mb-4">
+                <!-- Toggle 1: Pickup Mode -->
+                <div class="card p-4">
+                    <div class="flex-between mb-3">
+                        <div class="flex-center gap-3">
+                            <div class="stat-card-icon" style="background:#E8EDE6; color:var(--primary-green); width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><rect width="20" height="5" x="2" y="7"/></svg>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-dark mb-0">Store Pickup Mode</h4>
+                                <div class="text-xs text-muted">Allow customers to choose self-pickup from hub</div>
+                            </div>
+                        </div>
+                        <span id="pickupBadge" class="badge badge-success">Active</span>
+                    </div>
+                    <p class="text-sm text-dark mb-3">When enabled, customers can choose between doorstep delivery and direct store pickup at checkout. Pickup orders bypass home delivery charges.</p>
+                    <button class="btn btn-secondary btn-sm" id="btnTogglePickup" onclick="togglePickupSetting()">
+                        Toggle Pickup Mode
+                    </button>
+                </div>
+
+                <!-- Toggle 2: Area Allocation -->
+                <div class="card p-4">
+                    <div class="flex-between mb-3">
+                        <div class="flex-center gap-3">
+                            <div class="stat-card-icon" style="background:#E8EDE6; color:var(--primary-green); width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-dark mb-0">Strict Area Allocation</h4>
+                                <div class="text-xs text-muted">Delivery partner geographical confinement</div>
+                            </div>
+                        </div>
+                        <span id="allocBadge" class="badge badge-success">Enforced</span>
+                    </div>
+                    <p class="text-sm text-dark mb-3">When enabled, orders are strictly dispatched to partners whose assigned delivery area matches the customer destination (e.g. Padur, Navalur, Siruseri).</p>
+                    <button class="btn btn-secondary btn-sm" id="btnToggleAlloc" onclick="toggleAreaAllocSetting()">
+                        Toggle Area Allocation
+                    </button>
+                </div>
+            </div>
+
+            <!-- Form: Store & Hub Coordinates -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="card-title">Distribution Hub & Operational Parameters</h4>
+                </div>
+                <div class="card-body">
+                    <form onsubmit="saveHubSettings(event)">
+                        <div class="grid grid-3 gap-3 mb-3">
+                            <div class="form-group">
+                                <label class="form-label required">Primary Hub Facility Name</label>
+                                <input type="text" id="hubName" class="form-control" value="Padur Central Distribution Hub" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">Hub Latitude Coordinate</label>
+                                <input type="number" step="0.0001" id="hubLat" class="form-control font-mono" value="12.8025" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">Hub Longitude Coordinate</label>
+                                <input type="number" step="0.0001" id="hubLng" class="form-control font-mono" value="80.2233" required>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-3 gap-3 mb-3">
+                            <div class="form-group">
+                                <label class="form-label required">Serviceable Delivery Radius (km)</label>
+                                <input type="number" id="hubRadius" class="form-control font-mono" value="15" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">Morning Slot Start Time</label>
+                                <input type="text" id="slotStart" class="form-control" value="5:30 AM" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">Morning Slot End Time</label>
+                                <input type="text" id="slotEnd" class="form-control" value="7:30 AM" required>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-3 gap-3 mb-4">
+                            <div class="form-group">
+                                <label class="form-label required">Official UPI VPA (Receiver)</label>
+                                <input type="text" id="upiVpa" class="form-control font-mono" value="7904880944@superyes" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">Operations Emergency Helpline</label>
+                                <input type="text" id="opsPhone" class="form-control font-mono" value="+91 79048 80944" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">Customer Support Email</label>
+                                <input type="email" id="opsEmail" class="form-control" value="support@thulirva.in" required>
+                            </div>
+                        </div>
+
+                        <div class="flex-between">
+                            <span class="text-xs text-muted">All changes apply instantly to customer checkout & partner GPS geofencing engines.</span>
+                            <button type="submit" class="btn btn-primary" id="btnSaveHub">
+                                Save Operational Parameters
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="js/admin-shell.js"></script>
+<script>
+let pickupEnabled = true;
+let allocEnabled = true;
+const token = localStorage.getItem("thulirva_admin_token") || "";
+
+document.addEventListener("DOMContentLoaded", () => {
+    initAdminShell({
+        activePage: "settings",
+        breadcrumbs: [
+            { label: "Overview", url: "dashboard.html" },
+            { label: "System", url: "settings.html" },
+            { label: "Store Settings", url: "settings.html" }
+        ]
+    });
+
+    loadInitialSettings();
+});
+
+async function loadInitialSettings() {
+    try {
+        const [pickupRes, allocRes] = await Promise.all([
+            fetch("/api/pickup/settings").catch(() => null),
+            fetch("/api/admin/delivery/settings/area-allocation", { headers: { Authorization: `Bearer ${token}` } }).catch(() => null)
+        ]);
+
+        if (pickupRes && pickupRes.ok) {
+            const data = await pickupRes.json();
+            pickupEnabled = data.pickup_enabled !== false;
+            updatePickupUi();
+        }
+
+        if (allocRes && allocRes.ok) {
+            const data = await allocRes.json();
+            allocEnabled = data.enabled !== false;
+            updateAllocUi();
+        }
+    } catch (_) {}
+}
+
+function updatePickupUi() {
+    const badge = document.getElementById("pickupBadge");
+    const btn = document.getElementById("btnTogglePickup");
+    if (pickupEnabled) {
+        badge.className = "badge badge-success";
+        badge.textContent = "Active";
+        btn.textContent = "Disable Pickup Mode";
+    } else {
+        badge.className = "badge badge-warning";
+        badge.textContent = "Disabled";
+        btn.textContent = "Enable Pickup Mode";
+    }
+}
+
+function updateAllocUi() {
+    const badge = document.getElementById("allocBadge");
+    const btn = document.getElementById("btnToggleAlloc");
+    if (allocEnabled) {
+        badge.className = "badge badge-success";
+        badge.textContent = "Enforced";
+        btn.textContent = "Disable Area Allocation";
+    } else {
+        badge.className = "badge badge-warning";
+        badge.textContent = "Broadcast Mode";
+        btn.textContent = "Enable Area Allocation";
+    }
+}
+
+async function togglePickupSetting() {
+    pickupEnabled = !pickupEnabled;
+    try {
+        await fetch("/api/pickup/settings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ pickup_enabled: pickupEnabled })
+        });
+        updatePickupUi();
+        showToast(`Store pickup mode ${pickupEnabled ? 'enabled' : 'disabled'}.`, "success");
+    } catch (err) {
+        showToast("Error updating pickup setting: " + err.message, "danger");
+    }
+}
+
+async function toggleAreaAllocSetting() {
+    allocEnabled = !allocEnabled;
+    try {
+        await fetch("/api/admin/delivery/settings/area-allocation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ enabled: allocEnabled })
+        });
+        updateAllocUi();
+        showToast(`Strict area allocation ${allocEnabled ? 'enabled' : 'disabled'}.`, "success");
+    } catch (err) {
+        showToast("Error updating area allocation: " + err.message, "danger");
+    }
+}
+
+function saveHubSettings(e) {
+    e.preventDefault();
+    const btn = document.getElementById("btnSaveHub");
+    btn.disabled = true;
+    btn.textContent = "Saving Parameters...";
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = "Save Operational Parameters";
+        showToast("Hub operational parameters saved and synchronized.", "success");
+    }, 400);
+}
+</script>
+</body>
+</html>

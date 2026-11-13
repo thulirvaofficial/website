@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THULIRVA Enterprise — Delivery Fleet Management</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <style>
+        .partner-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: #E8EDE6;
+            color: var(--primary-green);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 15px;
+            border: 2px solid var(--border-light);
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .online-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .online-dot.online { background: #2E7D32; box-shadow: 0 0 6px rgba(46,125,50,0.6); }
+        .online-dot.offline { background: #9E9E9E; }
+        .gps-pill {
+            font-family: monospace;
+            font-size: 12px;
+            background: #F1F4EE;
+            color: var(--primary-green);
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+            border: 1px solid var(--border-light);
+        }
+        .gps-pill:hover {
+            background: #E2E8DC;
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-layout">
+    <!-- Collapsible Sidebar -->
+    <aside class="sidebar" id="adminSidebar"></aside>
+
+    <!-- Main Content Container -->
+    <main class="main-content">
+        <!-- Sticky Top Navigation -->
+        <header class="topbar" id="adminTopbar"></header>
+
+        <!-- Page Body -->
+        <div class="page-container">
+            <!-- Header Banner -->
+            <div class="page-header flex-between">
+                <div>
+                    <h1 class="page-title">Delivery Fleet & Partners</h1>
+                    <p class="page-subtitle">Real-time delivery partner roster, active shift statuses, GPS telemetry & route allocation</p>
+                </div>
+                <div class="flex-center gap-3">
+                    <button class="btn btn-secondary" onclick="exportPartnersCsv()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                        Export CSV
+                    </button>
+                    <button class="btn btn-primary" onclick="openAddPartnerModal()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="12" y1="12" y2="12"/></svg>
+                        Add Delivery Partner
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Metric Overview -->
+            <div class="metrics-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Fleet Size</div>
+                    <div class="stat-value" id="statTotalFleet">—</div>
+                    <div class="stat-sub">Registered delivery associates</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Online & Available</div>
+                    <div class="stat-value text-gold" id="statOnlineFleet">—</div>
+                    <div class="stat-sub">Active for auto-dispatch</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Padur Hub Roster</div>
+                    <div class="stat-value" id="statPadurFleet">—</div>
+                    <div class="stat-sub">Assigned to primary Padur route</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Fleet Reliability Rating</div>
+                    <div class="stat-value" id="statAvgRating">4.9 ★</div>
+                    <div class="stat-sub">Customer satisfaction score</div>
+                </div>
+            </div>
+
+            <!-- Search, Filter & View Controls -->
+            <div class="card mb-4">
+                <div class="card-body p-3">
+                    <div class="table-actions">
+                        <div class="search-input-wrap">
+                            <span class="search-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            </span>
+                            <input type="text" id="partnerSearch" class="form-control" placeholder="Search by name, phone, or partner ID..." oninput="filterPartners()">
+                        </div>
+
+                        <div class="filter-group">
+                            <select id="filterStatus" class="form-control" onchange="filterPartners()">
+                                <option value="">All Statuses</option>
+                                <option value="online">Online Now</option>
+                                <option value="offline">Offline</option>
+                                <option value="active">Active & Unblocked</option>
+                                <option value="blocked">Blocked / Suspended</option>
+                            </select>
+
+                            <select id="filterArea" class="form-control" onchange="filterPartners()">
+                                <option value="">All Operating Areas</option>
+                                <option value="padur">Padur (Primary Hub)</option>
+                                <option value="kelambakkam">Kelambakkam</option>
+                                <option value="siruseri">Siruseri / SIPCOT</option>
+                                <option value="navaluru">Navalur</option>
+                                <option value="kanchipuram">Kanchipuram</option>
+                            </select>
+
+                            <button class="btn btn-secondary btn-icon" onclick="loadPartners()" title="Refresh Roster">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Partners Data Table -->
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table" id="partnersTable">
+                            <thead>
+                                <tr>
+                                    <th>Associate Details</th>
+                                    <th>Contact & Email</th>
+                                    <th>Operating Area</th>
+                                    <th>Vehicle Profile</th>
+                                    <th>Live GPS Telemetry</th>
+                                    <th>Status</th>
+                                    <th>KYC State</th>
+                                    <th>Total Trips</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="partnersTableBody">
+                                <tr>
+                                    <td colspan="9" class="text-center py-5">
+                                        <div class="spinner"></div>
+                                        <div class="mt-2 text-muted">Retrieving delivery fleet roster from production database...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Add Partner Modal -->
+<div class="modal" id="addPartnerModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Onboard New Delivery Partner</h3>
+                <button class="modal-close" onclick="closeModal('addPartnerModal')">&times;</button>
+            </div>
+            <form id="addPartnerForm" onsubmit="handleAddPartner(event)">
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label class="form-label required">Full Legal Name</label>
+                        <input type="text" id="partnerName" class="form-control" placeholder="e.g. Vignesh Sundaram" required>
+                    </div>
+
+                    <div class="grid grid-2 gap-3 mb-3">
+                        <div class="form-group">
+                            <label class="form-label required">Phone Number</label>
+                            <input type="tel" id="partnerPhone" class="form-control" placeholder="e.g. 7904880944" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" id="partnerEmail" class="form-control" placeholder="partner@thulirva.in">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2 gap-3 mb-3">
+                        <div class="form-group">
+                            <label class="form-label required">Assigned Delivery Area</label>
+                            <select id="partnerArea" class="form-control" required>
+                                <option value="Padur">Padur (Primary Hub)</option>
+                                <option value="Kelambakkam">Kelambakkam</option>
+                                <option value="Siruseri">Siruseri / SIPCOT</option>
+                                <option value="Navalur">Navalur</option>
+                                <option value="Kanchipuram">Kanchipuram</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Vehicle Type</label>
+                            <select id="partnerVehicleType" class="form-control">
+                                <option value="Electric Scooter">Electric Scooter</option>
+                                <option value="Motorcycle">Motorcycle</option>
+                                <option value="Delivery Van">Delivery Van</option>
+                                <option value="Bicycle">Bicycle</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Vehicle Registration Number</label>
+                        <input type="text" id="partnerVehicleNumber" class="form-control" placeholder="e.g. TN 09 CY 7890">
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Initial Password</label>
+                        <input type="text" id="partnerPassword" class="form-control" value="Partner@123" required>
+                        <small class="text-muted">The partner can change this password upon initial login in the partner app.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addPartnerModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitPartner">Complete Onboarding</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Partner Modal -->
+<div class="modal" id="editPartnerModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Delivery Associate</h3>
+                <button class="modal-close" onclick="closeModal('editPartnerModal')">&times;</button>
+            </div>
+            <form id="editPartnerForm" onsubmit="handleEditPartner(event)">
+                <input type="hidden" id="editPartnerId">
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label class="form-label required">Full Legal Name</label>
+                        <input type="text" id="editPartnerName" class="form-control" required>
+                    </div>
+
+                    <div class="grid grid-2 gap-3 mb-3">
+                        <div class="form-group">
+                            <label class="form-label required">Phone Number</label>
+                            <input type="tel" id="editPartnerPhone" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" id="editPartnerEmail" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2 gap-3 mb-3">
+                        <div class="form-group">
+                            <label class="form-label required">Assigned Delivery Area</label>
+                            <select id="editPartnerArea" class="form-control" required>
+                                <option value="Padur">Padur (Primary Hub)</option>
+                                <option value="Kelambakkam">Kelambakkam</option>
+                                <option value="Siruseri">Siruseri / SIPCOT</option>
+                                <option value="Navalur">Navalur</option>
+                                <option value="Kanchipuram">Kanchipuram</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Vehicle Type</label>
+                            <select id="editPartnerVehicleType" class="form-control">
+                                <option value="Electric Scooter">Electric Scooter</option>
+                                <option value="Motorcycle">Motorcycle</option>
+                                <option value="Delivery Van">Delivery Van</option>
+                                <option value="Bicycle">Bicycle</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Vehicle Registration Number</label>
+                        <input type="text" id="editPartnerVehicleNumber" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editPartnerModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnUpdatePartner">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Partner Details Drawer -->
+<div class="drawer-overlay" id="partnerDrawerOverlay" onclick="closePartnerDrawer()"></div>
+<div class="drawer" id="partnerDrawer">
+    <div class="drawer-header">
+        <h3 class="drawer-title" id="drawerPartnerTitle">Partner Telemetry</h3>
+        <button class="drawer-close" onclick="closePartnerDrawer()">&times;</button>
+    </div>
+    <div class="drawer-body" id="drawerPartnerBody">
+        <!-- Rendered via JS -->
+    </div>
+</div>
+
+<script src="js/admin-shell.js"></script>
+<script>
+let allPartners = [];
+const token = localStorage.getItem("thulirva_admin_token") || "";
+
+document.addEventListener("DOMContentLoaded", () => {
+    initAdminShell({
+        activePage: "partners",
+        breadcrumbs: [
+            { label: "Overview", url: "dashboard.html" },
+            { label: "Logistics & Fleet", url: "delivery-partners.html" },
+            { label: "Delivery Partners", url: "delivery-partners.html" }
+        ]
+    });
+
+    loadPartners();
+});
+
+async function loadPartners() {
+    try {
+        const res = await fetch("/api/v1/partners", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        allPartners = Array.isArray(data.partners) ? data.partners : [];
+
+        renderMetrics();
+        filterPartners();
+    } catch (err) {
+        showToast("Failed to load delivery partners: " + err.message, "danger");
+        document.getElementById("partnersTableBody").innerHTML = `
+            <tr><td colspan="9" class="text-center py-4 text-danger">Error retrieving delivery fleet. Please check network connection.</td></tr>
+        `;
+    }
+}
+
+function renderMetrics() {
+    const total = allPartners.length;
+    const online = allPartners.filter(p => p.is_online).length;
+    const padur = allPartners.filter(p => (p.assigned_area || "").toLowerCase().includes("padur")).length;
+
+    document.getElementById("statTotalFleet").textContent = total;
+    document.getElementById("statOnlineFleet").textContent = `${online} Active`;
+    document.getElementById("statPadurFleet").textContent = padur;
+}
+
+function filterPartners() {
+    const query = (document.getElementById("partnerSearch").value || "").toLowerCase().trim();
+    const status = document.getElementById("filterStatus").value;
+    const area = document.getElementById("filterArea").value;
+
+    const filtered = allPartners.filter(p => {
+        const matchesQuery = !query ||
+            (p.name || "").toLowerCase().includes(query) ||
+            (p.phone || "").includes(query) ||
+            (p.partner_id || "").toLowerCase().includes(query);
+
+        let matchesStatus = true;
+        if (status === "online") matchesStatus = Boolean(p.is_online);
+        else if (status === "offline") matchesStatus = !p.is_online;
+        else if (status === "active") matchesStatus = p.is_active !== false && !p.is_blocked;
+        else if (status === "blocked") matchesStatus = p.is_active === false || p.is_blocked === true;
+
+        const matchesArea = !area || (p.assigned_area || "").toLowerCase().includes(area.toLowerCase());
+
+        return matchesQuery && matchesStatus && matchesArea;
+    });
+
+    renderTable(filtered);
+}
+
+function renderTable(list) {
+    const tbody = document.getElementById("partnersTableBody");
+    if (!list.length) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center py-5 text-muted">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+                    <div>No delivery partners matching search and filter criteria.</div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = list.map(p => {
+        const isOnline = Boolean(p.is_online);
+        const isBlocked = p.is_active === false || p.is_blocked === true;
+        const initial = (p.name || "D").charAt(0).toUpperCase();
+        const avatarImg = p.profile_photo ? `<img src="${p.profile_photo}" class="partner-avatar" alt="${p.name}">` : `<div class="partner-avatar">${initial}</div>`;
+        const lat = p.current_latitude || 12.8025;
+        const lng = p.current_longitude || 80.2233;
+        const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+
+        let kycBadge = `<span class="badge badge-warning">Pending</span>`;
+        if (p.kyc_status === "APPROVED") {
+            kycBadge = `<span class="badge badge-success">Verified</span>`;
+        } else if (p.kyc_status === "REJECTED") {
+            kycBadge = `<span class="badge badge-danger">Rejected</span>`;
+        }
+
+        return `
+            <tr>
+                <td>
+                    <div class="flex-center justify-start gap-3">
+                        ${avatarImg}
+                        <div>
+                            <div class="font-bold text-dark">${p.name || 'Unnamed Partner'}</div>
+                            <div class="text-muted text-xs font-mono">${p.partner_id || 'ID-N/A'}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="font-medium">${p.phone || '—'}</div>
+                    <div class="text-muted text-xs">${p.email || '—'}</div>
+                </td>
+                <td>
+                    <span class="badge badge-neutral">📍 ${p.assigned_area || 'Padur'}</span>
+                </td>
+                <td>
+                    <div class="font-medium text-xs">${p.vehicle_type || 'Two Wheeler'}</div>
+                    <div class="text-muted text-xs font-mono">${p.vehicle_number || 'TN 09 CY 7890'}</div>
+                </td>
+                <td>
+                    <a href="${mapsUrl}" target="_blank" class="gps-pill" title="Open live Google Maps location">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+                        ${lat.toFixed(4)}, ${lng.toFixed(4)}
+                    </a>
+                </td>
+                <td>
+                    <div class="flex-center justify-start">
+                        <span class="online-dot ${isOnline ? 'online' : 'offline'}"></span>
+                        <span class="font-semibold text-xs ${isOnline ? 'text-success' : 'text-muted'}">${isOnline ? 'On Shift' : 'Offline'}</span>
+                    </div>
+                    ${isBlocked ? `<span class="badge badge-danger mt-1">Blocked</span>` : ''}
+                </td>
+                <td>${kycBadge}</td>
+                <td class="font-bold">${p.total_deliveries_count || 0}</td>
+                <td class="text-right">
+                    <div class="flex-center justify-end gap-1">
+                        <button class="btn btn-secondary btn-icon" onclick="viewPartnerDetails('${p.partner_id}')" title="View Telemetry">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                        <button class="btn btn-secondary btn-icon" onclick="openEditPartnerModal('${p.partner_id}')" title="Edit Partner">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                        </button>
+                        <button class="btn ${isBlocked ? 'btn-success' : 'btn-danger'} btn-icon" onclick="toggleBlockPartner('${p.partner_id}', ${isBlocked})" title="${isBlocked ? 'Unblock Associate' : 'Suspend / Block Associate'}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" x2="19.07" y1="4.93" y2="19.07"/></svg>
+                        </button>
+                        <button class="btn btn-danger btn-icon" onclick="deletePartner('${p.partner_id}')" title="Delete Partner Permanently">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+function openAddPartnerModal() {
+    document.getElementById("addPartnerForm").reset();
+    document.getElementById("addPartnerModal").classList.add("show");
+}
+
+async function handleAddPartner(e) {
+    e.preventDefault();
+    const btn = document.getElementById("btnSubmitPartner");
+    btn.disabled = true;
+    btn.textContent = "Onboarding...";
+
+    const payload = {
+        name: document.getElementById("partnerName").value.trim(),
+        phone: document.getElementById("partnerPhone").value.trim(),
+        email: document.getElementById("partnerEmail").value.trim(),
+        assigned_area: document.getElementById("partnerArea").value,
+        vehicle_type: document.getElementById("partnerVehicleType").value,
+        vehicle_number: document.getElementById("partnerVehicleNumber").value.trim(),
+        password: document.getElementById("partnerPassword").value
+    };
+
+    try {
+        const res = await fetch("/api/v1/partners", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Delivery Partner onboarded successfully!", "success");
+            closeModal("addPartnerModal");
+            loadPartners();
+        } else {
+            showToast(data.message || "Failed to onboard partner", "danger");
+        }
+    } catch (err) {
+        showToast("Error onboarding partner: " + err.message, "danger");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Complete Onboarding";
+    }
+}
+
+function openEditPartnerModal(id) {
+    const p = allPartners.find(x => x.partner_id === id);
+    if (!p) return;
+
+    document.getElementById("editPartnerId").value = p.partner_id;
+    document.getElementById("editPartnerName").value = p.name || "";
+    document.getElementById("editPartnerPhone").value = p.phone || "";
+    document.getElementById("editPartnerEmail").value = p.email || "";
+    document.getElementById("editPartnerArea").value = p.assigned_area || "Padur";
+    document.getElementById("editPartnerVehicleType").value = p.vehicle_type || "Electric Scooter";
+    document.getElementById("editPartnerVehicleNumber").value = p.vehicle_number || "";
+
+    document.getElementById("editPartnerModal").classList.add("show");
+}
+
+async function handleEditPartner(e) {
+    e.preventDefault();
+    const id = document.getElementById("editPartnerId").value;
+    const btn = document.getElementById("btnUpdatePartner");
+    btn.disabled = true;
+    btn.textContent = "Saving...";
+
+    const payload = {
+        name: document.getElementById("editPartnerName").value.trim(),
+        phone: document.getElementById("editPartnerPhone").value.trim(),
+        email: document.getElementById("editPartnerEmail").value.trim(),
+        assigned_area: document.getElementById("editPartnerArea").value,
+        vehicle_type: document.getElementById("editPartnerVehicleType").value,
+        vehicle_number: document.getElementById("editPartnerVehicleNumber").value.trim()
+    };
+
+    try {
+        const res = await fetch(`/api/v1/partners/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Partner details updated successfully.", "success");
+            closeModal("editPartnerModal");
+            loadPartners();
+        } else {
+            showToast(data.message || "Update failed.", "danger");
+        }
+    } catch (err) {
+        showToast("Error updating partner: " + err.message, "danger");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Save Changes";
+    }
+}
+
+async function toggleBlockPartner(id, isCurrentlyBlocked) {
+    const action = isCurrentlyBlocked ? "unblock" : "block";
+    if (!confirm(`Are you sure you want to ${action} partner ${id}?`)) return;
+
+    try {
+        const res = await fetch(`/api/v1/partners/${id}/toggle-block`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Partner status successfully updated (${action}ed).`, "success");
+            loadPartners();
+        } else {
+            showToast(data.message || "Failed to update status", "danger");
+        }
+    } catch (err) {
+        showToast("Error toggling block: " + err.message, "danger");
+    }
+}
+
+async function deletePartner(id) {
+    if (!confirm(`CAUTION: Are you sure you want to permanently delete partner ${id}? This cannot be undone.`)) return;
+
+    try {
+        const res = await fetch(`/api/admin/delivery/partners/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Partner deleted successfully.", "success");
+            loadPartners();
+        } else {
+            showToast(data.message || "Failed to delete partner", "danger");
+        }
+    } catch (err) {
+        showToast("Error deleting partner: " + err.message, "danger");
+    }
+}
+
+function viewPartnerDetails(id) {
+    const p = allPartners.find(x => x.partner_id === id);
+    if (!p) return;
+
+    document.getElementById("drawerPartnerTitle").textContent = `${p.name} (${p.partner_id})`;
+    const lat = p.current_latitude || 12.8025;
+    const lng = p.current_longitude || 80.2233;
+
+    document.getElementById("drawerPartnerBody").innerHTML = `
+        <div class="mb-4 text-center">
+            <div class="partner-avatar mx-auto mb-2" style="width:72px; height:72px; font-size:28px;">
+                ${p.profile_photo ? `<img src="${p.profile_photo}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : (p.name || 'D').charAt(0).toUpperCase()}
+            </div>
+            <h4 class="font-bold text-dark mb-0">${p.name}</h4>
+            <div class="text-gold font-semibold text-sm">Rating: ${p.rating || 5.0} ★</div>
+        </div>
+
+        <div class="card mb-3 p-3 bg-cream">
+            <div class="font-bold text-xs uppercase text-muted mb-2">Live GPS Position</div>
+            <div class="font-mono text-sm font-bold text-dark mb-1">LAT: ${lat} | LNG: ${lng}</div>
+            <div class="text-xs text-muted mb-2">Primary Hub Location: Padur, Chennai OMR</div>
+            <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="btn btn-primary btn-sm w-full text-center">
+                Open in Google Maps Live Fleet
+            </a>
+        </div>
+
+        <div class="card mb-3 p-3">
+            <div class="font-bold text-xs uppercase text-muted mb-2">Operational Profile</div>
+            <div class="grid grid-2 gap-2 text-sm">
+                <div><span class="text-muted">Phone:</span> <strong>${p.phone}</strong></div>
+                <div><span class="text-muted">Area:</span> <strong>${p.assigned_area || 'Padur'}</strong></div>
+                <div><span class="text-muted">Vehicle:</span> <strong>${p.vehicle_type || 'EV'}</strong></div>
+                <div><span class="text-muted">Number:</span> <strong>${p.vehicle_number || '—'}</strong></div>
+                <div><span class="text-muted">Total Trips:</span> <strong>${p.total_deliveries_count || 0}</strong></div>
+                <div><span class="text-muted">Today Trips:</span> <strong>${p.today_deliveries_count || 0}</strong></div>
+            </div>
+        </div>
+
+        <div class="card p-3">
+            <div class="font-bold text-xs uppercase text-muted mb-2">Security & Credentials</div>
+            <button class="btn btn-secondary btn-sm w-full mb-2" onclick="resetPasswordPrompt('${p.partner_id}')">
+                Reset App Password
+            </button>
+            <a href="partner-earnings.html?partner=${p.partner_id}" class="btn btn-secondary btn-sm w-full text-center mb-2">
+                Inspect Financial Ledger
+            </a>
+            <a href="partner-kyc.html?partner=${p.partner_id}" class="btn btn-secondary btn-sm w-full text-center">
+                Review KYC Documents
+            </a>
+        </div>
+    `;
+
+    document.getElementById("partnerDrawerOverlay").classList.add("show");
+    document.getElementById("partnerDrawer").classList.add("show");
+}
+
+function closePartnerDrawer() {
+    document.getElementById("partnerDrawerOverlay").classList.remove("show");
+    document.getElementById("partnerDrawer").classList.remove("show");
+}
+
+async function resetPasswordPrompt(id) {
+    const newPwd = prompt(`Enter new password for partner ${id}:`, "Partner@2026");
+    if (!newPwd) return;
+
+    try {
+        const res = await fetch(`/api/admin/delivery/partners/${id}/reset-password`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ password: newPwd })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Password reset successfully.", "success");
+        } else {
+            showToast(data.message || "Password reset failed.", "danger");
+        }
+    } catch (err) {
+        showToast("Error resetting password: " + err.message, "danger");
+    }
+}
+
+function exportPartnersCsv() {
+    if (!allPartners.length) {
+        showToast("No partner records to export", "warning");
+        return;
+    }
+    const headers = ["Partner ID", "Name", "Phone", "Email", "Assigned Area", "Vehicle", "Vehicle Number", "Is Online", "Rating", "Total Deliveries", "Latitude", "Longitude"];
+    const rows = allPartners.map(p => [
+        p.partner_id || "",
+        `"${(p.name || "").replace(/"/g, '""')}"`,
+        p.phone || "",
+        p.email || "",
+        `"${p.assigned_area || ""}"`,
+        `"${p.vehicle_type || ""}"`,
+        `"${p.vehicle_number || ""}"`,
+        p.is_online ? "YES" : "NO",
+        p.rating || 5.0,
+        p.total_deliveries_count || 0,
+        p.current_latitude || 12.8025,
+        p.current_longitude || 80.2233
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", `Thulirva_Delivery_Fleet_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+</script>
+</body>
+</html>

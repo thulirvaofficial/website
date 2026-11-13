@@ -1,547 +1,558 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THULIRVA Admin — Orders &amp; Payment Verification</title>
+    <title>THULIRVA Admin — Orders &amp; Dispatch Management</title>
     <link rel="stylesheet" href="css/admin.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
-        rel="stylesheet">
     <style>
         .proof-thumb {
             width: 44px;
             height: 44px;
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
             object-fit: cover;
-            border: 1.5px solid var(--border);
+            border: 1.5px solid var(--thulirva-border);
             cursor: pointer;
-            transition: transform .15s;
+            transition: var(--transition);
         }
-
         .proof-thumb:hover {
-            transform: scale(1.1);
-            border-color: var(--green);
-        }
-
-        .proof-modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.75);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .proof-modal-overlay.active {
-            display: flex;
-        }
-
-        .proof-modal-content {
-            background: white;
-            border-radius: 12px;
-            max-width: 580px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            padding: 22px;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transform: scale(1.08);
+            border-color: var(--thulirva-forest);
         }
     </style>
 </head>
-
 <body>
 
-    <div class="admin-layout">
-        <aside class="sidebar">
-            <div class="sidebar-logo">
-                <img src="images/logo.jpg" alt="THULIRVA Logo"
-                    style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 1.5px solid #d4af37; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-                <div
-                    style="font-family:'Playfair Display',serif; color:#E9EBD9; font-size:18px; font-weight:700; letter-spacing:1.5px;">
-                    THULIRVA</div>
-                <span>ADMIN CONSOLE</span>
-            </div>
+<div class="admin-layout">
+    <aside class="sidebar" id="adminSidebar"></aside>
 
-            <a href="dashboard.html">📊 Dashboard</a>
-            <a href="products.html">🛍 Products</a>
-            <a href="categories.html">🏷 Categories</a>
-            <a href="subscriptions.html">🔄 Subscriptions</a>
-            <a href="orders.html" class="active">📦 Orders</a>
-            <a href="customers.html">👥 Customers</a>
-            <a href="locations.html">📍 Delivery Locations</a>
-            <a href="coupons.html">🎟️ Promo Codes</a>
-            <a href="notifications.html">📢 News & Notifications</a>
-            <a href="recipes.html">🍳 Recipes</a>
-            <a href="/" target="_blank">🌐 View Website ↗</a>
-
-            <div style="margin-top: auto; padding: 20px 0;">
-                <button class="logout-btn" style="width:100%" onclick="logout()">Logout</button>
-            </div>
-        </aside>
+    <div class="admin-container">
+        <header class="topbar" id="adminTopbar"></header>
 
         <main class="admin-main">
-            <div class="admin-header">
+            <!-- Header -->
+            <div class="page-header">
                 <div>
-                    <h1 style="font-family:'Playfair Display',serif; font-size: 26px;">Orders &amp; Payment Verification
-                    </h1>
-                    <p>Track real-time orders, verify UPI transaction IDs &amp; payment screenshot proofs, and dispatch
-                        deliveries.</p>
+                    <h1 class="page-title">Orders &amp; Dispatch Management</h1>
+                    <p class="page-subtitle">Verify customer UPI payments, manage delivery partner dispatch, and track doorstep fulfillment in real time.</p>
                 </div>
-                <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-                    <div style="display:inline-flex; align-items:center; gap:8px; background:white; padding:6px 14px; border-radius:20px; border:1.5px solid #2d6a4f; box-shadow:0 2px 6px rgba(0,0,0,0.06);">
-                        <span style="font-size:12px; font-weight:700; color:#1b4332;">🏪 Pickup Orders Mode:</span>
-                        <input type="checkbox" id="pickupModeToggle" onchange="togglePickupMode(this.checked)" style="width:18px; height:18px; accent-color:#1b4332; cursor:pointer;">
-                        <span id="pickupModeLabel" style="font-size:11px; font-weight:800; color:#e74c3c;">OFF</span>
-                    </div>
-                    <span class="badge badge-active" id="pendingCountBadge">0 Pending</span>
-                    <button class="logout-btn" onclick="logout()">Logout</button>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="exportOrdersCSV()">
+                        📥 Export Orders CSV
+                    </button>
+                    <button class="btn btn-primary" onclick="loadOrders()">
+                        🔄 Refresh Live Orders
+                    </button>
                 </div>
             </div>
 
-            <div class="admin-panel">
-                <div
-                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                    <h2>Real-time Customer Orders (<span id="totalOrdersCount">0</span>)</h2>
-                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                        <select id="typeFilter" onchange="filterOrders()"
-                            style="padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px;">
-                            <option value="all">All Delivery Types</option>
-                            <option value="delivery">Home Delivery</option>
-                            <option value="pickup">Store Pickup Only</option>
-                        </select>
-                        <select id="statusFilter" onchange="filterOrders()"
-                            style="padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px;">
-                            <option value="all">All Statuses</option>
+            <!-- Orders Summary Metrics Grid -->
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Total Orders</span>
+                        <div class="stat-icon">📦</div>
+                    </div>
+                    <div class="stat-value" id="totalOrdersMetric">0</div>
+                    <div class="stat-meta"><span>All order history</span></div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Pending Orders</span>
+                        <div class="stat-icon" style="background:#FEF3C7; color:#B45309;">⏳</div>
+                    </div>
+                    <div class="stat-value" id="pendingOrdersMetric" style="color:#B45309;">0</div>
+                    <div class="stat-meta"><span>Needs dispatch / action</span></div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Out for Delivery</span>
+                        <div class="stat-icon" style="background:#E0F2FE; color:#0369A1;">🚚</div>
+                    </div>
+                    <div class="stat-value" id="inTransitMetric" style="color:#0369A1;">0</div>
+                    <div class="stat-meta"><span>Live with partners</span></div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Completed Deliveries</span>
+                        <div class="stat-icon" style="background:#E8F5E9; color:#1E6F43;">✓</div>
+                    </div>
+                    <div class="stat-value" id="deliveredMetric" style="color:#1E6F43;">0</div>
+                    <div class="stat-meta"><span class="stat-trend-up">100% Doorstep fulfilled</span></div>
+                </div>
+            </div>
+
+            <!-- Main Panel -->
+            <div class="panel-card">
+                <!-- Filters Bar -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <input type="text" id="orderSearch" placeholder="Search order ID, customer, UTR, phone..." onkeyup="filterOrders()" class="form-control" style="width:260px;">
+                        
+                        <select id="statusFilter" onchange="filterOrders()" class="form-select" style="width:160px;">
+                            <option value="">All Statuses</option>
                             <option value="pending">Pending</option>
                             <option value="processing">Processing</option>
-                            <option value="preparing">Preparing (Pickup)</option>
-                            <option value="ready_for_pickup">Ready for Pickup</option>
-                            <option value="collected">Collected</option>
-                            <option value="shipped">Shipped</option>
+                            <option value="in_transit">In Transit / Shipped</option>
                             <option value="delivered">Delivered</option>
                             <option value="cancelled">Cancelled</option>
                         </select>
-                        <input type="text" id="orderSearch" placeholder="Search customer, phone, or UTR..."
-                            onkeyup="filterOrders()"
-                            style="padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px; width: 220px;">
+
+                        <select id="paymentFilter" onchange="filterOrders()" class="form-select" style="width:170px;">
+                            <option value="">All Payments</option>
+                            <option value="verified">Verified</option>
+                            <option value="pending">Verification Pending</option>
+                        </select>
+
+                        <select id="typeFilter" onchange="filterOrders()" class="form-select" style="width:160px;">
+                            <option value="">All Types</option>
+                            <option value="delivery">Doorstep Delivery</option>
+                            <option value="pickup">Store Pickup</option>
+                        </select>
+                    </div>
+
+                    <div style="font-size:12px; color:var(--thulirva-text-muted);">
+                        Showing <strong id="visibleOrdersCount">0</strong> orders
                     </div>
                 </div>
 
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Order #</th>
-                            <th>Date &amp; Time</th>
-                            <th>Customer</th>
-                            <th>Delivery Address</th>
-                            <th>Items</th>
-                            <th>Payment &amp; Transaction ID</th>
-                            <th>Payment Proof</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ordersTable">
-                        <!-- Dynamic Orders -->
-                    </tbody>
-                </table>
+                <!-- Orders Table -->
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Date &amp; Time</th>
+                                <th>Customer Details</th>
+                                <th>Delivery Address</th>
+                                <th>Items Summary</th>
+                                <th>Payment &amp; UTR</th>
+                                <th>Proof</th>
+                                <th>Total</th>
+                                <th>Partner</th>
+                                <th>Delivery Status</th>
+                                <th style="text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTable">
+                            <!-- Injected by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Footer -->
+                <div class="pagination-wrap">
+                    <div>Page <strong id="currentPageNum">1</strong> of <strong id="totalPagesNum">1</strong></div>
+                    <div class="pagination-controls">
+                        <button class="page-btn" id="prevPageBtn" onclick="changeOrderPage(-1)">&larr; Previous</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn" id="nextPageBtn" onclick="changeOrderPage(1)">Next &rarr;</button>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
+</div>
 
-    <!-- PROOF LIGHTBOX MODAL -->
-    <div class="proof-modal-overlay" id="proofModal" onclick="if(event.target === this) closeProofModal()">
-        <div class="proof-modal-content">
-            <div
-                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid #eee; padding-bottom:10px;">
-                <h3 style="margin:0; font-family:'Playfair Display',serif; color:var(--green); font-size:18px;">
-                    🔍 Payment Screenshot Proof
-                </h3>
-                <button onclick="closeProofModal()"
-                    style="background:none; border:none; font-size:22px; cursor:pointer; color:#666;">✕</button>
+<!-- PAYMENT PROOF PREVIEW MODAL -->
+<div class="modal-overlay" id="proofModal">
+    <div class="modal-content" style="max-width: 580px;">
+        <div class="modal-header">
+            <h3 class="modal-title">🖼️ UPI Payment Proof Verification</h3>
+            <button class="modal-close-btn" onclick="closeProofModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div id="proofModalInfo" style="margin-bottom:16px; font-size:13px; line-height:1.5;"></div>
+            <div style="text-align:center; background:#FAF8F2; padding:12px; border-radius:var(--radius-md); border:1px solid var(--thulirva-border); max-height:360px; overflow-y:auto;">
+                <img id="proofModalImg" src="" alt="Payment Screenshot Proof" style="max-width:100%; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
             </div>
-            <div id="proofModalInfo"
-                style="font-size:13px; margin-bottom:14px; background:#f4f7f2; padding:10px 14px; border-radius:8px; line-height:1.5;">
+        </div>
+        <div class="modal-footer" style="justify-content:space-between;">
+            <div>
+                <a id="proofDownloadLink" href="#" target="_blank" class="btn btn-secondary btn-sm" download>⬇ Open Full Image</a>
             </div>
-            <div style="text-align:center; background:#111; padding:10px; border-radius:8px; margin-bottom:16px;">
-                <img id="proofModalImg" src="" alt="Payment Proof"
-                    style="max-width:100%; max-height:480px; object-fit:contain; border-radius:4px;">
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:14px; border-top:1px solid #eee; padding-top:14px;">
-                <div style="display:flex; gap:8px;">
-                    <button id="modalVerifyBtn" onclick="verifyCurrentProof()" style="background:#1b4332; color:white; border:none; padding:9px 16px; border-radius:6px; font-weight:700; cursor:pointer;">
-                        ✓ Verify Payment
-                    </button>
-                    <button id="modalRejectBtn" onclick="rejectCurrentProof()" style="background:#c62828; color:white; border:none; padding:9px 16px; border-radius:6px; font-weight:700; cursor:pointer;">
-                        ✕ Reject Payment
-                    </button>
-                </div>
-                <div style="display:flex; gap:8px;">
-                    <a id="proofDownloadLink" href="#" target="_blank" download="payment_proof.jpg" class="action-btn"
-                        style="background:#2E7D32; color:white; text-decoration:none; padding:8px 16px; font-size:12px; border-radius:6px; font-weight:700;">
-                        ⬇ Open Full Size / Download
-                    </a>
-                    <button onclick="closeProofModal()" class="action-btn"
-                        style="background:#ddd; color:#333; padding:8px 16px; font-size:12px; border-radius:6px;">Close</button>
-                </div>
+            <div style="display:flex; gap:10px;">
+                <button type="button" class="btn btn-danger btn-sm" onclick="rejectCurrentProof()">Reject Payment</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="verifyCurrentProof()">✓ Verify Payment</button>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        const token = localStorage.getItem("thulirva_admin_token");
-        let allOrders = [];
+<!-- ASSIGN PARTNER MODAL -->
+<div class="modal-overlay" id="assignPartnerModal">
+    <div class="modal-content" style="max-width: 480px;">
+        <div class="modal-header">
+            <h3 class="modal-title">🚚 Assign Delivery Partner</h3>
+            <button class="modal-close-btn" onclick="closeAssignModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="assignTargetOrderId">
+            <p style="font-size:13px; color:var(--thulirva-text-muted); margin-bottom:16px;">
+                Select an active delivery partner for Order <strong id="assignOrderNumText">#0000</strong>.
+            </p>
+            <div class="form-group">
+                <label class="form-label">Available Delivery Partners (Padur Region)</label>
+                <select id="partnerSelectDropdown" class="form-select">
+                    <!-- Populated dynamically -->
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeAssignModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="submitPartnerAssignment()">Dispatch Order</button>
+        </div>
+    </div>
+</div>
 
-        async function loadOrders() {
-            try {
-                const res = await fetch("/api/orders/admin/all", {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                const data = await res.json();
-                allOrders = data.orders || [];
-            } catch {
-                allOrders = [];
-            }
+<script src="js/admin-shell.js"></script>
+<script>
+initAdminShell({
+    activePage: "orders",
+    breadcrumbs: [{ label: "Orders & Dispatch" }]
+});
 
-            // Merge from local storage orders if placed in current browser
-            const localOrders = JSON.parse(localStorage.getItem('thulirva_my_orders') || '[]');
-            localOrders.forEach(lo => {
-                if (!allOrders.some(o => o.id == lo.id)) {
-                    allOrders.unshift(lo);
-                }
+const token = localStorage.getItem("thulirva_admin_token");
+let allOrders = [];
+let filteredOrders = [];
+let deliveryPartners = [];
+let activeModalOrderId = null;
+let currentPage = 1;
+const pageSize = 12;
+
+async function loadOrders() {
+    try {
+        const res = await fetch("/api/v1/orders", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            allOrders = data.orders || [];
+        } else {
+            // Fallback to legacy
+            const legRes = await fetch("/api/orders/admin/all", {
+                headers: { Authorization: `Bearer ${token}` }
             });
+            if (legRes.ok) {
+                const lData = await legRes.json();
+                allOrders = lData.orders || [];
+            }
+        }
+    } catch (_) {
+        allOrders = [];
+    }
 
-            renderOrders(allOrders);
+    calculateMetrics();
+    filterOrders();
+    loadPartnersList();
+}
+
+async function loadPartnersList() {
+    try {
+        const res = await fetch("/api/v1/partners", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            deliveryPartners = data.partners || [];
+        }
+    } catch (_) {}
+}
+
+function calculateMetrics() {
+    document.getElementById("totalOrdersMetric").textContent = allOrders.length;
+    const pending = allOrders.filter(o => o.order_status === 'pending');
+    document.getElementById("pendingOrdersMetric").textContent = pending.length;
+    const inTransit = allOrders.filter(o => o.order_status === 'in_transit' || o.order_status === 'shipped' || o.order_status === 'out_for_delivery');
+    document.getElementById("inTransitMetric").textContent = inTransit.length;
+    const delivered = allOrders.filter(o => o.order_status === 'delivered');
+    document.getElementById("deliveredMetric").textContent = delivered.length;
+}
+
+function filterOrders() {
+    const q = (document.getElementById("orderSearch").value || "").trim().toLowerCase();
+    const status = document.getElementById("statusFilter").value;
+    const payment = document.getElementById("paymentFilter").value;
+    const type = document.getElementById("typeFilter").value;
+
+    filteredOrders = allOrders.filter(o => {
+        const idMatch = String(o.id || o.order_number || "").toLowerCase().includes(q);
+        const nameMatch = (o.customer_name || "").toLowerCase().includes(q);
+        const phoneMatch = (o.customer_phone || "").includes(q);
+        const utrMatch = String(o.transaction_id || o.utr || "").toLowerCase().includes(q);
+        const matchesQ = !q || idMatch || nameMatch || phoneMatch || utrMatch;
+
+        const matchesStatus = !status || (o.order_status || "").toLowerCase() === status.toLowerCase();
+        
+        let matchesPayment = true;
+        if (payment === "verified") matchesPayment = o.payment_status === "verified";
+        else if (payment === "pending") matchesPayment = o.payment_status !== "verified";
+
+        let matchesType = true;
+        const isPickup = o.order_type === 'pickup' || o.is_pickup || (o.address && o.address.toLowerCase().includes('pickup'));
+        if (type === "pickup") matchesType = isPickup;
+        else if (type === "delivery") matchesType = !isPickup;
+
+        return matchesQ && matchesStatus && matchesPayment && matchesType;
+    });
+
+    currentPage = 1;
+    renderOrdersTable();
+}
+
+function renderOrdersTable() {
+    const table = document.getElementById("ordersTable");
+    document.getElementById("visibleOrdersCount").textContent = filteredOrders.length;
+
+    const totalPages = Math.ceil(filteredOrders.length / pageSize) || 1;
+    document.getElementById("currentPageNum").textContent = currentPage;
+    document.getElementById("totalPagesNum").textContent = totalPages;
+    document.getElementById("prevPageBtn").disabled = currentPage <= 1;
+    document.getElementById("nextPageBtn").disabled = currentPage >= totalPages;
+
+    const start = (currentPage - 1) * pageSize;
+    const paged = filteredOrders.slice(start, start + pageSize);
+
+    table.innerHTML = "";
+    if (!paged.length) {
+        table.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:36px; color:var(--thulirva-text-muted);">No orders found matching your filters.</td></tr>`;
+        return;
+    }
+
+    paged.forEach((o, idx) => {
+        const row = document.createElement("tr");
+        const badgeClass = o.order_status === 'pending' ? 'badge-pending' : (o.order_status === 'shipped' || o.order_status === 'in_transit' ? 'badge-shipped' : (o.order_status === 'cancelled' ? 'badge-cancelled' : 'badge-delivered'));
+
+        let itemsDesc = "";
+        if (Array.isArray(o.items) && o.items.length) {
+            itemsDesc = o.items.map(i => `${i.name || i.product_name || 'Item'} (${i.quantity || 1}x)`).join(", ");
+        } else {
+            itemsDesc = o.items_summary || "Farm Fresh Dairy Pack";
         }
 
-        let currentRenderedOrders = [];
+        const txnId = o.transaction_id || o.transactionId || o.utr || '';
+        const proofImg = o.payment_proof || o.paymentProof || o.proof || '';
+        const totalAmt = o.total !== undefined ? o.total : (o.total_price || 0);
 
-        function renderOrders(orders) {
-            currentRenderedOrders = orders;
-            const table = document.getElementById("ordersTable");
-            document.getElementById("totalOrdersCount").textContent = orders.length;
-            const pendingCount = orders.filter(o => o.order_status === 'pending').length;
-            document.getElementById("pendingCountBadge").textContent = `${pendingCount} Pending`;
+        const utrHtml = txnId ? `<div class="font-mono" style="font-size:11px; background:#EAF2E4; color:var(--thulirva-forest); padding:2px 6px; border-radius:4px; margin-top:2px;">UTR: ${txnId}</div>` : `<span style="font-size:11px; color:var(--thulirva-text-muted);">Unverified</span>`;
+        const proofHtml = proofImg ? `
+            <img src="${proofImg}" class="proof-thumb" onclick="openProofModal('${o.id}')" title="Click to view full screenshot proof">
+        ` : `<span style="color:var(--thulirva-text-muted); font-size:11px;">None</span>`;
 
-            table.innerHTML = "";
-            if (!orders.length) {
-                table.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:36px; color:var(--muted); font-size:14px;">No customer orders found yet. Live orders will show here in real time.</td></tr>`;
-                return;
-            }
+        const partnerText = o.partner_name || o.partner_id ? `<span style="font-weight:600; color:var(--thulirva-forest);">${o.partner_name || o.partner_id}</span>` : `<button class="btn btn-secondary btn-sm" onclick="openAssignModal('${o.id}', '${o.order_number || o.id}')">＋ Assign</button>`;
 
-            orders.forEach((o, idx) => {
-                const row = document.createElement("tr");
-                const badgeClass = o.order_status === 'pending' ? 'badge-pending' : (o.order_status === 'shipped' ? 'badge-shipped' : (o.order_status === 'cancelled' ? 'badge-cancelled' : 'badge-delivered'));
-
-                let itemsDesc = "";
-                if (Array.isArray(o.items) && o.items.length) {
-                    itemsDesc = o.items.map(i => `${i.name || i.product_name || i.title || 'Farm Item'} (${i.quantity || 1}x)`).join(", ");
-                } else {
-                    itemsDesc = o.items_summary || "Farm Fresh Dairy Pack";
-                }
-
-                const txnId = o.transaction_id || o.transactionId || o.utr || '';
-                const proofImg = o.payment_proof || o.paymentProof || o.proof || '';
-                const custName = o.customer_name || o.customerName || 'Customer';
-                const custPhone = o.customer_phone || o.customerPhone || '';
-                const custAddress = o.address || o.delivery_address || '';
-                const totalAmt = (o.total !== undefined && o.total !== null) ? o.total : ((o.total_price !== undefined && o.total_price !== null) ? o.total_price : (o.totalPrice || 0));
-                const uId = o.user_id || o.userId || '';
-
-                const utrText = txnId ? `<div style="margin-top:4px;"><span style="background:#eaf2e4; color:#1a4a2e; font-weight:700; font-size:11px; padding:2px 6px; border-radius:4px; border:1px solid #c8dbbf; font-family:monospace;">UTR: ${txnId}</span></div>` : '<div style="color:var(--muted); font-size:11px;">Pending verification</div>';
-                const proofHtml = proofImg ? `
-            <div style="display:flex; align-items:center; gap:6px;">
-                <img src="${proofImg}" class="proof-thumb" onclick="openProofModal(${idx})" title="Click to view full screenshot proof">
-                <button class="action-btn" onclick="openProofModal(${idx})" style="background:#1a4a2e; color:white; font-size:10.5px; padding:4px 8px; border-radius:4px; cursor:pointer;">🖼️ View Proof</button>
-            </div>
-        ` : `<span style="color:var(--muted); font-size:11.5px;">No file uploaded</span>`;
-
-                const userTag = uId ? `<span style="background:#e8f5e9; color:#2e7d32; font-size:10px; font-weight:700; padding:1px 6px; border-radius:4px; margin-left:4px;">#${String(uId).startsWith('USR-') ? uId : 'USR-' + uId}</span>` : '';
-
-                const isPickup = o.order_type === 'pickup' || o.is_pickup || (o.address && o.address.toLowerCase().includes('pickup'));
-                const typeBadge = isPickup 
-                    ? `<span style="background:#e8f5e9; color:#1b4332; border:1px solid #2d6a4f; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; display:inline-block; margin-top:3px;">🏪 STORE PICKUP</span>`
-                    : `<span style="background:#e3f2fd; color:#0d47a1; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; display:inline-block; margin-top:3px;">🚚 DELIVERY</span>`;
-
-                row.innerHTML = `
-            <td><strong>#${o.id}</strong></td>
-            <td><small style="color:var(--muted);">${o.created_at || "Recent"}</small></td>
+        row.innerHTML = `
+            <td><strong>#${o.id || o.order_number}</strong></td>
+            <td><small style="color:var(--thulirva-text-muted);">${(o.created_at || "Recent").slice(0, 16).replace("T", " ")}</small></td>
             <td>
-                <div style="font-weight:700; color:var(--green);">${custName} ${userTag}</div>
-                <small style="color:var(--muted);">${custPhone}</small>
-                <div>${typeBadge}</div>
+                <div style="font-weight:700; color:var(--thulirva-forest);">${o.customer_name || "Customer"}</div>
+                <small style="color:var(--thulirva-text-muted);">${o.customer_phone || ""}</small>
             </td>
-            <td style="max-width:180px; font-size:11px; line-height:1.4;">
-                ${custAddress}${o.city ? ', ' + o.city : ''}
-            </td>
-            <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${itemsDesc}">
-                ${itemsDesc}
-            </td>
+            <td style="max-width:180px; font-size:11.5px; line-height:1.35;">${o.address || ""}${o.city ? ', ' + o.city : ''}</td>
+            <td style="max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${itemsDesc}">${itemsDesc}</td>
             <td>
-                <div style="font-weight:600; font-size:12px;">${o.payment_method || 'UPI Payment'}</div>
-                ${utrText}
+                <div style="font-size:11.5px; font-weight:600;">${o.payment_method || 'UPI'}</div>
+                ${utrHtml}
             </td>
             <td>${proofHtml}</td>
-            <td>
-                <strong>₹${totalAmt}</strong>
-                ${o.promo_code ? `<div style="margin-top:3px;"><span style="background:#eaf2e4; color:#2e7d32; font-size:10.5px; font-weight:700; padding:1px 5px; border-radius:3px; border:1px solid #c8dbbf;">🎟️ ${o.promo_code} (-₹${o.discount_amount || 0})</span></div>` : ''}
-            </td>
-            <td><span class="badge ${badgeClass}" id="badge-${o.id}">${o.order_status}</span></td>
-            <td>
-                <select onchange="updateStatus(${o.id}, this.value)" style="padding:4px 8px; border:1px solid var(--border); border-radius:4px; font-size:11.5px; font-weight:600;">
+            <td><strong>₹${totalAmt}</strong></td>
+            <td>${partnerText}</td>
+            <td><span class="badge ${badgeClass}">${o.order_status}</span></td>
+            <td style="text-align:right;">
+                <select onchange="updateOrderStatus('${o.id}', this.value)" class="form-select" style="padding:4px 8px; font-size:11px; width:auto; display:inline-block;">
                     <option value="pending" ${o.order_status === 'pending' ? 'selected' : ''}>Pending</option>
-                    <option value="processing" ${o.order_status === 'processing' ? 'selected' : ''}>Processing</option>
-                    <option value="preparing" ${o.order_status === 'preparing' ? 'selected' : ''}>Preparing (Pickup)</option>
-                    <option value="ready_for_pickup" ${o.order_status === 'ready_for_pickup' ? 'selected' : ''}>Ready for Pickup</option>
-                    <option value="collected" ${o.order_status === 'collected' ? 'selected' : ''}>Collected</option>
-                    <option value="shipped" ${o.order_status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                    <option value="in_transit" ${o.order_status === 'in_transit' || o.order_status === 'shipped' ? 'selected' : ''}>In Transit</option>
                     <option value="delivered" ${o.order_status === 'delivered' ? 'selected' : ''}>Delivered</option>
                     <option value="cancelled" ${o.order_status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
                 </select>
             </td>
         `;
-                table.appendChild(row);
-            });
+        table.appendChild(row);
+    });
+}
+
+function changeOrderPage(delta) {
+    currentPage += delta;
+    renderOrdersTable();
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+    try {
+        const res = await fetch(`/api/v1/orders/${orderId}/status`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Order #${orderId} marked as ${newStatus}.`);
+            loadOrders();
+        } else {
+            showToast(data.message || "Failed to update status", "error");
         }
+    } catch (e) {
+        showToast("Error updating order: " + e.message, "error");
+    }
+}
 
-        let activeModalOrderId = null;
+function openProofModal(orderId) {
+    const o = allOrders.find(ord => ord.id == orderId || ord.order_number == orderId);
+    if (!o) return;
+    activeModalOrderId = o.id;
 
-        function openProofModal(idx) {
-            const o = currentRenderedOrders[idx];
-            if (!o) return;
-            activeModalOrderId = o.id;
-            const proofImg = o.payment_proof || o.paymentProof || o.proof || '';
-            const txnId = o.transaction_id || o.transactionId || o.utr || 'N/A';
-            const custName = o.customer_name || o.customerName || 'Customer';
-            const uId = o.user_id || o.userId || '';
-            const totalAmt = (o.total !== undefined && o.total !== null) ? o.total : ((o.total_price !== undefined && o.total_price !== null) ? o.total_price : (o.totalPrice || 0));
+    const proofImg = o.payment_proof || o.paymentProof || o.proof || '';
+    const txnId = o.transaction_id || o.transactionId || o.utr || 'N/A';
+    const totalAmt = o.total !== undefined ? o.total : (o.total_price || 0);
 
-            const imgEl = document.getElementById("proofModalImg");
-            const linkEl = document.getElementById("proofDownloadLink");
-            if (proofImg) {
-                imgEl.src = proofImg;
-                imgEl.style.display = "block";
-                linkEl.href = proofImg;
-                linkEl.style.display = "inline-block";
-            } else {
-                imgEl.style.display = "none";
-                linkEl.style.display = "none";
-            }
+    const imgEl = document.getElementById("proofModalImg");
+    const linkEl = document.getElementById("proofDownloadLink");
+    if (proofImg) {
+        imgEl.src = proofImg;
+        imgEl.style.display = "block";
+        linkEl.href = proofImg;
+        linkEl.style.display = "inline-block";
+    } else {
+        imgEl.style.display = "none";
+        linkEl.style.display = "none";
+    }
 
-            const userTag = uId ? `(#${String(uId).startsWith('USR-') ? uId : 'USR-' + uId})` : '';
-            const promoLine = o.promo_code ? `<div><strong>Promo Code Applied:</strong> <span style="background:#eaf2e4; color:#2e7d32; font-weight:700; padding:2px 8px; border-radius:4px; font-family:monospace;">🎟️ ${o.promo_code}</span> (Saved ₹${o.discount_amount || 0})</div>` : '';
-            document.getElementById("proofModalInfo").innerHTML = `
-        <div><strong>Order ID:</strong> #${o.id} &bull; <strong>Customer:</strong> ${custName} ${userTag}</div>
-        <div><strong>Transaction ID / UTR:</strong> <span style="color:#1a4a2e; font-weight:700; font-family:monospace; font-size:14px; background:#e8f5e9; padding:2px 8px; border-radius:4px;">${txnId}</span></div>
-        <div><strong>Payment Status:</strong> <span style="font-weight:700; color:${o.payment_status === 'verified' ? '#2e7d32' : (o.payment_status === 'rejected' ? '#c62828' : '#e65100')}">${o.payment_status || 'Verification Pending'}</span></div>
-        ${promoLine}
-        <div><strong>Amount Paid:</strong> ₹${totalAmt} &bull; <strong>Paid to UPI ID:</strong> <span style="font-family:monospace; font-weight:600;">7904880944@superyes</span></div>
-        ${!proofImg ? '<div style="color:#c62828; margin-top:6px; font-weight:600;">⚠️ No screenshot file was attached for this order.</div>' : ''}
+    document.getElementById("proofModalInfo").innerHTML = `
+        <div><strong>Order ID:</strong> #${o.id || o.order_number} &bull; <strong>Customer:</strong> ${o.customer_name || 'Customer'}</div>
+        <div><strong>UTR / Ref:</strong> <span class="font-mono" style="color:var(--thulirva-forest); font-weight:700; background:#E8F5E9; padding:2px 6px; border-radius:4px;">${txnId}</span></div>
+        <div><strong>Amount:</strong> ₹${totalAmt} &bull; <strong>UPI Merchant:</strong> 7904880944@superyes</div>
+        <div><strong>Payment Status:</strong> <span class="badge ${o.payment_status === 'verified' ? 'badge-active' : 'badge-pending'}">${o.payment_status || 'Pending Verification'}</span></div>
     `;
-            document.getElementById("proofModal").classList.add("active");
+
+    document.getElementById("proofModal").classList.add("active");
+}
+
+function closeProofModal() {
+    document.getElementById("proofModal").classList.remove("active");
+}
+
+async function verifyCurrentProof() {
+    if (!activeModalOrderId) return;
+    try {
+        const res = await fetch(`/api/orders/${activeModalOrderId}/verify-payment`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ verified_by: "Admin" })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Payment for Order #${activeModalOrderId} verified!`);
+            closeProofModal();
+            loadOrders();
+        } else {
+            showToast(data.message || "Failed to verify", "error");
         }
+    } catch (e) {
+        showToast("Error: " + e.message, "error");
+    }
+}
 
-        async function safeApiCall(url, method, body) {
-            let res = await fetch(url, {
-                method: method,
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify(body)
-            });
-
-            // Try fallback POST if PUT method not supported by reverse proxy
-            if ((res.status === 404 || res.status === 405) && method === "PUT") {
-                res = await fetch(url, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`
-                    },
-                    body: JSON.stringify(body)
-                });
-            }
-
-            const contentType = res.headers.get("content-type") || "";
-            if (contentType.includes("application/json")) {
-                return await res.json();
-            } else {
-                const text = await res.text();
-                if (res.ok) {
-                    return { success: true };
-                }
-                throw new Error(text.slice(0, 100) || `Server error (${res.status})`);
-            }
+async function rejectCurrentProof() {
+    if (!activeModalOrderId) return;
+    const reason = prompt("Enter payment rejection reason:", "Invalid UTR / Payment proof mismatch");
+    if (!reason) return;
+    try {
+        const res = await fetch(`/api/orders/${activeModalOrderId}/reject-payment`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ reason })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Order #${activeModalOrderId} payment rejected.`, "info");
+            closeProofModal();
+            loadOrders();
         }
+    } catch (e) {
+        showToast("Error: " + e.message, "error");
+    }
+}
 
-        async function verifyCurrentProof() {
-            if (!activeModalOrderId) return;
-            if (!confirm(`Verify payment for Order #${activeModalOrderId}?`)) return;
-            try {
-                const data = await safeApiCall(`/api/orders/${activeModalOrderId}/verify-payment`, "PUT", { verified_by: "Admin" });
-                if (data.success) {
-                    alert(`✓ Payment for Order #${activeModalOrderId} verified successfully!`);
-                    closeProofModal();
-                    loadOrders();
-                } else {
-                    alert(`Error: ${data.message || 'Failed to verify'}`);
-                }
-            } catch (e) {
-                alert(`Error: ${e.message}`);
-            }
+function openAssignModal(orderId, orderNum) {
+    document.getElementById("assignTargetOrderId").value = orderId;
+    document.getElementById("assignOrderNumText").textContent = `#${orderNum}`;
+    const select = document.getElementById("partnerSelectDropdown");
+    select.innerHTML = "";
+
+    if (!deliveryPartners.length) {
+        select.innerHTML = `<option value="">No registered delivery partners</option>`;
+    } else {
+        deliveryPartners.forEach(p => {
+            select.innerHTML += `
+                <option value="${p.partner_id}">
+                    ${p.name} (${p.partner_id}) • ${p.assigned_area || 'Padur'} [${p.is_online ? 'ONLINE' : 'OFFLINE'}]
+                </option>
+            `;
+        });
+    }
+
+    document.getElementById("assignPartnerModal").classList.add("active");
+}
+
+function closeAssignModal() {
+    document.getElementById("assignPartnerModal").classList.remove("active");
+}
+
+async function submitPartnerAssignment() {
+    const orderId = document.getElementById("assignTargetOrderId").value;
+    const partnerId = document.getElementById("partnerSelectDropdown").value;
+    if (!partnerId) {
+        showToast("Please select a partner.", "error");
+        return;
+    }
+
+    try {
+        const res = await fetch("/api/v1/assignments/manual", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ order_id: orderId, partner_id: partnerId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Order #${orderId} assigned to ${partnerId}.`);
+            closeAssignModal();
+            loadOrders();
+        } else {
+            showToast(data.message || "Failed to assign partner", "error");
         }
+    } catch (e) {
+        showToast("Error assigning: " + e.message, "error");
+    }
+}
 
-        async function rejectCurrentProof() {
-            if (!activeModalOrderId) return;
-            const reason = prompt("Enter internal reason for payment rejection:", "UTR reference mismatch / Invalid payment proof");
-            if (!reason) return;
-            try {
-                const data = await safeApiCall(`/api/orders/${activeModalOrderId}/reject-payment`, "PUT", { reason, rejection_reason: reason });
-                if (data.success) {
-                    alert(`Order #${activeModalOrderId} payment rejected.`);
-                    closeProofModal();
-                    loadOrders();
-                } else {
-                    alert(`Error: ${data.message || 'Failed to reject'}`);
-                }
-            } catch (e) {
-                alert(`Error: ${e.message}`);
-            }
-        }
+function exportOrdersCSV() {
+    let csv = "Order ID,Date,Customer,Phone,Address,Items,Total,Status,Payment\n";
+    allOrders.forEach(o => {
+        csv += `"${o.id || o.order_number}","${o.created_at || ''}","${o.customer_name || ''}","${o.customer_phone || ''}","${(o.address || '').replace(/"/g, '""')}","${(o.items_summary || '').replace(/"/g, '""')}","${o.total || 0}","${o.order_status}","${o.payment_status || 'Pending'}"\n`;
+    });
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `thulirva_orders_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+}
 
-        function closeProofModal() {
-            document.getElementById("proofModal").classList.remove("active");
-            activeModalOrderId = null;
-        }
-
-        async function cancelOrder(orderId) {
-            const reason = prompt(`Enter reason for cancelling Order #${orderId}:`, "Cancelled by Admin / Out of Stock");
-            if (!reason) return;
-            try {
-                const data = await safeApiCall(`/api/orders/${orderId}/cancel`, "PUT", { reason, cancellation_reason: reason });
-                if (data.success) {
-                    alert(`Order #${orderId} has been cancelled and product stock restored.`);
-                    loadOrders();
-                } else {
-                    alert(`Error: ${data.message || 'Failed to cancel'}`);
-                }
-            } catch (e) {
-                alert(`Error: ${e.message}`);
-            }
-        }
-
-        async function updateStatus(orderId, newStatus) {
-            if (newStatus === "cancelled") {
-                return cancelOrder(orderId);
-            }
-            try {
-                await safeApiCall(`/api/orders/${orderId}/status`, "PUT", { status: newStatus, order_status: newStatus });
-            } catch { }
-
-            // Update in-memory allOrders
-            const order = allOrders.find(o => o.id == orderId);
-            if (order) order.order_status = newStatus;
-
-            // Update in local storage
-            try {
-                const localOrders = JSON.parse(localStorage.getItem('thulirva_my_orders') || '[]');
-                const match = localOrders.find(lo => lo.id == orderId);
-                if (match) {
-                    match.order_status = newStatus;
-                    localStorage.setItem('thulirva_my_orders', JSON.stringify(localOrders));
-                }
-            } catch { }
-
-            const badge = document.getElementById(`badge-${orderId}`);
-            if (badge) {
-                badge.className = `badge badge-${newStatus}`;
-                badge.textContent = newStatus;
-            }
-        }
-
-        function filterOrders() {
-            const type = document.getElementById("typeFilter") ? document.getElementById("typeFilter").value.toLowerCase() : "all";
-            const status = document.getElementById("statusFilter").value.toLowerCase();
-            const q = document.getElementById("orderSearch").value.toLowerCase();
-
-            let filtered = allOrders;
-            if (type === "pickup") {
-                filtered = filtered.filter(o => o.order_type === 'pickup' || o.is_pickup || (o.address && o.address.toLowerCase().includes('pickup')));
-            } else if (type === "delivery") {
-                filtered = filtered.filter(o => !(o.order_type === 'pickup' || o.is_pickup || (o.address && o.address.toLowerCase().includes('pickup'))));
-            }
-            if (status !== "all") {
-                filtered = filtered.filter(o => (o.order_status || "").toLowerCase() === status);
-            }
-            if (q) {
-                filtered = filtered.filter(o =>
-                    (o.customer_name && o.customer_name.toLowerCase().includes(q)) ||
-                    (o.customer_phone && o.customer_phone.includes(q)) ||
-                    (o.transaction_id && o.transaction_id.toLowerCase().includes(q)) ||
-                    String(o.id).includes(q)
-                );
-            }
-            renderOrders(filtered);
-        }
-
-        async function loadPickupMode() {
-            try {
-                const res = await fetch('/api/settings/store');
-                const data = await res.json();
-                if (data.success && data.settings) {
-                    const isPickup = Boolean(data.settings.pickup_mode);
-                    const toggle = document.getElementById('pickupModeToggle');
-                    const label = document.getElementById('pickupModeLabel');
-                    if (toggle) toggle.checked = isPickup;
-                    if (label) {
-                        label.textContent = isPickup ? 'ON (Pickup Only)' : 'OFF (Normal)';
-                        label.style.color = isPickup ? '#2e7d32' : '#e74c3c';
-                    }
-                }
-            } catch (e) { }
-        }
-
-        async function togglePickupMode(checked) {
-            try {
-                const label = document.getElementById('pickupModeLabel');
-                if (label) {
-                    label.textContent = checked ? 'ON (Pickup Only)' : 'OFF (Normal)';
-                    label.style.color = checked ? '#2e7d32' : '#e74c3c';
-                }
-                const res = await fetch('/api/settings/store', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ pickup_mode: checked })
-                });
-                const data = await res.json();
-                alert(data.message || (checked ? 'Store Pickup Mode ACTIVATED' : 'Store Pickup Mode DEACTIVATED'));
-            } catch (e) {
-                alert('Failed to update pickup mode: ' + e.message);
-            }
-        }
-
-        // Initialize pickup mode
-        loadPickupMode();
-
-        function logout() {
-            localStorage.removeItem("thulirva_admin_token");
-            window.location.href = "index.html";
-        }
-
-        loadOrders();
-    </script>
+loadOrders();
+</script>
 </body>
-
 </html>

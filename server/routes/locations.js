@@ -14,11 +14,25 @@ let MOCK_LOCATIONS = [
     { id: 8, name: "Koyambedu", pincode: "600107", status: "active" },
     { id: 9, name: "KK Nagar", pincode: "600078", status: "active" },
     { id: 10, name: "Alapakkam", pincode: "600116", status: "active" },
-    { id: 11, name: "Maduravoyal", pincode: "600095", status: "active" }
+    { id: 11, name: "Maduravoyal", pincode: "600095", status: "active" },
+    { id: 12, name: "Anna Nagar", pincode: "600040", status: "active" },
+    { id: 13, name: "T Nagar", pincode: "600017", status: "active" },
+    { id: 14, name: "Velachery", pincode: "600042", status: "active" },
+    { id: 15, name: "Adyar", pincode: "600020", status: "active" }
 ];
 
 /* GET ALL DELIVERY LOCATIONS */
 router.get("/", async (req, res) => {
+    try {
+        // First try central serviceable_areas
+        const saResult = await pool.query(
+            "SELECT id, area_name as name, pincode, CASE WHEN is_active THEN 'active' ELSE 'inactive' END as status FROM serviceable_areas ORDER BY id ASC"
+        );
+        if (saResult.rows && saResult.rows.length > 0) {
+            return res.json({ success: true, locations: saResult.rows });
+        }
+    } catch {}
+
     try {
         const result = await pool.query(
             "SELECT * FROM delivery_locations ORDER BY name ASC"
