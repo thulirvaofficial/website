@@ -373,6 +373,61 @@ window.renderErrorState = function(container, { title, message, onRetry } = {}) 
 };
 
 /**
+ * Safe HTML error extractor to prevent "Unexpected token '<'"
+ */
+function extractHtmlError(htmlText, status, statusText) {
+    if (!htmlText || typeof htmlText !== "string") {
+        return `Server returned HTTP ${status} (${statusText || "Error"})`;
+    }
+    const titleMatch = htmlText.match(/<title[^>]*>([^<]+)<\/title>/i);
+    if (titleMatch && titleMatch[1]) {
+        return `Server returned HTTP ${status}: ${titleMatch[1].trim()}`;
+    }
+    const h1Match = htmlText.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+    if (h1Match && h1Match[1]) {
+        return `Server returned HTTP ${status}: ${h1Match[1].trim()}`;
+    }
+    if (status === 502) return "Backend service temporarily unavailable (502 Bad Gateway). Please retry shortly.";
+    if (status === 504) return "Backend gateway timed out (HTTP 504). Please retry shortly.";
+    if (status === 404) return `API endpoint not found (HTTP 404).`;
+    return `Server returned HTTP ${status} (${statusText || "Unexpected response"}).`;
+}
+
+/**
+ * Universal safe response wrapper that intercepts HTML error pages
+ */
+function wrapSafeResponse(res) {
+    const originalJson = res.json.bind(res);
+    res.json = async function() {
+        const ct = (res.headers.get("content-type") || "").toLowerCase();
+        if (!ct.includes("application/json")) {
+            const rawText = await res.text();
+            const msg = extractHtmlError(rawText, res.status, res.statusText);
+            const err = new Error(msg);
+            err.status = res.status;
+            err.isHtml = true;
+            err.rawText = rawText;
+            throw err;
+        }
+        return await originalJson();
+    };
+    return res;
+}
+
+/**
+ * Global fetch wrapper: Automatically protects all direct fetch calls
+ * from throwing SyntaxError: Unexpected token '<' when receiving HTML.
+ */
+if (typeof window !== "undefined" && window.fetch && !window._thulirvaFetchWrapped) {
+    const _nativeFetch = window.fetch;
+    window._thulirvaFetchWrapped = true;
+    window.fetch = async function(...args) {
+        const res = await _nativeFetch.apply(this, args);
+        return wrapSafeResponse(res);
+    };
+}
+
+/**
  * Centralized Authorized Fetch Client
  */
 window.apiFetch = async function(url, options = {}) {
@@ -387,16 +442,25 @@ window.apiFetch = async function(url, options = {}) {
 
     try {
         const res = await fetch(url, Object.assign({}, options, { headers }));
-        if (res.status === 401 && !window.location.pathname.endsWith("index.html")) {
+        if (res.status === 401 && !window.location.pathname.endsWith("index.html") && !window.location.pathname.endsWith("/admin/")) {
             localStorage.removeItem("thulirva_admin_token");
             window.location.href = "index.html";
             return null;
         }
-        return res;
+        return wrapSafeResponse(res);
     } catch (err) {
         console.error("apiFetch network failure:", err);
         throw err;
     }
+};
+
+/**
+ * Direct JSON fetch helper that returns parsed data directly
+ */
+window.apiFetchJson = async function(url, options = {}) {
+    const res = await window.apiFetch(url, options);
+    if (!res) return null;
+    return await res.json();
 };
 
 /**
