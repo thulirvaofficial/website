@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDqhJ1XV_YMFmlEAGYkBxnHhNPCnjGhO8U&libraries=geometry"></script>
     <style>
         .partner-avatar {
             width: 42px;
@@ -161,6 +163,11 @@
 
                             <button class="btn btn-secondary btn-icon" onclick="loadPartners()" title="Refresh Roster">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                            </button>
+
+                            <button class="btn btn-primary" onclick="openLiveFleetMapModal()" style="display:inline-flex; align-items:center; gap:6px;" title="Open Live Google Maps Fleet Tracking Dashboard">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+                                <span>Live Fleet Map</span>
                             </button>
                         </div>
                     </div>
@@ -338,6 +345,33 @@
                     <button type="submit" class="btn btn-primary" id="btnUpdatePartner">Save Changes</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Real-Time Google Maps Live Fleet Dashboard Modal -->
+<div class="modal-overlay" id="fleetMapModalOverlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div style="background:#fff; width:92%; max-width:1200px; border-radius:16px; overflow:hidden; box-shadow:0 24px 48px rgba(0,0,0,0.25); display:flex; flex-direction:column; max-height:92vh;">
+        <div style="padding:16px 24px; background:linear-gradient(135deg, #133E2B, #1B5E3C); color:#fff; display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:22px;">🛵</div>
+                <div>
+                    <h3 style="margin:0; font-size:18px; font-weight:700;">Live Google Maps Fleet Tracking Dashboard</h3>
+                    <div style="font-size:12px; opacity:0.85;">Worldwide Real-time GPS Telemetry & Active Delivery Routes</div>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:16px;">
+                <span id="fleetModalOnlineCount" class="badge" style="background:#2E7D32; color:#fff; padding:6px 12px; font-size:12px; font-weight:600;">0 Online Now</span>
+                <button onclick="closeLiveFleetMapModal()" style="background:rgba(255,255,255,0.2); border:none; color:#fff; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center;">&times;</button>
+            </div>
+        </div>
+        <div style="position:relative; width:100%; height:550px;">
+            <div id="fleetGoogleMapContainer" style="width:100%; height:100%;"></div>
+            <div id="fleetMapStatusCard" style="position:absolute; bottom:16px; left:16px; background:rgba(255,255,255,0.95); backdrop-filter:blur(8px); padding:12px 18px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.15); max-width:340px; font-size:12px; border-left:4px solid #00A859;">
+                <div style="font-weight:700; color:#133E2B; margin-bottom:4px;">🌾 Thulirva Central Dairy Hub (Padur)</div>
+                <div style="color:#666;">Lat: 12.8025, Lng: 80.2233</div>
+                <div id="fleetLiveLastUpdate" style="color:#00A859; font-weight:600; margin-top:4px;">🟢 Real-time Socket.IO Synchronized</div>
+            </div>
         </div>
     </div>
 </div>
@@ -890,6 +924,200 @@ function exportPartnersCsv() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+/* ============================================================
+   GOOGLE MAPS LIVE FLEET DASHBOARD & SOCKET.IO SYNCHRONIZATION
+============================================================ */
+let fleetMap = null;
+let fleetMarkers = {};
+let hubMarker = null;
+let adminSocket = null;
+
+function initFleetSocket() {
+    if (adminSocket || typeof io === 'undefined') return;
+    try {
+        adminSocket = io({
+            transports: ['websocket', 'polling'],
+            reconnection: true
+        });
+
+        adminSocket.on('connect', () => {
+            console.log('[AdminFleetMap] Connected to Socket.IO');
+            adminSocket.emit('join:admin');
+        });
+
+        function handleFleetLocation(data) {
+            if (!data) return;
+            const partnerId = data.partnerId || data.partner_id;
+            const lat = parseFloat(data.latitude);
+            const lng = parseFloat(data.longitude);
+            if (!partnerId || isNaN(lat) || isNaN(lng)) return;
+
+            const p = allPartners.find(x => x.partner_id === partnerId);
+            if (p) {
+                p.current_latitude = lat;
+                p.current_longitude = lng;
+                p.is_online = true;
+                if (data.speed !== undefined) p.speed = data.speed;
+                if (data.heading !== undefined) p.heading = data.heading;
+            }
+
+            if (fleetMap && fleetMarkers[partnerId] && typeof google !== 'undefined' && google.maps) {
+                const newPos = new google.maps.LatLng(lat, lng);
+                fleetMarkers[partnerId].setPosition(newPos);
+            }
+
+            const updateEl = document.getElementById("fleetLiveLastUpdate");
+            if (updateEl) {
+                updateEl.textContent = `🟢 Updated ${partnerId} @ ${new Date().toLocaleTimeString()}`;
+            }
+        }
+
+        adminSocket.on('delivery:location_updated', handleFleetLocation);
+        adminSocket.on('delivery:location:update', handleFleetLocation);
+        adminSocket.on('fleet:location:updated', handleFleetLocation);
+        adminSocket.on('partner:location:updated', handleFleetLocation);
+    } catch (e) {
+        console.warn('[AdminFleetMap] Socket init error:', e);
+    }
+}
+
+function openLiveFleetMapModal() {
+    document.getElementById("fleetMapModalOverlay").style.display = "flex";
+    initFleetSocket();
+
+    const onlinePartners = allPartners.filter(p => p.is_online);
+    document.getElementById("fleetModalOnlineCount").textContent = `${onlinePartners.length} Online Now`;
+
+    setTimeout(() => {
+        initFleetGoogleMap();
+    }, 150);
+}
+
+function closeLiveFleetMapModal() {
+    document.getElementById("fleetMapModalOverlay").style.display = "none";
+}
+
+function initFleetGoogleMap() {
+    const container = document.getElementById("fleetGoogleMapContainer");
+    if (!container) return;
+
+    const padurHub = { lat: 12.8025, lng: 80.2233 };
+
+    if (!fleetMap && typeof google !== 'undefined' && google.maps) {
+        fleetMap = new google.maps.Map(container, {
+            center: padurHub,
+            zoom: 14,
+            mapTypeId: 'roadmap',
+            streetViewControl: false,
+            mapTypeControl: true,
+            fullscreenControl: true
+        });
+
+        hubMarker = new google.maps.Marker({
+            position: padurHub,
+            map: fleetMap,
+            title: "Thulirva Central Dairy Hub (Padur)",
+            icon: {
+                url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+                        <circle cx="24" cy="24" r="20" fill="#133E2B" stroke="#ffffff" stroke-width="3"/>
+                        <text x="24" y="30" font-size="18" text-anchor="middle" fill="#ffffff">🌾</text>
+                    </svg>
+                `),
+                scaledSize: new google.maps.Size(48, 48),
+                anchor: new google.maps.Point(24, 24)
+            }
+        });
+
+        const hubInfoWindow = new google.maps.InfoWindow({
+            content: `
+                <div style="font-family:'Plus Jakarta Sans',sans-serif; padding:6px 10px;">
+                    <strong style="color:#133E2B;">🌾 Thulirva Central Dairy Hub</strong>
+                    <div style="font-size:12px; color:#555;">Padur, OMR, Chennai</div>
+                    <div style="font-size:11px; color:#00A859; font-weight:600; margin-top:4px;">Main Cold Storage & Fulfillment</div>
+                </div>
+            `
+        });
+        hubMarker.addListener("click", () => {
+            hubInfoWindow.open(fleetMap, hubMarker);
+        });
+    }
+
+    if (fleetMap && typeof google !== 'undefined' && google.maps) {
+        const bounds = new google.maps.LatLngBounds();
+        bounds.extend(padurHub);
+
+        allPartners.forEach(p => {
+            const lat = parseFloat(p.current_latitude || 12.8025);
+            const lng = parseFloat(p.current_longitude || 80.2233);
+            const isOnline = Boolean(p.is_online);
+            const pos = { lat, lng };
+
+            bounds.extend(pos);
+
+            const bikeSvg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+                    <circle cx="20" cy="20" r="18" fill="${isOnline ? '#00A859' : '#64748B'}" stroke="#ffffff" stroke-width="2.5"/>
+                    <text x="20" y="26" font-size="16" text-anchor="middle" fill="#ffffff">🛵</text>
+                </svg>
+            `;
+
+            if (fleetMarkers[p.partner_id]) {
+                fleetMarkers[p.partner_id].setPosition(pos);
+            } else {
+                const marker = new google.maps.Marker({
+                    position: pos,
+                    map: fleetMap,
+                    title: `${p.name} (${p.partner_id})`,
+                    icon: {
+                        url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(bikeSvg),
+                        scaledSize: new google.maps.Size(40, 40),
+                        anchor: new google.maps.Point(20, 20)
+                    }
+                });
+
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `
+                        <div style="font-family:'Plus Jakarta Sans',sans-serif; padding:8px 12px; min-width:180px;">
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                                <div style="width:32px; height:32px; border-radius:50%; background:#E8EDE6; display:flex; align-items:center; justify-content:center; font-weight:700; color:#133E2B;">
+                                    ${(p.name || 'D').charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div style="font-weight:700; color:#133E2B;">${p.name}</div>
+                                    <div style="font-size:11px; color:#666;">${p.partner_id}</div>
+                                </div>
+                            </div>
+                            <div style="font-size:12px; color:#333; margin-bottom:4px;">
+                                <strong>Status:</strong> <span style="color:${isOnline ? '#00A859' : '#999'}; font-weight:600;">${isOnline ? 'Online / On Shift' : 'Offline'}</span>
+                            </div>
+                            <div style="font-size:12px; color:#333; margin-bottom:4px;">
+                                <strong>Vehicle:</strong> ${p.vehicle_type || 'Scooter'} (${p.vehicle_number || '—'})
+                            </div>
+                            <div style="font-size:12px; color:#333; margin-bottom:8px;">
+                                <strong>Area:</strong> ${p.assigned_area || 'Padur'}
+                            </div>
+                            <button onclick="closeLiveFleetMapModal(); viewPartnerDetails('${p.partner_id}');" style="background:#133E2B; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; width:100%;">
+                                Open Associate Drawer
+                            </button>
+                        </div>
+                    `
+                });
+
+                marker.addListener("click", () => {
+                    infoWindow.open(fleetMap, marker);
+                });
+
+                fleetMarkers[p.partner_id] = marker;
+            }
+        });
+
+        if (allPartners.length > 0) {
+            fleetMap.fitBounds(bounds);
+        }
+    }
 }
 </script>
 </body>
