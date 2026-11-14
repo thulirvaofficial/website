@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THULIRVA Enterprise — Live Fleet 3D GPS Tracking</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet & 3D Layer Styling -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <style>
+        .map-viewport-container {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 210px);
+            min-height: 560px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            border: 1px solid var(--border-light);
+            background: #F4F6F0;
+        }
+
+        #fleetMap {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* 3D Delivery Rider Marker Styling */
+        .rider-marker-container {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            margin-left: -45px;
+            margin-top: -45px;
+            pointer-events: auto;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .rider-marker-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Radar Pulse Ring */
+        .radar-pulse-ring {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: radarPulse 2s infinite ease-out;
+        }
+        .radar-pulse-ring.online { border: 2px solid rgba(46, 125, 50, 0.7); background: rgba(46, 125, 50, 0.12); }
+        .radar-pulse-ring.transit { border: 2px solid rgba(217, 119, 6, 0.8); background: rgba(217, 119, 6, 0.15); }
+        .radar-pulse-ring.offline { display: none; }
+
+        @keyframes radarPulse {
+            0% { transform: scale(0.6); opacity: 1; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+
+        /* Realistic 3D Scooty & Rider Model */
+        .scooty-3d-model {
+            position: absolute;
+            width: 58px;
+            height: 58px;
+            filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+            transition: transform 0.4s ease-out;
+            transform-origin: center center;
+        }
+
+        /* Rider Info Floating Pill */
+        .rider-label-pill {
+            position: absolute;
+            top: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1B4D3E;
+            color: #FFFFFF;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 12px;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid rgba(255,255,255,0.2);
+            pointer-events: none;
+        }
+        .rider-label-pill .speed-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #4ADE80;
+        }
+
+        /* Hub Pin */
+        .hub-pin-container {
+            width: 48px;
+            height: 48px;
+            margin-left: -24px;
+            margin-top: -44px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .hub-pin-badge {
+            background: #1B4D3E;
+            color: #D4AF37;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 800;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+            border: 1px solid #D4AF37;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Floating Fleet HUD Overlay */
+        .fleet-hud-panel {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            padding: 12px 18px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .hud-metric {
+            display: flex;
+            flex-direction: column;
+        }
+        .hud-metric .num {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary-green);
+            line-height: 1.1;
+        }
+        .hud-metric .lbl {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Floating Map Controls */
+        .map-quick-controls {
+            position: absolute;
+            bottom: 24px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .map-ctrl-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: #FFFFFF;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--primary-green);
+            transition: all 0.2s;
+        }
+        .map-ctrl-btn:hover {
+            background: var(--cream-bg);
+            transform: scale(1.05);
+        }
+
+        /* Partner Details Slide Drawer */
+        .partner-drawer {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 360px;
+            max-width: calc(100% - 32px);
+            max-height: calc(100% - 32px);
+            z-index: 1001;
+            background: #FFFFFF;
+            border-radius: 18px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            overflow-y: auto;
+            transform: translateX(390px);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .partner-drawer.open {
+            transform: translateX(0);
+        }
+
+        .drawer-header {
+            padding: 16px;
+            background: linear-gradient(135deg, #1B4D3E 0%, #2A6A56 100%);
+            color: #FFFFFF;
+            border-radius: 17px 17px 0 0;
+            position: relative;
+        }
+        .drawer-close-btn {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #FFFFFF;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .drawer-close-btn:hover {
+            background: rgba(255,255,255,0.35);
+        }
+
+        .partner-avatar-img {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 3px solid #D4AF37;
+            object-fit: cover;
+            background: #E8EDE6;
+        }
+
+        .drawer-body {
+            padding: 18px;
+        }
+
+        .telemetry-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 13px;
+        }
+        .telemetry-row:last-child {
+            border-bottom: none;
+        }
+        .telemetry-lbl {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .telemetry-val {
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        /* Associates Roster Sidebar Tabs */
+        .roster-card {
+            height: calc(100vh - 210px);
+            min-height: 560px;
+            display: flex;
+            flex-direction: column;
+        }
+        .roster-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .roster-item {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .roster-item:hover, .roster-item.active {
+            background: #F4F6F0;
+        }
+        .roster-item.active {
+            border-left: 4px solid var(--primary-green);
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-layout">
+    <aside class="sidebar" id="adminSidebar"></aside>
+
+    <main class="main-content">
+        <header class="topbar" id="adminTopbar"></header>
+
+        <div class="page-container">
+            <!-- Header Banner -->
+            <div class="page-header flex-between mb-3">
+                <div>
+                    <h1 class="page-title">Live Fleet 3D GPS Tracking</h1>
+                    <p class="page-subtitle">Real-time direction-aware 3D scooter telemetry, active doorstep routes, and fleet dispatch monitoring</p>
+                </div>
+                <div class="flex-center gap-3">
+                    <span class="badge" style="background:#DCFCE7; color:#15803D; font-weight:800; font-size:12px; padding:6px 12px; display:inline-flex; align-items:center; gap:6px;">
+                        <span class="pulse-dot" style="background:#16A34A; width:8px; height:8px;"></span>
+                        TELEMETRY ACTIVE
+                    </span>
+                    <button class="btn btn-secondary" onclick="recenterFleet()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                        Recenter Fleet
+                    </button>
+                    <a href="delivery-partners.html" class="btn btn-primary">
+                        Manage Partners Roster
+                    </a>
+                </div>
+            </div>
+
+            <!-- Two Column Layout: Map on Left (75%), Roster on Right (25%) -->
+            <div style="display: grid; grid-template-columns: 1fr 340px; gap: 18px; align-items: start;">
+                <!-- Map Viewport -->
+                <div class="map-viewport-container">
+                    <div id="fleetMap"></div>
+
+                    <!-- Floating HUD -->
+                    <div class="fleet-hud-panel">
+                        <div class="hud-metric">
+                            <span class="num" id="hudActiveCount">0</span>
+                            <span class="lbl">Active Associates</span>
+                        </div>
+                        <div style="width:1px; height:28px; background:var(--border-light);"></div>
+                        <div class="hud-metric">
+                            <span class="num text-gold" id="hudInTransitCount">0</span>
+                            <span class="lbl">In Transit</span>
+                        </div>
+                        <div style="width:1px; height:28px; background:var(--border-light);"></div>
+                        <div class="hud-metric">
+                            <span class="num text-success" id="hudOnlineCount">0</span>
+                            <span class="lbl">Online Fleet</span>
+                        </div>
+                        <div style="width:1px; height:28px; background:var(--border-light);"></div>
+                        <div class="hud-metric">
+                            <span class="num text-muted" id="hudHubName">Padur Hub</span>
+                            <span class="lbl">Primary Dispatch</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Map Controls -->
+                    <div class="map-quick-controls">
+                        <button class="map-ctrl-btn" onclick="zoomInMap()" title="Zoom In">+</button>
+                        <button class="map-ctrl-btn" onclick="zoomOutMap()" title="Zoom Out">−</button>
+                        <button class="map-ctrl-btn" onclick="recenterFleet()" title="Fit All Riders">🎯</button>
+                    </div>
+
+                    <!-- Partner Telemetry Slide Drawer -->
+                    <div class="partner-drawer" id="partnerDrawer">
+                        <div class="drawer-header">
+                            <button class="drawer-close-btn" onclick="closePartnerDrawer()">✕</button>
+                            <div style="display:flex; align-items:center; gap:14px;">
+                                <img src="/uploads/partners/vignesh_profile.png" id="drawerAvatar" class="partner-avatar-img" alt="Associate">
+                                <div>
+                                    <h3 style="margin:0; font-size:16px; font-weight:800; color:#FFFFFF;" id="drawerName">—</h3>
+                                    <div style="font-size:12px; color:#D4AF37; font-weight:700;" id="drawerId">—</div>
+                                    <div style="font-size:11px; color:#A7F3D0; margin-top:2px;" id="drawerStatusPill">Online • Ready</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="drawer-body">
+                            <div class="telemetry-row">
+                                <span class="telemetry-lbl">Contact Phone</span>
+                                <span class="telemetry-val" id="drawerPhone">—</span>
+                            </div>
+                            <div class="telemetry-row">
+                                <span class="telemetry-lbl">Vehicle Profile</span>
+                                <span class="telemetry-val" id="drawerVehicle">—</span>
+                            </div>
+                            <div class="telemetry-row">
+                                <span class="telemetry-lbl">Live GPS Position</span>
+                                <span class="telemetry-val font-mono" id="drawerGps">—</span>
+                            </div>
+                            <div class="telemetry-row">
+                                <span class="telemetry-lbl">Current Speed</span>
+                                <span class="telemetry-val text-success" id="drawerSpeed">0.0 km/h</span>
+                            </div>
+                            <div class="telemetry-row">
+                                <span class="telemetry-lbl">Travel Heading</span>
+                                <span class="telemetry-val" id="drawerHeading">0° (North)</span>
+                            </div>
+                            <div class="telemetry-row">
+                                <span class="telemetry-lbl">Assigned Sector</span>
+                                <span class="telemetry-val" id="drawerArea">Padur OMR</span>
+                            </div>
+                            <div class="telemetry-row">
+                                <span class="telemetry-lbl">Customer Rating</span>
+                                <span class="telemetry-val" style="color:#B8860B;" id="drawerRating">5.0 ★</span>
+                            </div>
+
+                            <div style="margin-top:16px; display:flex; flex-direction:column; gap:8px;">
+                                <a id="drawerCallBtn" href="tel:" class="btn btn-primary w-full text-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                    Call Associate
+                                </a>
+                                <button class="btn btn-secondary w-full" onclick="centerOnDrawerPartner()">
+                                    Focus Camera on Associate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Associates Roster Panel -->
+                <div class="card roster-card">
+                    <div class="card-header p-3 flex-between">
+                        <div>
+                            <h3 style="font-size:14px; font-weight:800; margin:0;">Delivery Associates</h3>
+                            <span style="font-size:11px; color:var(--text-muted);" id="rosterSummary">Loading...</span>
+                        </div>
+                        <select id="rosterFilter" class="form-control" style="font-size:11px; padding:3px 6px; width:auto;" onchange="renderRosterList()">
+                            <option value="all">All</option>
+                            <option value="online">Online</option>
+                            <option value="in_transit">In Transit</option>
+                            <option value="offline">Offline</option>
+                        </select>
+                    </div>
+
+                    <div style="padding:10px 14px; border-bottom:1px solid var(--border-light);">
+                        <input type="text" id="rosterSearch" class="form-control" style="font-size:12px; padding:6px 10px;" placeholder="Search partner name or ID..." oninput="renderRosterList()">
+                    </div>
+
+                    <div class="roster-list" id="rosterListContainer">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="js/admin-shell.js"></script>
+<script>
+    initAdminShell({
+        activePage: "fleet-tracking",
+        breadcrumbs: [
+            { label: "Dashboard", url: "dashboard.html" },
+            { label: "Logistics & Fleet", url: "delivery-partners.html" },
+            { label: "Live Fleet 3D Tracking", url: "fleet-tracking.html" }
+        ]
+    });
+
+    // Padur Primary Farm Distribution Hub Coordinates (Single Source of Truth)
+    const PADUR_HUB = { lat: 12.8025, lng: 80.2233, name: "Padur Primary Farm Hub" };
+
+    let map;
+    let markersMap = {};
+    let allPartners = [];
+    let selectedPartnerId = null;
+    let socket = null;
+
+    // Generate High-Fidelity 3D Scooty & Delivery Rider SVG
+    function get3DScooterSvg(heading = 0, isOnline = true, isOnTrip = false) {
+        const bodyColor = isOnTrip ? "#D97706" : (isOnline ? "#1B4D3E" : "#6B7280");
+        const highlightColor = "#D4AF37"; // Thulirva gold
+        const visorColor = "#0F172A";
+
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="scooty-3d-model" style="transform: rotate(${heading}deg);">
+            <defs>
+                <filter id="shadow3d" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#000" flood-opacity="0.38"/>
+                </filter>
+                <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="${bodyColor}"/>
+                    <stop offset="100%" stop-color="#0A1F18"/>
+                </linearGradient>
+                <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#FDE047"/>
+                    <stop offset="100%" stop-color="#B45309"/>
+                </linearGradient>
+                <linearGradient id="helmetGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#FFFFFF"/>
+                    <stop offset="100%" stop-color="#D1D5DB"/>
+                </linearGradient>
+            </defs>
+
+            <!-- 1. Ground Shadow -->
+            <ellipse cx="50" cy="55" rx="34" ry="24" fill="rgba(0,0,0,0.28)" />
+
+            <!-- 2. Front & Rear Scooty Wheels -->
+            <rect x="46" y="8" width="8" height="16" rx="4" fill="#1E293B" stroke="#64748B" stroke-width="1.5" />
+            <rect x="46" y="74" width="8" height="18" rx="4" fill="#1E293B" stroke="#64748B" stroke-width="1.5" />
+
+            <!-- 3. Scooter Main Chassis & Floorboard -->
+            <path d="M 43,24 L 57,24 L 59,70 L 41,70 Z" fill="url(#bodyGrad)" filter="url(#shadow3d)" />
+            <path d="M 45,28 L 55,28 L 56,66 L 44,66 Z" fill="#334155" />
+
+            <!-- Gold Racing Pinstripes -->
+            <line x1="43" y1="30" x2="43" y2="65" stroke="url(#goldGrad)" stroke-width="1.5" />
+            <line x1="57" y1="30" x2="57" y2="65" stroke="url(#goldGrad)" stroke-width="1.5" />
+
+            <!-- 4. Handlebars & Mirrors -->
+            <path d="M 28,26 Q 50,23 72,26" stroke="#94A3B8" stroke-width="3" stroke-linecap="round" fill="none" />
+            <circle cx="28" cy="26" r="3" fill="#1E293B" stroke="#CBD5E1" stroke-width="1" />
+            <circle cx="72" cy="26" r="3" fill="#1E293B" stroke="#CBD5E1" stroke-width="1" />
+            <circle cx="22" cy="22" r="3" fill="#E2E8F0" />
+            <circle cx="78" cy="22" r="3" fill="#E2E8F0" />
+
+            <!-- Front Headlight Projector -->
+            <ellipse cx="50" cy="20" rx="5" ry="3" fill="#FEF08A" stroke="#CA8A04" stroke-width="1" />
+
+            <!-- 5. Thulirva Delivery Rider (Top-down 3D view) -->
+            <!-- Torso / Dark Forest Green Uniform Jacket -->
+            <path d="M 38,42 Q 50,38 62,42 L 60,58 Q 50,60 40,58 Z" fill="#15803D" stroke="#064E3B" stroke-width="1.2" />
+
+            <!-- Neon Reflective Sash -->
+            <path d="M 41,44 L 59,56" stroke="#FACC15" stroke-width="2.5" stroke-linecap="round" />
+
+            <!-- Arms gripping handlebars -->
+            <path d="M 38,44 Q 32,32 30,27" stroke="#15803D" stroke-width="3.5" stroke-linecap="round" fill="none" />
+            <path d="M 62,44 Q 68,32 70,27" stroke="#15803D" stroke-width="3.5" stroke-linecap="round" fill="none" />
+
+            <!-- Rider Safety Helmet -->
+            <ellipse cx="50" cy="46" rx="11" ry="12" fill="url(#helmetGrad)" stroke="#64748B" stroke-width="1" filter="url(#shadow3d)" />
+            <!-- Visor -->
+            <path d="M 43,40 Q 50,35 57,40 Q 50,43 43,40 Z" fill="${visorColor}" />
+            <circle cx="50" cy="48" r="3" fill="#1B4D3E" />
+
+            <!-- 6. Thulirva Insulated Delivery Cargo Box (Rear Mount) -->
+            <rect x="36" y="66" width="28" height="22" rx="4" fill="url(#bodyGrad)" stroke="${highlightColor}" stroke-width="1.8" filter="url(#shadow3d)" />
+            <!-- Box Gold Latch & Label -->
+            <rect x="46" y="67" width="8" height="3" rx="1" fill="#FDE047" />
+            <text x="50" y="80" font-family="'Plus Jakarta Sans', sans-serif" font-size="6.5" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.5">THULIRVA</text>
+            <text x="50" y="86" font-family="'Plus Jakarta Sans', sans-serif" font-size="4.2" font-weight="700" fill="#FDE047" text-anchor="middle">FARM FRESH</text>
+        </svg>`;
+    }
+
+    // Initialize Leaflet Map
+    function initMap() {
+        map = L.map('fleetMap', {
+            center: [PADUR_HUB.lat, PADUR_HUB.lng],
+            zoom: 14,
+            zoomControl: false
+        });
+
+        // CartoDB Voyager High-Performance Clean Vector-Like Tiles
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://carto.com/">CARTO</a>, &copy; OpenStreetMap contributors',
+            maxZoom: 19,
+            subdomains: 'abcd'
+        }).addTo(map);
+
+        // Add Padur Primary Hub Pin
+        const hubIcon = L.divIcon({
+            className: 'custom-hub-marker',
+            html: `
+                <div class="hub-pin-container">
+                    <div class="hub-pin-badge">
+                        🌾 PADUR HUB
+                    </div>
+                    <div style="font-size:24px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.3));">📍</div>
+                </div>`,
+            iconSize: [48, 48],
+            iconAnchor: [24, 44]
+        });
+
+        const hubMarker = L.marker([PADUR_HUB.lat, PADUR_HUB.lng], { icon: hubIcon }).addTo(map);
+        hubMarker.bindPopup(`
+            <div style="padding:4px; font-family:'Plus Jakarta Sans', sans-serif;">
+                <h4 style="margin:0 0 4px; font-weight:800; color:#1B4D3E;">🌾 Padur Primary Farm Hub</h4>
+                <p style="margin:0 0 6px; font-size:12px; color:#64748B;">Central processing & cold-chain distribution center</p>
+                <div style="font-size:11px; font-weight:700; color:#15803D;">GPS: ${PADUR_HUB.lat.toFixed(4)}°N, ${PADUR_HUB.lng.toFixed(4)}°E</div>
+            </div>
+        `);
+    }
+
+    // Update or Create 3D Rider Marker
+    function renderRiderMarker(partner) {
+        const id = partner.partner_id;
+        const lat = Number(partner.current_latitude) || PADUR_HUB.lat;
+        const lng = Number(partner.current_longitude) || PADUR_HUB.lng;
+        const heading = Number(partner.heading) || 0;
+        const speed = (Number(partner.speed) || 0).toFixed(1);
+        const isOnline = Boolean(partner.is_online);
+        const isOnTrip = isOnline && (Number(partner.active_orders_count) > 0 || (partner.today_deliveries_count > 0 && isOnline));
+
+        const pulseClass = isOnTrip ? "transit" : (isOnline ? "online" : "offline");
+        const svgContent = get3DScooterSvg(heading, isOnline, isOnTrip);
+
+        const markerHtml = `
+            <div class="rider-marker-container" onclick="openPartnerDrawer('${id}')">
+                <div class="rider-marker-inner">
+                    <div class="radar-pulse-ring ${pulseClass}"></div>
+                    ${svgContent}
+                    <div class="rider-label-pill">
+                        <span class="speed-dot"></span>
+                        <span>${(partner.name || 'Associate').split(' ')[0]} • ${speed} km/h</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        if (markersMap[id]) {
+            // Animate transition
+            markersMap[id].setLatLng([lat, lng]);
+            const el = markersMap[id].getElement();
+            if (el) {
+                el.innerHTML = markerHtml;
+            }
+        } else {
+            const icon = L.divIcon({
+                className: 'custom-rider-div',
+                html: markerHtml,
+                iconSize: [90, 90],
+                iconAnchor: [45, 45]
+            });
+
+            const marker = L.marker([lat, lng], { icon }).addTo(map);
+            markersMap[id] = marker;
+        }
+    }
+
+    // Load Fleet from Central Backend
+    async function loadFleetData() {
+        try {
+            const res = await fetch("/api/delivery/partners");
+            const data = await res.json();
+            if (data && data.success && Array.isArray(data.partners)) {
+                allPartners = data.partners;
+                updateMapMarkers();
+                updateHudMetrics();
+                renderRosterList();
+            }
+        } catch (e) {
+            console.warn("[FLEET LOAD ERROR]", e);
+        }
+    }
+
+    function updateMapMarkers() {
+        allPartners.forEach(renderRiderMarker);
+    }
+
+    function updateHudMetrics() {
+        const active = allPartners.filter(p => p.is_online && !p.is_blocked).length;
+        const onTrip = allPartners.filter(p => p.is_online && Number(p.active_orders_count) > 0).length;
+        const totalOnline = allPartners.filter(p => p.is_online).length;
+
+        document.getElementById("hudActiveCount").textContent = active;
+        document.getElementById("hudInTransitCount").textContent = onTrip;
+        document.getElementById("hudOnlineCount").textContent = totalOnline;
+        document.getElementById("rosterSummary").textContent = `${active} active online of ${allPartners.length} registered`;
+    }
+
+    // Render Side Roster
+    function renderRosterList() {
+        const q = (document.getElementById("rosterSearch").value || "").toLowerCase().trim();
+        const filter = document.getElementById("rosterFilter").value;
+        const container = document.getElementById("rosterListContainer");
+
+        let list = [...allPartners];
+        if (filter === "online") list = list.filter(p => p.is_online);
+        else if (filter === "in_transit") list = list.filter(p => p.is_online && Number(p.active_orders_count) > 0);
+        else if (filter === "offline") list = list.filter(p => !p.is_online);
+
+        if (q) {
+            list = list.filter(p =>
+                (p.name || "").toLowerCase().includes(q) ||
+                (p.partner_id || "").toLowerCase().includes(q) ||
+                (p.phone || "").includes(q)
+            );
+        }
+
+        if (!list.length) {
+            container.innerHTML = `<div style="padding:30px; text-align:center; color:var(--text-muted); font-size:12px;">No delivery associates match criteria.</div>`;
+            return;
+        }
+
+        container.innerHTML = list.map(p => {
+            const isOnline = Boolean(p.is_online);
+            const isTransit = isOnline && Number(p.active_orders_count) > 0;
+            const photo = p.profile_photo || "/uploads/partners/vignesh_profile.png";
+            const speed = (Number(p.speed) || 0).toFixed(1);
+
+            let statusBadge = `<span class="badge" style="background:#F3F4F6; color:#6B7280; font-size:10px;">Offline</span>`;
+            if (isTransit) statusBadge = `<span class="badge" style="background:#FEF3C7; color:#D97706; font-size:10px;">In Transit</span>`;
+            else if (isOnline) statusBadge = `<span class="badge" style="background:#DCFCE7; color:#15803D; font-size:10px;">Online</span>`;
+
+            return `
+                <div class="roster-item ${selectedPartnerId === p.partner_id ? 'active' : ''}" onclick="selectPartnerAndFocus('${p.partner_id}')">
+                    <img src="${photo}" style="width:38px; height:38px; border-radius:50%; object-fit:cover; border:2px solid ${isOnline ? '#15803D' : '#D1D5DB'};" onerror="this.src='/uploads/partners/vignesh_profile.png'">
+                    <div style="flex:1; min-width:0;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="font-weight:700; font-size:13px; color:var(--text-dark); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name || 'Associate'}</div>
+                            ${statusBadge}
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+                            <span style="font-size:11px; color:var(--text-muted);">${p.partner_id} • ${p.assigned_area || 'Padur'}</span>
+                            <span style="font-size:11px; font-weight:700; color:${isOnline ? '#15803D' : '#9CA3AF'};">${speed} km/h</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join("");
+    }
+
+    // Select Partner and Center Camera
+    function selectPartnerAndFocus(partnerId) {
+        selectedPartnerId = partnerId;
+        renderRosterList();
+        openPartnerDrawer(partnerId);
+
+        const partner = allPartners.find(p => p.partner_id === partnerId);
+        if (partner && map) {
+            const lat = Number(partner.current_latitude) || PADUR_HUB.lat;
+            const lng = Number(partner.current_longitude) || PADUR_HUB.lng;
+            map.flyTo([lat, lng], 16, { duration: 1.2 });
+        }
+    }
+
+    function openPartnerDrawer(partnerId) {
+        selectedPartnerId = partnerId;
+        const partner = allPartners.find(p => p.partner_id === partnerId);
+        if (!partner) return;
+
+        document.getElementById("drawerName").textContent = partner.name || "Associate";
+        document.getElementById("drawerId").textContent = `${partner.partner_id} • ${partner.assigned_area || 'Padur Hub'}`;
+        document.getElementById("drawerPhone").textContent = partner.phone || "—";
+        document.getElementById("drawerVehicle").textContent = `${partner.vehicle_type || 'Electric Scooter'} (${partner.vehicle_number || 'TN 09 CY 4567'})`;
+
+        const lat = Number(partner.current_latitude) || PADUR_HUB.lat;
+        const lng = Number(partner.current_longitude) || PADUR_HUB.lng;
+        document.getElementById("drawerGps").textContent = `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
+        document.getElementById("drawerSpeed").textContent = `${(Number(partner.speed) || 0).toFixed(1)} km/h`;
+        document.getElementById("drawerHeading").textContent = `${Number(partner.heading) || 0}°`;
+        document.getElementById("drawerArea").textContent = partner.assigned_area || "Padur OMR";
+        document.getElementById("drawerRating").textContent = `${partner.rating || 5.0} ★ (${partner.total_deliveries_count || 0} trips)`;
+
+        const isOnline = Boolean(partner.is_online);
+        const isTransit = isOnline && Number(partner.active_orders_count) > 0;
+        let pillText = "Offline • Resting";
+        if (isTransit) pillText = "In Transit • Delivering";
+        else if (isOnline) pillText = "Online • Standing By";
+        document.getElementById("drawerStatusPill").textContent = pillText;
+
+        const photo = partner.profile_photo || "/uploads/partners/vignesh_profile.png";
+        const avatarEl = document.getElementById("drawerAvatar");
+        avatarEl.src = photo;
+        avatarEl.onerror = () => avatarEl.src = "/uploads/partners/vignesh_profile.png";
+
+        document.getElementById("drawerCallBtn").href = `tel:${partner.phone || ''}`;
+        document.getElementById("partnerDrawer").classList.add("open");
+    }
+
+    function closePartnerDrawer() {
+        document.getElementById("partnerDrawer").classList.remove("open");
+        selectedPartnerId = null;
+        renderRosterList();
+    }
+
+    function centerOnDrawerPartner() {
+        if (selectedPartnerId) {
+            selectPartnerAndFocus(selectedPartnerId);
+        }
+    }
+
+    function recenterFleet() {
+        if (!map) return;
+        if (!allPartners.length) {
+            map.flyTo([PADUR_HUB.lat, PADUR_HUB.lng], 14);
+            return;
+        }
+
+        const validCoords = allPartners
+            .map(p => [Number(p.current_latitude), Number(p.current_longitude)])
+            .filter(([lat, lng]) => !isNaN(lat) && !isNaN(lng) && lat !== 0);
+
+        validCoords.push([PADUR_HUB.lat, PADUR_HUB.lng]);
+
+        const bounds = L.latLngBounds(validCoords);
+        map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
+    }
+
+    function zoomInMap() { if (map) map.zoomIn(); }
+    function zoomOutMap() { if (map) map.zoomOut(); }
+
+    // Real-Time Socket.IO Synchronization
+    function initSocket() {
+        try {
+            socket = io();
+            socket.on("connect", () => {
+                console.log("✓ [FLEET 3D MAP] Socket connected for real-time telemetry");
+            });
+
+            // Live telemetry tick
+            socket.on("delivery:location_updated", (data) => {
+                const partner = allPartners.find(p => p.partner_id === data.partner_id);
+                if (partner) {
+                    partner.current_latitude = data.latitude;
+                    partner.current_longitude = data.longitude;
+                    partner.speed = data.speed;
+                    partner.heading = data.heading;
+                    partner.is_online = true;
+                    renderRiderMarker(partner);
+                    updateHudMetrics();
+                    if (selectedPartnerId === partner.partner_id) {
+                        openPartnerDrawer(partner.partner_id);
+                    }
+                }
+            });
+
+            // Status updates
+            socket.on("delivery:status:update", () => loadFleetData());
+            socket.on("order:updated", () => loadFleetData());
+            socket.on("order:pickup_confirmed", () => loadFleetData());
+            socket.on("order:in_transit", () => loadFleetData());
+            socket.on("order:delivered", () => loadFleetData());
+            socket.on("partner:updated", () => loadFleetData());
+        } catch (e) {
+            console.warn("[SOCKET WARN]", e);
+        }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+        initMap();
+        loadFleetData();
+        initSocket();
+
+        // 4-second continuous polling fallback
+        setInterval(loadFleetData, 4000);
+    });
+</script>
+</body>
+</html>
