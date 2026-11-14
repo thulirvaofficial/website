@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>THULIRVA Admin — Orders &amp; Dispatch Management</title>
     <link rel="stylesheet" href="css/admin.css">
+    <script src="/socket.io/socket.io.js"></script>
     <style>
         .proof-thumb {
             width: 44px;
@@ -357,7 +358,30 @@ function renderOrdersTable() {
 
     paged.forEach((o, idx) => {
         const row = document.createElement("tr");
-        const badgeClass = o.order_status === 'pending' ? 'badge-pending' : (o.order_status === 'shipped' || o.order_status === 'in_transit' ? 'badge-shipped' : (o.order_status === 'cancelled' ? 'badge-cancelled' : 'badge-delivered'));
+        let badgeClass = 'badge-pending';
+        let statusLabel = (o.order_status || 'placed').replace(/_/g, ' ').toUpperCase();
+        if (o.order_status === 'out_for_delivery' || o.order_status === 'in_transit' || o.order_status === 'shipped') {
+            badgeClass = 'badge-shipped';
+            statusLabel = 'OUT FOR DELIVERY';
+        } else if (o.order_status === 'picked_up' || o.order_status === 'pickup_confirmed') {
+            badgeClass = 'badge-shipped';
+            statusLabel = 'PICKED UP';
+        } else if (o.order_status === 'delivered') {
+            badgeClass = 'badge-delivered';
+            statusLabel = 'DELIVERED';
+        } else if (o.order_status === 'cancelled') {
+            badgeClass = 'badge-cancelled';
+            statusLabel = 'CANCELLED';
+        } else if (o.order_status === 'preparing') {
+            badgeClass = 'badge-pending';
+            statusLabel = 'PREPARING';
+        } else if (o.order_status === 'assigned') {
+            badgeClass = 'badge-pending';
+            statusLabel = 'ASSIGNED';
+        } else if (o.order_status === 'confirmed') {
+            badgeClass = 'badge-pending';
+            statusLabel = 'CONFIRMED';
+        }
 
         let itemsDesc = "";
         if (Array.isArray(o.items) && o.items.length) {
@@ -383,8 +407,10 @@ function renderOrdersTable() {
             } else {
                 deliveryProofBadge = `<button class="btn btn-secondary btn-sm" onclick="openDeliveryProofModal('${o.id}')" style="padding:2px 8px; font-size:11px; font-weight:700; color:#B45309; background:#FEF3C7; border-color:#FDE68A; margin-top:4px;">⚠️ No Photo</button>`;
             }
-        } else if (o.order_status === 'in_transit' || o.order_status === 'shipped' || o.order_status === 'out_for_delivery') {
-            deliveryProofBadge = `<span style="font-size:10.5px; color:#1D4ED8; font-weight:600; display:block; margin-top:4px;">🚚 In Transit</span>`;
+        } else if (o.order_status === 'out_for_delivery' || o.order_status === 'in_transit' || o.order_status === 'shipped') {
+            deliveryProofBadge = `<span style="font-size:10.5px; color:#1D4ED8; font-weight:600; display:block; margin-top:4px;">🚚 Out for Delivery</span>`;
+        } else if (o.order_status === 'picked_up' || o.order_status === 'pickup_confirmed') {
+            deliveryProofBadge = `<span style="font-size:10.5px; color:#D97706; font-weight:600; display:block; margin-top:4px;">📦 Picked Up</span>`;
         } else {
             deliveryProofBadge = `<span style="font-size:10.5px; color:var(--thulirva-text-muted); display:block; margin-top:4px;">⏳ Awaiting</span>`;
         }
@@ -410,11 +436,15 @@ function renderOrdersTable() {
             </td>
             <td><strong>₹${totalAmt}</strong></td>
             <td>${partnerText}</td>
-            <td><span class="badge ${badgeClass}">${o.order_status}</span></td>
+            <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
             <td style="text-align:right;">
                 <select onchange="updateOrderStatus('${o.id}', this.value)" class="form-select" style="padding:4px 8px; font-size:11px; width:auto; display:inline-block;">
-                    <option value="pending" ${o.order_status === 'pending' ? 'selected' : ''}>Pending</option>
-                    <option value="in_transit" ${o.order_status === 'in_transit' || o.order_status === 'shipped' ? 'selected' : ''}>In Transit</option>
+                    <option value="placed" ${o.order_status === 'placed' ? 'selected' : ''}>Placed</option>
+                    <option value="confirmed" ${o.order_status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                    <option value="preparing" ${o.order_status === 'preparing' ? 'selected' : ''}>Preparing</option>
+                    <option value="assigned" ${o.order_status === 'assigned' ? 'selected' : ''}>Assigned</option>
+                    <option value="picked_up" ${o.order_status === 'picked_up' || o.order_status === 'pickup_confirmed' ? 'selected' : ''}>Picked Up</option>
+                    <option value="out_for_delivery" ${o.order_status === 'out_for_delivery' || o.order_status === 'in_transit' || o.order_status === 'shipped' ? 'selected' : ''}>Out for Delivery</option>
                     <option value="delivered" ${o.order_status === 'delivered' ? 'selected' : ''}>Delivered</option>
                     <option value="cancelled" ${o.order_status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
                 </select>
@@ -556,6 +586,11 @@ async function openDeliveryProofModal(orderId) {
     const linkEl = document.getElementById("deliveryProofDownloadLink");
 
     if (proofUrl) {
+        imgEl.onerror = () => {
+            noticeEl.innerHTML = `⚠️ Proof photo recorded on server (<a href="${proofUrl}" target="_blank" style="color:var(--thulirva-forest); font-weight:bold; text-decoration:underline;">Open direct link</a>)`;
+            noticeEl.style.display = "block";
+            imgEl.style.display = "none";
+        };
         imgEl.src = proofUrl;
         imgEl.style.display = "block";
         noticeEl.style.display = "none";
@@ -715,7 +750,39 @@ function exportOrdersCSV() {
     a.click();
 }
 
+// Real-Time Socket.IO Synchronization & 5-Second Polling Fallback
+function initOrdersRealtime() {
+    // 1. 5-Second polling fallback
+    setInterval(async () => {
+        try {
+            const res = await fetch("/api/orders");
+            const data = await res.json();
+            const orders = Array.isArray(data) ? data : (data.orders || data.data || []);
+            if (orders && orders.length) {
+                allOrders = orders;
+                updateMetrics();
+                renderOrders();
+            }
+        } catch (_) {}
+    }, 5000);
+
+    // 2. Real-time WebSocket connection
+    try {
+        if (typeof io !== "undefined") {
+            const socket = io();
+            socket.emit("join:admin");
+            socket.on("order:status_updated", () => loadOrders());
+            socket.on("order:updated", () => loadOrders());
+            socket.on("delivery:status:update", () => loadOrders());
+            socket.on("order:out_for_delivery", () => loadOrders());
+            socket.on("order:picked_up", () => loadOrders());
+            socket.on("order:delivered", () => loadOrders());
+        }
+    } catch (_) {}
+}
+
 loadOrders();
+initOrdersRealtime();
 </script>
 </body>
 </html>
