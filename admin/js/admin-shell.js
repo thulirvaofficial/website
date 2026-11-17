@@ -90,6 +90,107 @@ function getIcon(name) {
 }
 
 /**
+ * Safe Admin Profile & Session Provider
+ * Guarantees admin.admin_name is never undefined across the entire ecosystem
+ */
+window.getSafeAdmin = function() {
+    let admin = null;
+    try {
+        const raw = localStorage.getItem("thulirva_admin_user") || localStorage.getItem("admin");
+        if (raw) {
+            admin = JSON.parse(raw);
+        }
+    } catch (_) {}
+
+    if (!admin || typeof admin !== "object") {
+        admin = {
+            id: 1,
+            name: "Super Admin",
+            admin_name: "Super Admin",
+            email: "admin@thulirva.com",
+            role: "Super Admin",
+            profile_photo: ""
+        };
+    } else {
+        if (!admin.admin_name) admin.admin_name = admin.name || "Super Admin";
+        if (!admin.name) admin.name = admin.admin_name;
+        if (!admin.email) admin.email = "admin@thulirva.com";
+        if (!admin.role) admin.role = "Super Admin";
+    }
+
+    window.admin = admin;
+    return admin;
+};
+
+window.admin = window.getSafeAdmin();
+window.getAdminName = function() {
+    return window.getSafeAdmin().admin_name || "Super Admin";
+};
+
+window.AdminProfile = {
+    get: window.getSafeAdmin,
+    getName: window.getAdminName,
+    sync: async function() {
+        const token = localStorage.getItem("thulirva_admin_token");
+        if (!token) return window.getSafeAdmin();
+        try {
+            let res = await fetch("/api/admin/profile", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                res = await fetch("/api/auth/me", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+            }
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.success) {
+                    const src = data.admin || data.user || {};
+                    const adminObj = {
+                        id: src.id || 1,
+                        name: src.name || src.admin_name || "Super Admin",
+                        admin_name: src.admin_name || src.name || "Super Admin",
+                        email: src.email || "admin@thulirva.com",
+                        role: src.role || "Super Admin",
+                        profile_photo: src.profile_photo || ""
+                    };
+                    localStorage.setItem("thulirva_admin_user", JSON.stringify(adminObj));
+                    localStorage.setItem("admin", JSON.stringify(adminObj));
+                    window.admin = adminObj;
+                    window.AdminProfile.updateUI(adminObj);
+                    return adminObj;
+                }
+            }
+        } catch (_) {}
+        return window.getSafeAdmin();
+    },
+    updateUI: function(admin) {
+        if (!admin) admin = window.getSafeAdmin();
+        const safeName = admin.admin_name || admin.name || "Super Admin";
+        const safeEmail = admin.email || "admin@thulirva.com";
+        const initials = safeName.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase() || "AD";
+
+        const sideAvatar = document.querySelector(".sidebar-admin-avatar");
+        const sideName = document.querySelector(".sidebar-admin-name");
+        const sideRole = document.querySelector(".sidebar-admin-role");
+        if (sideAvatar) sideAvatar.textContent = initials[0] || "A";
+        if (sideName) sideName.textContent = safeName;
+        if (sideRole) sideRole.textContent = admin.role || "Super Admin";
+
+        const topAvatar = document.querySelector(".topbar-user-avatar");
+        const topName = document.querySelector(".topbar-user-name");
+        if (topAvatar) topAvatar.textContent = initials;
+        if (topName) topName.textContent = safeName;
+
+        const userDropdown = document.getElementById("userDropdownMenu");
+        if (userDropdown) {
+            const strongEl = userDropdown.querySelector("strong");
+            if (strongEl) strongEl.textContent = safeEmail;
+        }
+    }
+};
+
+/**
  * Initialize the unified Admin Shell
  */
 function initAdminShell({ activePage = "dashboard", breadcrumbs = [] } = {}) {
@@ -99,6 +200,12 @@ function initAdminShell({ activePage = "dashboard", breadcrumbs = [] } = {}) {
         window.location.href = "index.html";
         return;
     }
+
+    const currentAdmin = window.getSafeAdmin();
+    const safeAdminName = currentAdmin.admin_name || currentAdmin.name || "Super Admin";
+    const safeAdminEmail = currentAdmin.email || "admin@thulirva.com";
+    const safeAdminRole = currentAdmin.role || "Super Admin";
+    const safeInitials = safeAdminName.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase() || "AD";
 
     // 2. Build Sidebar
     const sidebarEl = document.querySelector(".sidebar") || document.getElementById("adminSidebar");
@@ -143,10 +250,10 @@ function initAdminShell({ activePage = "dashboard", breadcrumbs = [] } = {}) {
         navHtml += `
             </nav>
             <div class="sidebar-footer">
-                <div class="sidebar-admin-avatar">A</div>
+                <div class="sidebar-admin-avatar">${safeInitials[0] || 'A'}</div>
                 <div class="sidebar-admin-info">
-                    <div class="sidebar-admin-name">Thulirva Ops</div>
-                    <div class="sidebar-admin-role">Super Admin</div>
+                    <div class="sidebar-admin-name">${safeAdminName}</div>
+                    <div class="sidebar-admin-role">${safeAdminRole}</div>
                 </div>
                 <button class="sidebar-logout-btn" onclick="logoutAdmin()" title="Sign Out">
                     ${getIcon("log-out")}
@@ -220,13 +327,13 @@ function initAdminShell({ activePage = "dashboard", breadcrumbs = [] } = {}) {
 
                 <div style="position:relative;">
                     <div class="topbar-user" id="userMenuBtn" onclick="toggleUserDropdown()">
-                        <div class="topbar-user-avatar">AD</div>
-                        <span class="topbar-user-name">Admin</span>
+                        <div class="topbar-user-avatar">${safeInitials}</div>
+                        <span class="topbar-user-name">${safeAdminName}</span>
                         ${getIcon("chevron-right")}
                     </div>
                     <div class="dropdown-menu" id="userDropdownMenu">
                         <div style="padding: 10px 16px; border-bottom: 1px solid var(--thulirva-border); font-size: 11.5px; color: var(--thulirva-text-muted);">
-                            Signed in as<br><strong style="color: var(--thulirva-forest-deep);">admin@thulirva.com</strong>
+                            Signed in as<br><strong style="color: var(--thulirva-forest-deep);">${safeAdminEmail}</strong>
                         </div>
                         <a href="profile.html" class="dropdown-item">${getIcon("user-cog")} Admin Profile</a>
                         <a href="settings.html" class="dropdown-item">${getIcon("sliders")} Store Settings</a>
@@ -294,6 +401,9 @@ function initAdminShell({ activePage = "dashboard", breadcrumbs = [] } = {}) {
 
     // 7. Load Live Notification & Badge Counters
     loadShellBadges();
+
+    // 8. Safely synchronize active Admin Profile
+    window.AdminProfile.sync();
 }
 
 /**
@@ -471,14 +581,25 @@ window.apiFetchJson = async function(url, options = {}) {
 };
 
 /**
- * Toast Notifications Manager
+ * Toast Notifications Manager with Automatic Deduplication
  */
+const _toastDedupeCache = new Map();
+
 function showToast(message, type = "success") {
+    if (!message) return;
+    const msgStr = typeof message === "string" ? message : (message.message || JSON.stringify(message));
+    const normalizedType = type === "danger" ? "error" : type;
+    const dedupeKey = `${normalizedType}::${msgStr.trim()}`;
+    const now = Date.now();
+
+    // Prevent duplicate toast within 2500ms
+    if (_toastDedupeCache.has(dedupeKey) && (now - _toastDedupeCache.get(dedupeKey) < 2500)) {
+        return;
+    }
+    _toastDedupeCache.set(dedupeKey, now);
+
     const container = document.getElementById("toast-container");
     if (!container) return;
-
-    // Map 'danger' to 'error'
-    const normalizedType = type === "danger" ? "error" : type;
 
     const toast = document.createElement("div");
     toast.className = `toast-msg ${normalizedType}`;
@@ -490,7 +611,7 @@ function showToast(message, type = "success") {
 
     toast.innerHTML = `
         ${iconSvg}
-        <div style="flex:1; line-height:1.35;">${message}</div>
+        <div style="flex:1; line-height:1.35;">${msgStr}</div>
     `;
 
     container.appendChild(toast);
@@ -516,6 +637,8 @@ function toggleUserDropdown() {
 function logoutAdmin() {
     if (confirm("Are you sure you want to sign out of the THULIRVA Admin Console?")) {
         localStorage.removeItem("thulirva_admin_token");
+        localStorage.removeItem("thulirva_admin_user");
+        localStorage.removeItem("admin");
         window.location.href = "index.html";
     }
 }

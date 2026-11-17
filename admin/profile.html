@@ -34,12 +34,12 @@
             <div class="grid grid-3 gap-4">
                 <!-- Profile Card (1 col) -->
                 <div class="card p-4 text-center" style="grid-column: span 1;">
-                    <div class="sidebar-admin-avatar mx-auto mb-3" style="width: 80px; height: 80px; font-size: 32px; border-radius: 50%; background: #173F2D; color: #D4AF37; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                    <div class="sidebar-admin-avatar mx-auto mb-3" style="width: 80px; height: 80px; font-size: 32px; border-radius: 50%; background: #173F2D; color: #D4AF37; display: flex; align-items: center; justify-content: center; font-weight: 700;" id="profileAvatarBig">
                         A
                     </div>
-                    <h3 class="font-bold text-dark mb-1">Thulirva Ops Admin</h3>
-                    <div class="badge badge-success mb-3">Super Administrator</div>
-                    <div class="text-sm text-muted mb-4 font-mono">admin@thulirva.com</div>
+                    <h3 class="font-bold text-dark mb-1" id="profileAdminName">Thulirva Ops Admin</h3>
+                    <div class="badge badge-success mb-3" id="profileAdminRole">Super Administrator</div>
+                    <div class="text-sm text-muted mb-4 font-mono" id="profileAdminEmail">admin@thulirva.com</div>
 
                     <div class="card bg-cream p-3 text-left mb-3">
                         <div class="text-xs text-muted font-bold uppercase mb-1">Privileges & Scopes</div>
@@ -105,11 +105,29 @@
 </div>
 
 <script src="js/api-client.js"></script>
-<script src="js/admin-shell.js"></script>
+<script src="js/admin-shell.js?v=20261117d"></script>
 <script>
 const token = localStorage.getItem("thulirva_admin_token") || "";
 
-document.addEventListener("DOMContentLoaded", () => {
+function loadAdminProfileCard() {
+    const admin = window.getSafeAdmin();
+    const name = admin.admin_name || admin.name || "Super Admin";
+    const email = admin.email || "admin@thulirva.com";
+    const role = admin.role || "Super Administrator";
+    const initials = name.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase() || "A";
+
+    const nameEl = document.getElementById("profileAdminName");
+    const emailEl = document.getElementById("profileAdminEmail");
+    const roleEl = document.getElementById("profileAdminRole");
+    const avatarEl = document.getElementById("profileAvatarBig");
+
+    if (nameEl) nameEl.textContent = name;
+    if (emailEl) emailEl.textContent = email;
+    if (roleEl) roleEl.textContent = role;
+    if (avatarEl) avatarEl.textContent = initials[0] || "A";
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
     initAdminShell({
         activePage: "profile",
         breadcrumbs: [
@@ -118,6 +136,11 @@ document.addEventListener("DOMContentLoaded", () => {
             { label: "Admin Profile", url: "profile.html" }
         ]
     });
+    loadAdminProfileCard();
+    if (window.AdminProfile && window.AdminProfile.sync) {
+        await window.AdminProfile.sync();
+        loadAdminProfileCard();
+    }
 });
 
 async function handleChangePassword(e) {

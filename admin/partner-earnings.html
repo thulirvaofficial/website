@@ -309,7 +309,7 @@
 </div>
 
 <script src="js/api-client.js"></script>
-<script src="js/admin-shell.js"></script>
+<script src="js/admin-shell.js?v=20261117d"></script>
 <script>
 let partnerWallets = [];
 let pastSettlements = [];
@@ -407,21 +407,21 @@ function renderSettlementsTable() {
         return;
     }
 
-    tbody.innerHTML = pastSettlements.map(s => `
+    tbody.innerHTML = (pastSettlements || []).filter(Boolean).map(s => `
         <tr>
-            <td class="font-mono font-bold text-dark text-xs">${s.settlement_id || s.id}</td>
+            <td class="font-mono font-bold text-dark text-xs">${(s && (s.settlement_id || s.id)) || '—'}</td>
             <td>
-                <div class="font-bold text-dark">${s.partner_name || s.partner_id}</div>
-                <div class="text-xs text-muted font-mono">${s.partner_id}</div>
+                <div class="font-bold text-dark">${(s && (s.partner_name || s.partner_id)) || 'Partner'}</div>
+                <div class="text-xs text-muted font-mono">${(s && s.partner_id) || '—'}</div>
             </td>
             <td class="text-xs text-muted">
-                ${s.period_start || '—'} → ${s.period_end || '—'}
+                ${(s && s.period_start) || '—'} → ${(s && s.period_end) || '—'}
             </td>
-            <td class="font-bold text-success">₹${Number(s.net_amount_rupees || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-            <td><span class="badge badge-neutral">${s.payment_mode || 'Bank Transfer'}</span></td>
-            <td><span class="font-mono text-xs font-bold text-dark">${s.utr_number || '—'}</span></td>
-            <td class="text-xs text-muted">${new Date(s.created_at || Date.now()).toLocaleDateString('en-IN')}</td>
-            <td class="text-xs font-medium text-muted">${s.admin_name || 'Ops Admin'}</td>
+            <td class="font-bold text-success">₹${Number((s && s.net_amount_rupees) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+            <td><span class="badge badge-neutral">${(s && s.payment_mode) || 'Bank Transfer'}</span></td>
+            <td><span class="font-mono text-xs font-bold text-dark">${(s && s.utr_number) || '—'}</span></td>
+            <td class="text-xs text-muted">${new Date((s && s.created_at) || Date.now()).toLocaleDateString('en-IN')}</td>
+            <td class="text-xs font-medium text-muted">${(s && (s.admin_name || s.name)) || 'Ops Admin'}</td>
         </tr>
     `).join("");
 }
@@ -565,21 +565,21 @@ function renderSettlementsTableSlice(items) {
         return;
     }
 
-    tbody.innerHTML = items.map(s => `
+    tbody.innerHTML = (items || []).filter(Boolean).map(s => `
         <tr>
-            <td class="font-mono font-bold text-dark text-xs">${s.settlement_id || s.id}</td>
+            <td class="font-mono font-bold text-dark text-xs">${(s && (s.settlement_id || s.id)) || '—'}</td>
             <td>
-                <div class="font-bold text-dark">${s.partner_name || s.partner_id}</div>
-                <div class="text-xs text-muted font-mono">${s.partner_id}</div>
+                <div class="font-bold text-dark">${(s && (s.partner_name || s.partner_id)) || 'Partner'}</div>
+                <div class="text-xs text-muted font-mono">${(s && s.partner_id) || '—'}</div>
             </td>
             <td class="text-xs text-muted">
-                ${s.period_start || '—'} → ${s.period_end || '—'}
+                ${(s && s.period_start) || '—'} → ${(s && s.period_end) || '—'}
             </td>
-            <td class="font-bold text-success">₹${Number(s.net_amount_rupees || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-            <td><span class="badge badge-neutral">${s.payment_mode || 'Bank Transfer'}</span></td>
-            <td><span class="font-mono text-xs font-bold text-dark">${s.utr_number || '—'}</span></td>
-            <td class="text-xs text-muted">${new Date(s.created_at || Date.now()).toLocaleDateString('en-IN')}</td>
-            <td class="text-xs font-medium text-muted">${s.admin_name || 'Ops Admin'}</td>
+            <td class="font-bold text-success">₹${Number((s && s.net_amount_rupees) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+            <td><span class="badge badge-neutral">${(s && s.payment_mode) || 'Bank Transfer'}</span></td>
+            <td><span class="font-mono text-xs font-bold text-dark">${(s && s.utr_number) || '—'}</span></td>
+            <td class="text-xs text-muted">${new Date((s && s.created_at) || Date.now()).toLocaleDateString('en-IN')}</td>
+            <td class="text-xs font-medium text-muted">${(s && (s.admin_name || s.name)) || 'Ops Admin'}</td>
         </tr>
     `).join("");
 }

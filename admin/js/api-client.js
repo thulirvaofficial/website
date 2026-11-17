@@ -248,15 +248,25 @@
         }
 
         /**
-         * User-friendly toast notifications
+         * User-friendly toast notifications with deduplication
          */
         showToast(message, type = "info") {
+            if (!message) return;
             if (typeof global.showToast === "function" && global.showToast !== this.showToast) {
                 try {
                     global.showToast(message, type);
                     return;
                 } catch (_) {}
             }
+
+            const msgText = typeof message === "string" ? message : (message.message || JSON.stringify(message));
+            const dedupeKey = `${type}::${msgText.trim()}`;
+            const now = Date.now();
+            if (this._lastToastKey === dedupeKey && (now - (this._lastToastTime || 0) < 2500)) {
+                return;
+            }
+            this._lastToastKey = dedupeKey;
+            this._lastToastTime = now;
 
             let toastEl = document.getElementById("adminToast") || document.getElementById("toast");
             if (!toastEl) {
