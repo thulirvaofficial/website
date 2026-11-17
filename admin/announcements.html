@@ -369,8 +369,8 @@
     </div>
 </div>
 
-<script src="js/api-client.js?v=20261117f"></script>
-<script src="js/admin-shell.js?v=20261117f"></script>
+<script src="js/api-client.js?v=20261117g"></script>
+<script src="js/admin-shell.js?v=20261117g"></script>
 <script>
 // Expose global filter fallbacks immediately before any code execution
 function applyFilters() {
@@ -731,7 +731,6 @@ async function toggleStatus(id, checkboxEl) {
             } catch (mErr) { console.warn("Metrics err:", mErr); }
             try {
                 if (typeof filterAnnouncements === "function") filterAnnouncements();
-                else if (typeof applyFilters === "function") applyFilters();
                 else if (typeof renderTable === "function") renderTable();
             } catch (tErr) { console.warn("Table refresh err:", tErr); }
             try {
@@ -776,7 +775,6 @@ async function togglePublish(id, isPublished, btnEl) {
             } catch (mErr) { console.warn("Metrics err:", mErr); }
             try {
                 if (typeof filterAnnouncements === "function") filterAnnouncements();
-                else if (typeof applyFilters === "function") applyFilters();
                 else if (typeof renderTable === "function") renderTable();
             } catch (tErr) { console.warn("Table refresh err:", tErr); }
             try {

@@ -11,8 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDqhJ1XV_YMFmlEAGYkBxnHhNPCnjGhO8U&libraries=geometry"></script>
+    <script src="/socket.io/socket.io.js" defer></script>
     <style>
         .partner-avatar {
             width: 42px;
@@ -512,14 +511,33 @@
     </div>
 </div>
 
-<script src="js/api-client.js?v=20261117f"></script>
-<script src="js/admin-shell.js?v=20261117f"></script>
+<script src="js/api-client.js?v=20261117g"></script>
+<script src="js/admin-shell.js?v=20261117g"></script>
 <script>
 let allPartners = [];
 let displayedPartners = [];
 let currentPage = 1;
 const pageSize = 10;
 const token = localStorage.getItem("thulirva_admin_token") || "";
+
+// Dynamic on-demand Google Maps Script Loader
+let _googleMapsPromise = null;
+function loadGoogleMapsScript() {
+    if (typeof google !== 'undefined' && google.maps) {
+        return Promise.resolve(window.google);
+    }
+    if (_googleMapsPromise) return _googleMapsPromise;
+    _googleMapsPromise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyDqhJ1XV_YMFmlEAGYkBxnHhNPCnjGhO8U&libraries=geometry";
+        script.async = true;
+        script.defer = true;
+        script.onload = () => resolve(window.google);
+        script.onerror = () => reject(new Error("Google Maps script failed to load"));
+        document.head.appendChild(script);
+    });
+    return _googleMapsPromise;
+}
 
 function initPartnersPage() {
     initAdminShell({
@@ -543,31 +561,61 @@ if (document.readyState === "loading") {
 async function loadPartners() {
     const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
     try {
+        const headers = {};
+        if (token && token.trim()) {
+            headers["Authorization"] = `Bearer ${token.trim()}`;
+        }
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
         const res = await fetch(apiBase + "/api/v1/partners", {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: headers,
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
+
         const data = await res.json();
         allPartners = Array.isArray(data.partners) ? data.partners : [];
 
         renderMetrics();
         filterPartners();
     } catch (err) {
+        console.warn("Delivery fleet fetch warning:", err);
+        // Fallback: try without auth header if initial fetch had issue
+        if (token) {
+            try {
+                const retryRes = await fetch(apiBase + "/api/v1/partners");
+                const retryData = await retryRes.json();
+                if (retryData && Array.isArray(retryData.partners)) {
+                    allPartners = retryData.partners;
+                    renderMetrics();
+                    filterPartners();
+                    return;
+                }
+            } catch (_) {}
+        }
         showToast("Failed to load delivery partners: " + err.message, "danger");
-        document.getElementById("partnersTableBody").innerHTML = `
-            <tr><td colspan="9" class="text-center py-4 text-danger">Error retrieving delivery fleet. Please check network connection.</td></tr>
-        `;
+        const tbody = document.getElementById("partnersTableBody");
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr><td colspan="9" class="text-center py-4 text-danger">
+                    <div>Error retrieving delivery fleet: ${err.message || "Request timed out"}</div>
+                    <button class="btn btn-secondary btn-sm mt-2" onclick="loadPartners()">Retry Roster Load</button>
+                </td></tr>
+            `;
+        }
     }
 }
 
 function setFilterStatus(status) {
-    document.getElementById("filterStatus").value = status;
+    const filterEl = document.getElementById("filterStatus");
+    if (filterEl) filterEl.value = status;
     filterPartners();
 }
 
 function renderMetrics() {
     const total = allPartners.length;
     const online = allPartners.filter(p => Boolean(p.is_online)).length;
-    const offline = total - online;
+    const offline = Math.max(0, total - online);
     const active = allPartners.filter(p => p.is_active !== false && !p.is_blocked).length;
     const pendingKyc = allPartners.filter(p => p.kyc_status !== 'APPROVED').length;
     const blocked = allPartners.filter(p => p.is_active === false || p.is_blocked === true).length;
@@ -575,20 +623,31 @@ function renderMetrics() {
     const validRatings = allPartners.map(p => parseFloat(p.rating)).filter(r => !isNaN(r) && r > 0);
     const avgRating = validRatings.length ? (validRatings.reduce((a, b) => a + b, 0) / validRatings.length).toFixed(1) : '4.9';
 
-    document.getElementById("statTotalFleet").textContent = total;
-    document.getElementById("statOnlineFleet").textContent = `${online} Active`;
-    document.getElementById("statOfflineFleet").textContent = `${offline}`;
-    document.getElementById("statActiveFleet").textContent = `${active}`;
-    document.getElementById("statPendingKyc").textContent = `${pendingKyc}`;
-    document.getElementById("statBlockedFleet").textContent = `${blocked}`;
-    document.getElementById("statAvgRating").textContent = `${avgRating} ★`;
+    const elTotal = document.getElementById("statTotalFleet");
+    if (elTotal) elTotal.textContent = total;
+    const elOnline = document.getElementById("statOnlineFleet");
+    if (elOnline) elOnline.textContent = `${online} Active`;
+    const elOffline = document.getElementById("statOfflineFleet");
+    if (elOffline) elOffline.textContent = `${offline}`;
+    const elActive = document.getElementById("statActiveFleet");
+    if (elActive) elActive.textContent = `${active}`;
+    const elPending = document.getElementById("statPendingKyc");
+    if (elPending) elPending.textContent = `${pendingKyc}`;
+    const elBlocked = document.getElementById("statBlockedFleet");
+    if (elBlocked) elBlocked.textContent = `${blocked}`;
+    const elRating = document.getElementById("statAvgRating");
+    if (elRating) elRating.textContent = `${avgRating} ★`;
 }
 
 function filterPartners() {
-    const query = (document.getElementById("partnerSearch").value || "").toLowerCase().trim();
-    const status = document.getElementById("filterStatus").value;
-    const area = document.getElementById("filterArea").value;
-    const sortBy = document.getElementById("sortPartners") ? document.getElementById("sortPartners").value : "name_asc";
+    const searchInput = document.getElementById("partnerSearch");
+    const query = (searchInput ? searchInput.value : "").toLowerCase().trim();
+    const filterStatusEl = document.getElementById("filterStatus");
+    const status = filterStatusEl ? filterStatusEl.value : "";
+    const filterAreaEl = document.getElementById("filterArea");
+    const area = filterAreaEl ? filterAreaEl.value : "";
+    const sortEl = document.getElementById("sortPartners");
+    const sortBy = sortEl ? sortEl.value : "name_asc";
 
     let filtered = allPartners.filter(p => {
         const matchesQuery = !query ||
@@ -679,9 +738,9 @@ function renderTable(list) {
         const isBlocked = p.is_active === false || p.is_blocked === true;
         const initial = (p.name || "D").charAt(0).toUpperCase();
         const avatarImg = p.profile_photo ? `<img src="${p.profile_photo}" class="partner-avatar" alt="${p.name}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'partner-avatar\\'>${initial}</div>';">` : `<div class="partner-avatar">${initial}</div>`;
-        const lat = p.current_latitude || 12.8025;
-        const lng = p.current_longitude || 80.2233;
-        const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+        const latNum = Number(p.current_latitude) || 12.8025;
+        const lngNum = Number(p.current_longitude) || 80.2233;
+        const mapsUrl = `https://www.google.com/maps?q=${latNum},${lngNum}`;
 
         let kycBadge = `<span class="badge badge-warning">Pending</span>`;
         if (p.kyc_status === "APPROVED") {
@@ -715,7 +774,7 @@ function renderTable(list) {
                 <td>
                     <a href="${mapsUrl}" target="_blank" class="gps-pill" title="Open live Google Maps location">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
-                        ${lat.toFixed(4)}, ${lng.toFixed(4)}
+                        ${latNum.toFixed(4)}, ${lngNum.toFixed(4)}
                     </a>
                 </td>
                 <td>
@@ -1432,16 +1491,34 @@ function initFleetSocket() {
     }
 }
 
-function openLiveFleetMapModal() {
-    document.getElementById("fleetMapModalOverlay").style.display = "flex";
+async function openLiveFleetMapModal() {
+    const overlay = document.getElementById("fleetMapModalOverlay");
+    if (overlay) overlay.style.display = "flex";
     initFleetSocket();
 
     const onlinePartners = allPartners.filter(p => p.is_online);
-    document.getElementById("fleetModalOnlineCount").textContent = `${onlinePartners.length} Online Now`;
+    const countEl = document.getElementById("fleetModalOnlineCount");
+    if (countEl) countEl.textContent = `${onlinePartners.length} Online Now`;
 
-    setTimeout(() => {
+    const container = document.getElementById("fleetGoogleMapContainer");
+    if (!fleetMap && container) {
+        container.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#133E2B;">
+                <div class="spinner-border text-primary" role="status" style="width:2.2rem; height:2.2rem; border-width:0.2em; border-color:#1B4332; border-right-color:transparent;"></div>
+                <div style="font-size:13px; font-weight:600; margin-top:12px;">Loading Live Google Maps Engine...</div>
+            </div>
+        `;
+    }
+
+    try {
+        await loadGoogleMapsScript();
+        if (container && !fleetMap) container.innerHTML = "";
         initFleetGoogleMap();
-    }, 150);
+    } catch (err) {
+        if (container) {
+            container.innerHTML = `<div style="padding:30px; text-align:center; color:#B91C1C;">Failed to load Google Maps. Please check your internet connection and try again.</div>`;
+        }
+    }
 }
 
 function closeLiveFleetMapModal() {
