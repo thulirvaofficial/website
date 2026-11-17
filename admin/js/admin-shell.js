@@ -97,6 +97,17 @@ function getIcon(name) {
     return SVG_ICONS[name] || `<i data-lucide="${name}"></i>`;
 }
 
+function getApiBaseUrl() {
+    if (window.THULIRVA_API_BASE) return window.THULIRVA_API_BASE.replace(/\/+$/, "");
+    if (window.location && window.location.protocol === "file:") return "http://localhost:5500";
+    if (window.location && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+        if (window.location.port && window.location.port !== "5500" && window.location.port !== "80" && window.location.port !== "443") {
+            return "http://" + window.location.hostname + ":5500";
+        }
+    }
+    return "";
+}
+
 /**
  * Safe Admin Profile & Session Provider
  * Guarantees admin.admin_name is never undefined across the entire ecosystem
@@ -127,17 +138,17 @@ window.getSafeAdmin = function() {
     if (!admin || typeof admin !== "object") {
         admin = {
             id: 1,
-            name: "Admin",
-            admin_name: "Admin",
+            name: "Super Admin",
+            admin_name: "Super Admin",
             email: "admin@thulirva.com",
-            role: "Admin",
+            role: "Super Admin",
             profile_photo: ""
         };
     } else {
-        if (!admin.admin_name) admin.admin_name = admin.name || "Admin";
+        if (!admin.admin_name) admin.admin_name = admin.name || "Super Admin";
         if (!admin.name) admin.name = admin.admin_name;
         if (!admin.email) admin.email = "admin@thulirva.com";
-        if (!admin.role) admin.role = "Admin";
+        if (!admin.role) admin.role = "Super Admin";
     }
 
     window.admin = admin;
@@ -146,7 +157,7 @@ window.getSafeAdmin = function() {
 
 window.admin = window.getSafeAdmin();
 window.getAdminName = function() {
-    return window.getSafeAdmin().admin_name || "Admin";
+    return window.getSafeAdmin().admin_name || "Super Admin";
 };
 
 window.AdminProfile = {
@@ -156,7 +167,7 @@ window.AdminProfile = {
         const token = localStorage.getItem("thulirva_admin_token");
         if (!token) return window.getSafeAdmin();
         try {
-            let res = await fetch("/api/admin/profile", {
+            let res = await fetch(getApiBaseUrl() + "/api/admin/profile", {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             if (res.ok) {
@@ -173,8 +184,8 @@ window.AdminProfile = {
                     }
                     const adminObj = {
                         id: src.id || 1,
-                        name: src.name || src.admin_name || "Admin",
-                        admin_name: src.admin_name || src.name || "Admin",
+                        name: src.name || src.admin_name || "Super Admin",
+                        admin_name: src.admin_name || src.name || "Super Admin",
                         email: src.email || "admin@thulirva.com",
                         role: role === "super_admin" || role === "super admin" ? "Super Admin" : "Admin",
                         profile_photo: src.profile_photo || ""
@@ -185,7 +196,7 @@ window.AdminProfile = {
                     window.AdminProfile.updateUI(adminObj);
                     return adminObj;
                 }
-            } else if (res.status === 401 || res.status === 403) {
+            } else if (res.status === 403) {
                 localStorage.removeItem("thulirva_admin_token");
                 localStorage.removeItem("thulirva_admin_user");
                 localStorage.removeItem("admin");
@@ -196,7 +207,7 @@ window.AdminProfile = {
     },
     updateUI: function(admin) {
         if (!admin) admin = window.getSafeAdmin();
-        const safeName = admin.admin_name || admin.name || "Admin";
+        const safeName = admin.admin_name || admin.name || "Super Admin";
         const safeEmail = admin.email || "admin@thulirva.com";
         const initials = safeName.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase() || "AD";
 
@@ -205,7 +216,7 @@ window.AdminProfile = {
         const sideRole = document.querySelector(".sidebar-admin-role");
         if (sideAvatar) sideAvatar.textContent = initials[0] || "A";
         if (sideName) sideName.textContent = safeName;
-        if (sideRole) sideRole.textContent = admin.role || "Admin";
+        if (sideRole) sideRole.textContent = admin.role || "Super Admin";
 
         const topAvatar = document.querySelector(".topbar-user-avatar");
         const topName = document.querySelector(".topbar-user-name");
@@ -227,7 +238,7 @@ async function initAdminShell({ activePage = "dashboard", breadcrumbs = [] } = {
     const isLogin = window.location.pathname.endsWith("index.html") || window.location.pathname.endsWith("/admin/") || window.location.pathname.endsWith("/admin");
     const token = localStorage.getItem("thulirva_admin_token");
 
-    // 1. Unauthenticated Gate
+    // 1. Unauthenticated Gate: redirect missing token to admin login page
     if (!token) {
         if (!isLogin) {
             document.documentElement.classList.remove("auth-verifying");
@@ -239,20 +250,30 @@ async function initAdminShell({ activePage = "dashboard", breadcrumbs = [] } = {
     // 2. Strict Server-Side Role Verification
     if (token) {
         try {
-            const verifyRes = await fetch("/api/admin/profile", {
+            const verifyRes = await fetch(getApiBaseUrl() + "/api/admin/profile", {
                 headers: { "Authorization": `Bearer ${token}` }
             });
 
-            if (!verifyRes.ok) {
+            if (verifyRes.status === 403) {
+                // Customer or Delivery Partner account trying to access admin console
                 localStorage.removeItem("thulirva_admin_token");
                 localStorage.removeItem("thulirva_admin_user");
                 localStorage.removeItem("admin");
                 if (!isLogin) {
-                    alert("Access Denied: You do not have permission to access the Administrative Portal. Redirecting to home.");
+                    alert("Access Denied: Customer accounts are not authorized to access the Administrative Console.");
                     window.location.replace("../index.html");
                     return;
                 }
-            } else {
+            } else if (verifyRes.status === 401) {
+                // Session expired or invalid token - redirect to admin login
+                localStorage.removeItem("thulirva_admin_token");
+                localStorage.removeItem("thulirva_admin_user");
+                localStorage.removeItem("admin");
+                if (!isLogin) {
+                    window.location.replace("index.html");
+                    return;
+                }
+            } else if (verifyRes.ok) {
                 const data = await verifyRes.json();
                 const role = (data.admin?.role || data.user?.role || "").toLowerCase();
                 if (role !== "admin" && role !== "super_admin" && role !== "super admin") {
@@ -267,8 +288,8 @@ async function initAdminShell({ activePage = "dashboard", breadcrumbs = [] } = {
                 } else {
                     const verifiedAdmin = {
                         id: data.admin?.id || data.user?.id || 1,
-                        name: data.admin?.admin_name || data.admin?.name || data.user?.name || "Admin",
-                        admin_name: data.admin?.admin_name || data.admin?.name || data.user?.name || "Admin",
+                        name: data.admin?.admin_name || data.admin?.name || data.user?.name || "Super Admin",
+                        admin_name: data.admin?.admin_name || data.admin?.name || data.user?.name || "Super Admin",
                         email: data.admin?.email || data.user?.email || "admin@thulirva.com",
                         role: role === "super_admin" || role === "super admin" ? "Super Admin" : "Admin",
                         profile_photo: data.admin?.profile_photo || data.user?.profile_photo || ""

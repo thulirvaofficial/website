@@ -363,12 +363,23 @@
     </div>
 
     <script>
+        function getApiBaseUrl() {
+            if (window.THULIRVA_API_BASE) return window.THULIRVA_API_BASE.replace(/\/+$/, "");
+            if (window.location && window.location.protocol === "file:") return "http://localhost:5500";
+            if (window.location && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+                if (window.location.port && window.location.port !== "5500" && window.location.port !== "80" && window.location.port !== "443") {
+                    return "http://" + window.location.hostname + ":5500";
+                }
+            }
+            return "";
+        }
+
         // Verify admin token if already stored
         (async function checkExistingAdminSession() {
             const token = localStorage.getItem("thulirva_admin_token");
             if (token) {
                 try {
-                    const res = await fetch("/api/admin/profile", {
+                    const res = await fetch(getApiBaseUrl() + "/api/admin/profile", {
                         headers: { "Authorization": `Bearer ${token}` }
                     });
                     if (res.ok) {
@@ -435,7 +446,7 @@
             }
 
             try {
-                const response = await fetch("/api/auth/login", {
+                const response = await fetch(getApiBaseUrl() + "/api/auth/login", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email, password, admin_login: true, is_admin_portal: true })
