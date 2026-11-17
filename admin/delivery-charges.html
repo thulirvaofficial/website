@@ -263,6 +263,40 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- 5. Cash on Delivery (COD) Master Switch & Capacity Controls (Modules 4 & 5) -->
+                    <div class="card">
+                        <div class="card-header flex-between" style="padding:14px 20px;">
+                            <div>
+                                <div style="font-weight:700; color:var(--thulirva-forest); font-size:14px; display:flex; align-items:center; gap:8px;">
+                                    <span>💵 Cash on Delivery (COD) Master Switch</span>
+                                    <span id="codStatusBadge" class="badge badge-active" style="font-size:11px;">ACTIVE</span>
+                                </div>
+                                <div style="font-size:11.5px; color:var(--thulirva-text-muted);">Enable/disable COD storewide for product orders and configure holding limit</div>
+                            </div>
+                            <label class="switch-toggle" title="Toggle COD Master Switch">
+                                <input type="checkbox" id="cfgCodMasterSwitch" checked onchange="toggleCodMasterSwitch(this)">
+                                <span class="slider-round"></span>
+                            </label>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                                <div class="form-group">
+                                    <label class="form-label">Maximum COD Holding Limit Per Partner</label>
+                                    <div class="rate-input-group">
+                                        <span class="rate-prefix">₹</span>
+                                        <input type="number" id="cfgCodHoldingLimit" class="form-control rate-input" value="1000" min="0" step="100" onchange="updateCodHoldingLimit(this.value)">
+                                    </div>
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Partners cannot accept additional COD orders once unremitted cash reaches ₹1,000.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Subscription COD Policy</label>
+                                    <input type="text" class="form-control" value="Prepaid Online Only (Zero COD Liability)" disabled style="background:#FAF8EF; color:var(--thulirva-forest); font-weight:600;">
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Subscriptions strictly bypass holding limits &amp; never accrue COD debt.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Right Column: Interactive Live Calculator & Simulator -->
@@ -580,7 +614,87 @@ async function saveAllSettings() {
     }
 }
 
+async function loadCodConfig() {
+    try {
+        const res = await fetch("/api/config/cod");
+        const data = await res.json();
+        if (data.success) {
+            const isEnabled = data.cod_enabled !== false;
+            document.getElementById("cfgCodMasterSwitch").checked = isEnabled;
+            document.getElementById("cfgCodHoldingLimit").value = data.cod_holding_limit || 1000;
+            const badge = document.getElementById("codStatusBadge");
+            if (badge) {
+                badge.className = isEnabled ? "badge badge-active" : "badge badge-inactive";
+                badge.textContent = isEnabled ? "ACTIVE" : "DISABLED";
+            }
+        }
+    } catch (_) {}
+}
+
+async function toggleCodMasterSwitch(checkboxEl) {
+    const isEnabled = checkboxEl.checked;
+    const previous = !isEnabled;
+    checkboxEl.disabled = true;
+
+    try {
+        const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
+        const res = await fetch("/api/admin/config/cod", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Admin-Name": safeAdminName,
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                cod_enabled: isEnabled,
+                cod_holding_limit: Number(document.getElementById("cfgCodHoldingLimit").value) || 1000
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            checkboxEl.checked = data.cod_enabled;
+            const badge = document.getElementById("codStatusBadge");
+            if (badge) {
+                badge.className = data.cod_enabled ? "badge badge-active" : "badge badge-inactive";
+                badge.textContent = data.cod_enabled ? "ACTIVE" : "DISABLED";
+            }
+            showToast(data.message || (isEnabled ? "COD Master Switch ENABLED" : "COD Master Switch DISABLED"));
+        } else {
+            checkboxEl.checked = previous;
+            showToast(data.message || "Failed to update COD Master Switch", "error");
+        }
+    } catch (e) {
+        checkboxEl.checked = previous;
+        showToast("Error updating COD switch: " + e.message, "error");
+    } finally {
+        checkboxEl.disabled = false;
+    }
+}
+
+async function updateCodHoldingLimit(limit) {
+    const numLimit = Number(limit) || 1000;
+    try {
+        const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
+        const res = await fetch("/api/admin/config/cod", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Admin-Name": safeAdminName,
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                cod_holding_limit: numLimit
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`COD Holding limit updated to ₹${numLimit}`);
+        }
+    } catch (_) {}
+}
+
 loadDeliveryConfig();
+loadCodConfig();
 </script>
 </body>
 </html>
