@@ -533,15 +533,18 @@ async function promptToggleStatus() {
     if (!password) return;
 
     try {
+        const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
         const res = await fetch("/api/admin/payment-qr/status", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "X-Admin-Name": safeAdminName,
                 Authorization: `Bearer ${token}`
             },
             body: JSON.stringify({
                 security_password: password,
-                is_active: nextState
+                is_active: nextState,
+                admin_name: safeAdminName
             })
         });
 
@@ -577,15 +580,18 @@ async function handleChangePasswordSubmit(event) {
     }
 
     try {
+        const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
         const res = await fetch("/api/admin/payment-qr/set-password", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "X-Admin-Name": safeAdminName,
                 Authorization: `Bearer ${token}`
             },
             body: JSON.stringify({
                 current_password: cur,
-                new_password: np
+                new_password: np,
+                admin_name: safeAdminName
             })
         });
 

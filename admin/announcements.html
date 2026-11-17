@@ -622,6 +622,8 @@ async function handleFormSubmit(event) {
     const fileInput = document.getElementById("formBannerFile");
 
     const formData = new FormData();
+    const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
+    formData.append("admin_name", safeAdminName);
     formData.append("title", document.getElementById("formTitle").value.trim());
     formData.append("badge_text", document.getElementById("formBadge").value.trim());
     formData.append("description", document.getElementById("formDescription").value.trim());
@@ -650,7 +652,8 @@ async function handleFormSubmit(event) {
         const res = await fetch(url, {
             method,
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                "X-Admin-Name": safeAdminName
             },
             body: formData
         });
@@ -670,11 +673,15 @@ async function handleFormSubmit(event) {
 
 async function toggleStatus(id) {
     try {
+        const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
         const res = await fetch(`/api/admin/announcements/${id}/toggle`, {
-            method: "PATCH",
+            method: "POST",
             headers: {
+                "Content-Type": "application/json",
+                "X-Admin-Name": safeAdminName,
                 Authorization: `Bearer ${token}`
-            }
+            },
+            body: JSON.stringify({ admin_name: safeAdminName })
         });
         const data = await res.json();
         if (data.success) {
@@ -690,13 +697,15 @@ async function toggleStatus(id) {
 
 async function togglePublish(id, isPublished) {
     try {
+        const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
         const res = await fetch(`/api/admin/announcements/${id}/publish`, {
-            method: "PATCH",
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "X-Admin-Name": safeAdminName,
                 Authorization: `Bearer ${token}`
             },
-            body: JSON.stringify({ is_published: isPublished })
+            body: JSON.stringify({ is_published: isPublished, admin_name: safeAdminName })
         });
         const data = await res.json();
         if (data.success) {
@@ -714,9 +723,15 @@ async function deleteAnnouncementConfirm(id) {
     if (!confirm(`Are you sure you want to permanently delete announcement #${id}?`)) return;
 
     try {
-        const res = await fetch(`/api/admin/announcements/${id}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` }
+        const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
+        const res = await fetch(`/api/admin/announcements/${id}/delete`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Admin-Name": safeAdminName,
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ admin_name: safeAdminName })
         });
         const data = await res.json();
         if (data.success) {

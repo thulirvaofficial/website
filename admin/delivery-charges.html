@@ -552,14 +552,17 @@ async function saveAllSettings() {
         distance_rate_per_km: Number(document.getElementById("cfgDistanceRatePerKm").value),
         partner_base_payout: Number(document.getElementById("cfgPartnerBasePayout").value),
         partner_distance_bonus_per_km: Number(document.getElementById("cfgPartnerDistanceBonus").value),
-        zone_charges: collectZoneCharges()
+        zone_charges: collectZoneCharges(),
+        admin_name: (window.getAdminName && window.getAdminName()) || "Super Admin"
     };
 
     try {
+        const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
         const res = await fetch("/api/admin/config/delivery", {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
+                "X-Admin-Name": safeAdminName,
                 Authorization: `Bearer ${token}`
             },
             body: JSON.stringify(payload)
