@@ -455,6 +455,8 @@ function filterAnnouncements() {
 function applyFilters() {
     filterAnnouncements();
 }
+window.applyFilters = applyFilters;
+window.filterAnnouncements = filterAnnouncements;
 
 function renderTable() {
     const table = document.getElementById("announcementsTable");
@@ -706,9 +708,15 @@ async function toggleStatus(id, checkboxEl) {
             if (item) {
                 item.is_active = data.announcement.is_active;
             }
-            calculateMetrics();
-            filterAnnouncements();
-            renderLivePreview();
+            try {
+                if (typeof calculateMetrics === "function") calculateMetrics();
+                if (typeof filterAnnouncements === "function") filterAnnouncements();
+                else if (typeof applyFilters === "function") applyFilters();
+                else if (typeof renderTable === "function") renderTable();
+                if (typeof renderLivePreview === "function") renderLivePreview();
+            } catch (renderErr) {
+                console.warn("UI refresh warning:", renderErr);
+            }
         } else {
             checkboxEl.checked = previousState;
             showToast(data.message || "Failed to toggle status", "error");
@@ -742,9 +750,15 @@ async function togglePublish(id, isPublished, btnEl) {
             if (item) {
                 item.is_published = data.announcement.is_published;
             }
-            calculateMetrics();
-            filterAnnouncements();
-            renderLivePreview();
+            try {
+                if (typeof calculateMetrics === "function") calculateMetrics();
+                if (typeof filterAnnouncements === "function") filterAnnouncements();
+                else if (typeof applyFilters === "function") applyFilters();
+                else if (typeof renderTable === "function") renderTable();
+                if (typeof renderLivePreview === "function") renderLivePreview();
+            } catch (renderErr) {
+                console.warn("UI refresh warning:", renderErr);
+            }
         } else {
             showToast(data.message || "Failed to update publish state", "error");
         }
