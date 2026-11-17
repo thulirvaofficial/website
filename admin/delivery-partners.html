@@ -73,6 +73,9 @@
                     <p class="page-subtitle">Real-time delivery partner roster, active shift statuses, GPS telemetry & route allocation</p>
                 </div>
                 <div class="flex-center gap-3">
+                    <button class="btn btn-secondary" onclick="openRemittanceQueueModal()">
+                        💰 COD Remittances
+                    </button>
                     <button class="btn btn-secondary" onclick="exportPartnersCsv()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                         Export CSV
@@ -345,6 +348,124 @@
                     <button type="submit" class="btn btn-primary" id="btnUpdatePartner">Save Changes</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Partner Payout Modal (Module 3) -->
+<div class="modal" id="payoutModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Process Partner Payout</h3>
+                <button class="modal-close" onclick="closeModal('payoutModal')">&times;</button>
+            </div>
+            <form id="payoutForm" onsubmit="handleExecutePayout(event)">
+                <input type="hidden" id="payoutPartnerId">
+                <div class="modal-body">
+                    <div class="p-3 mb-3" style="background:#E8F5E9; border-radius:8px; font-size:12.5px; color:#1B5E20;">
+                        <strong>Partner:</strong> <span id="payoutPartnerName"></span> (<span id="payoutPartnerIdDisplay"></span>)<br>
+                        <strong>Available Balance:</strong> ₹<span id="payoutAvailableBalance">0</span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label required">Payout Amount (₹)</label>
+                        <input type="number" id="payoutAmount" class="form-control" min="1" step="0.5" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label required">Payment Mode</label>
+                        <select id="payoutMethod" class="form-control" required>
+                            <option value="bank_transfer">Bank Transfer (NEFT / IMPS)</option>
+                            <option value="upi">UPI Transfer</option>
+                            <option value="cash">Direct Cash</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label required">Transaction UTR / Reference ID</label>
+                        <input type="text" id="payoutTxnId" class="form-control" placeholder="e.g. UTR1234567890" required>
+                        <small class="text-muted">Mandatory for financial ledger and audit trail.</small>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Notes (Optional)</label>
+                        <input type="text" id="payoutNotes" class="form-control" placeholder="Weekly settlement payout">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('payoutModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitPayout">Disburse Payout</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Cash Handover Modal (Module 7) -->
+<div class="modal" id="cashHandoverModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Record Physical COD Cash Handover</h3>
+                <button class="modal-close" onclick="closeModal('cashHandoverModal')">&times;</button>
+            </div>
+            <form id="cashHandoverForm" onsubmit="handleCashHandover(event)">
+                <input type="hidden" id="handoverPartnerId">
+                <div class="modal-body">
+                    <div class="p-3 mb-3" style="background:#FEF3C7; border-radius:8px; font-size:12.5px; color:#B45309;">
+                        <strong>Partner:</strong> <span id="handoverPartnerName"></span><br>
+                        <strong>Outstanding Liability:</strong> ₹<span id="handoverLiability">0</span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label required">Handover Cash Amount (₹)</label>
+                        <input type="number" id="handoverAmount" class="form-control" min="1" step="1" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label required">Receipt / Voucher Number</label>
+                        <input type="text" id="handoverReceipt" class="form-control" placeholder="e.g. RCP-2026-001" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Notes (Optional)</label>
+                        <input type="text" id="handoverNotes" class="form-control" placeholder="Handed over at Padur Hub desk">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('cashHandoverModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitHandover">Confirm Cash Received</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- COD Remittance Queue Modal (Module 7) -->
+<div class="modal" id="remittanceQueueModal">
+    <div class="modal-dialog" style="max-width:850px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">COD Remittances Review Queue</h3>
+                <button class="modal-close" onclick="closeModal('remittanceQueueModal')">&times;</button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Partner</th>
+                                <th>Amount</th>
+                                <th>Payment Mode</th>
+                                <th>Txn / UTR ID</th>
+                                <th>Submitted At</th>
+                                <th>Status</th>
+                                <th style="text-align:right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="remittanceQueueTableBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('remittanceQueueModal')">Close</button>
+            </div>
         </div>
     </div>
 </div>
@@ -811,13 +932,48 @@ async function deletePartner(id) {
     }
 }
 
-function viewPartnerDetails(id) {
+async function viewPartnerDetails(id) {
     const p = allPartners.find(x => x.partner_id === id);
     if (!p) return;
 
     document.getElementById("drawerPartnerTitle").textContent = `${p.name} (${p.partner_id})`;
     const lat = p.current_latitude || 12.8025;
     const lng = p.current_longitude || 80.2233;
+
+    // Show initial skeleton and drawer
+    document.getElementById("drawerPartnerBody").innerHTML = `
+        <div class="mb-4 text-center">
+            <div class="partner-avatar mx-auto mb-2" style="width:72px; height:72px; font-size:28px;">
+                ${p.profile_photo ? `<img src="${p.profile_photo}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" onerror="this.onerror=null; this.parentElement.innerHTML='${(p.name || 'D').charAt(0).toUpperCase()}';">` : (p.name || 'D').charAt(0).toUpperCase()}
+            </div>
+            <h4 class="font-bold text-dark mb-0">${p.name}</h4>
+            <div class="text-gold font-semibold text-sm">Rating: ${p.rating || 5.0} ★</div>
+        </div>
+        <div class="p-4 text-center text-muted">Loading partner financial & operational telemetry...</div>
+    `;
+
+    document.getElementById("partnerDrawerOverlay").classList.add("show");
+    document.getElementById("partnerDrawer").classList.add("show");
+
+    // Fetch financial and bank telemetry in parallel
+    let codData = { cod_balance: { outstanding_cod_liability: 0, remaining_cod_capacity: 1000 } };
+    let walletData = { wallet: { available_earnings: 0, lifetime_earnings: 0 } };
+    let bankData = { bank_details: null };
+
+    try {
+        const [codRes, walRes, bnkRes] = await Promise.all([
+            fetch(`/api/admin/delivery/partners/${p.partner_id}/cod`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).catch(() => codData),
+            fetch(`/api/admin/delivery/partners/${p.partner_id}/wallet`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).catch(() => walletData),
+            fetch(`/api/admin/delivery/partners/${p.partner_id}/bank-details`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).catch(() => bankData)
+        ]);
+        if (codRes && codRes.success) codData = codRes;
+        if (walRes && walRes.success) walletData = walRes;
+        if (bnkRes && bnkRes.success) bankData = bnkRes;
+    } catch (_) {}
+
+    const cod = codData.cod_balance || { outstanding_cod_liability: 0, remaining_cod_capacity: 1000 };
+    const wal = walletData.wallet || { available_earnings: 0, lifetime_earnings: 0 };
+    const bnk = bankData.bank_details;
 
     document.getElementById("drawerPartnerBody").innerHTML = `
         <div class="mb-4 text-center">
@@ -828,10 +984,76 @@ function viewPartnerDetails(id) {
             <div class="text-gold font-semibold text-sm">Rating: ${p.rating || 5.0} ★</div>
         </div>
 
+        <!-- 1. COD Liability & Holding Limit Card (Modules 5 & 7) -->
+        <div class="card mb-3 p-3" style="border-left:4px solid ${cod.outstanding_cod_liability > 800 ? '#DC2626' : '#D97706'}; background:#FFFDF7;">
+            <div class="flex-between mb-2">
+                <span class="font-bold text-xs uppercase" style="color:#B45309;">💵 Cash on Delivery (COD) Status</span>
+                <span class="badge ${cod.remaining_cod_capacity > 0 ? 'badge-active' : 'badge-inactive'}" style="font-size:10px;">
+                    ${cod.remaining_cod_capacity > 0 ? 'CAPACITY SAFE' : 'LIMIT REACHED'}
+                </span>
+            </div>
+            <div class="grid grid-2 gap-2 text-sm mb-3">
+                <div>
+                    <div class="text-xs text-muted">Outstanding Liability:</div>
+                    <div class="font-bold text-dark" style="font-size:16px; color:#DC2626;">₹${cod.outstanding_cod_liability || 0}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-muted">Remaining Limit:</div>
+                    <div class="font-bold" style="font-size:16px; color:#1B5E20;">₹${cod.remaining_cod_capacity || 0} <small class="text-muted" style="font-size:11px;">/ ₹1,000</small></div>
+                </div>
+            </div>
+            <button class="btn btn-secondary btn-sm w-full text-center" onclick="openCashHandoverModal('${p.partner_id}', '${p.name}', ${cod.outstanding_cod_liability || 0})">
+                📥 Record Cash Handover From Partner
+            </button>
+        </div>
+
+        <!-- 2. Earnings Wallet & Payout Card (Module 3) -->
+        <div class="card mb-3 p-3" style="border-left:4px solid #1B5E20; background:#F8FFF9;">
+            <div class="flex-between mb-2">
+                <span class="font-bold text-xs uppercase" style="color:#1B5E20;">💼 Partner Earnings & Payout</span>
+                <span class="badge badge-active" style="font-size:10px;">WEEKLY SETTLED</span>
+            </div>
+            <div class="grid grid-2 gap-2 text-sm mb-3">
+                <div>
+                    <div class="text-xs text-muted">Available to Disburse:</div>
+                    <div class="font-bold text-dark" style="font-size:16px; color:#1B5E20;">₹${wal.available_earnings || 0}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-muted">Lifetime Earned:</div>
+                    <div class="font-bold text-dark" style="font-size:16px;">₹${wal.lifetime_earnings || 0}</div>
+                </div>
+            </div>
+            <button class="btn btn-primary btn-sm w-full text-center" onclick="openPayoutModal('${p.partner_id}', '${p.name}', ${wal.available_earnings || 0})" ${(wal.available_earnings || 0) <= 0 ? 'disabled' : ''}>
+                💳 Process Payout Disbursal
+            </button>
+        </div>
+
+        <!-- 3. Encrypted Bank Details (Module 2) -->
+        <div class="card mb-3 p-3">
+            <div class="flex-between mb-2">
+                <span class="font-bold text-xs uppercase text-muted">🏦 Bank Account (AES-256 Encrypted)</span>
+                ${bnk ? '<span class="badge badge-active" style="font-size:10px;">VERIFIED</span>' : '<span class="badge badge-inactive" style="font-size:10px;">NOT ADDED</span>'}
+            </div>
+            ${bnk ? `
+                <div class="text-sm mb-2" style="line-height:1.6;">
+                    <div><span class="text-muted">Holder:</span> <strong>${bnk.account_holder_name}</strong></div>
+                    <div><span class="text-muted">Bank:</span> <strong>${bnk.bank_name || 'Bank'}</strong></div>
+                    <div><span class="text-muted">Account:</span> <strong id="drawerAccNum_${p.partner_id}" class="font-mono">${bnk.account_number}</strong></div>
+                    <div><span class="text-muted">IFSC:</span> <strong class="font-mono">${bnk.ifsc_code}</strong></div>
+                </div>
+                <button class="btn btn-secondary btn-sm w-full text-center" id="btnRevealBank_${p.partner_id}" onclick="revealPartnerBankDetails('${p.partner_id}')">
+                    👁️ Reveal Full Account (Logs Audit Trail)
+                </button>
+            ` : `
+                <div class="text-xs text-muted py-2">No bank details added by partner yet.</div>
+            `}
+        </div>
+
+        <!-- 4. Operational Profile & Live GPS -->
         <div class="card mb-3 p-3 bg-cream">
             <div class="font-bold text-xs uppercase text-muted mb-2">Live GPS Position</div>
             <div class="font-mono text-sm font-bold text-dark mb-1">LAT: ${lat} | LNG: ${lng}</div>
-            <div class="text-xs text-muted mb-2">Primary Hub Location: Padur, Chennai OMR</div>
+            <div class="text-xs text-muted mb-2">Hub: Padur, Chennai OMR</div>
             <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="btn btn-primary btn-sm w-full text-center">
                 Open in Google Maps Live Fleet
             </a>
@@ -862,6 +1084,227 @@ function viewPartnerDetails(id) {
             </a>
         </div>
     `;
+}
+
+function openPayoutModal(partnerId, partnerName, available) {
+    document.getElementById("payoutPartnerId").value = partnerId;
+    document.getElementById("payoutPartnerName").textContent = partnerName;
+    document.getElementById("payoutPartnerIdDisplay").textContent = partnerId;
+    document.getElementById("payoutAvailableBalance").textContent = available;
+    document.getElementById("payoutAmount").value = available;
+    document.getElementById("payoutAmount").max = available;
+    document.getElementById("payoutTxnId").value = "";
+    document.getElementById("payoutNotes").value = "";
+    openModal("payoutModal");
+}
+
+async function handleExecutePayout(event) {
+    event.preventDefault();
+    const partnerId = document.getElementById("payoutPartnerId").value;
+    const amount = Number(document.getElementById("payoutAmount").value);
+    const method = document.getElementById("payoutMethod").value;
+    const txnId = document.getElementById("payoutTxnId").value.trim();
+    const notes = document.getElementById("payoutNotes").value.trim();
+
+    if (!txnId) {
+        showToast("Transaction UTR / Reference ID is required.", "danger");
+        return;
+    }
+
+    const btn = document.getElementById("btnSubmitPayout");
+    btn.disabled = true;
+
+    try {
+        const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
+        const res = await fetch("/api/admin/delivery/payouts", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Admin-Name": safeAdminName,
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                partner_id: partnerId,
+                amount,
+                payment_method: method,
+                transaction_id: txnId,
+                notes
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(data.message || `Payout of ₹${amount} successfully recorded.`);
+            closeModal("payoutModal");
+            viewPartnerDetails(partnerId);
+        } else {
+            showToast(data.message || "Failed to disburse payout.", "danger");
+        }
+    } catch (err) {
+        showToast("Error processing payout: " + err.message, "danger");
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+function openCashHandoverModal(partnerId, partnerName, liability) {
+    document.getElementById("handoverPartnerId").value = partnerId;
+    document.getElementById("handoverPartnerName").textContent = partnerName;
+    document.getElementById("handoverLiability").textContent = liability;
+    document.getElementById("handoverAmount").value = liability;
+    document.getElementById("handoverReceipt").value = `RCP-${Date.now().toString().slice(-6)}`;
+    document.getElementById("handoverNotes").value = "Physical cash handover received at desk";
+    openModal("cashHandoverModal");
+}
+
+async function handleCashHandover(event) {
+    event.preventDefault();
+    const partnerId = document.getElementById("handoverPartnerId").value;
+    const amount = Number(document.getElementById("handoverAmount").value);
+    const receipt = document.getElementById("handoverReceipt").value.trim();
+    const notes = document.getElementById("handoverNotes").value.trim();
+
+    const btn = document.getElementById("btnSubmitHandover");
+    btn.disabled = true;
+
+    try {
+        const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
+        const res = await fetch("/api/admin/delivery/cash-handover", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Admin-Name": safeAdminName,
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                partner_id: partnerId,
+                amount,
+                receipt_no: receipt,
+                notes
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(data.message || `Cash handover of ₹${amount} confirmed. Capacity restored.`);
+            closeModal("cashHandoverModal");
+            viewPartnerDetails(partnerId);
+        } else {
+            showToast(data.message || "Failed to record cash handover.", "danger");
+        }
+    } catch (err) {
+        showToast("Error recording cash handover: " + err.message, "danger");
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function revealPartnerBankDetails(partnerId) {
+    if (!confirm("CONFIDENTIAL DATA AUDIT NOTICE:\n\nAccessing unmasked bank details will be permanently recorded in the financial audit log with your admin identity and timestamp.\n\nDo you wish to proceed?")) {
+        return;
+    }
+
+    try {
+        const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
+        const res = await fetch(`/api/admin/delivery/partners/${partnerId}/bank-details?reveal=true`, {
+            headers: {
+                "X-Admin-Name": safeAdminName,
+                Authorization: `Bearer ${token}`
+            }
+        });
+        const data = await res.json();
+        if (data.success && data.bank_details) {
+            const accEl = document.getElementById(`drawerAccNum_${partnerId}`);
+            if (accEl) {
+                accEl.textContent = data.bank_details.account_number;
+                accEl.style.color = "#1B5E20";
+                accEl.style.fontWeight = "bold";
+            }
+            const btn = document.getElementById(`btnRevealBank_${partnerId}`);
+            if (btn) btn.style.display = "none";
+            showToast("Account number decrypted. Audit entry logged.");
+        } else {
+            showToast(data.message || "Failed to reveal bank account.", "danger");
+        }
+    } catch (err) {
+        showToast("Error unmasking bank details: " + err.message, "danger");
+    }
+}
+
+async function openRemittanceQueueModal() {
+    openModal("remittanceQueueModal");
+    const tbody = document.getElementById("remittanceQueueTableBody");
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">Loading submitted remittances...</td></tr>`;
+
+    try {
+        const res = await fetch("/api/admin/delivery/remittances", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        const remittances = (data.success && Array.isArray(data.remittances)) ? data.remittances : [];
+
+        if (!remittances.length) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No COD remittances currently waiting for review.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = remittances.map(r => `
+            <tr>
+                <td><strong>${r.partner_id}</strong></td>
+                <td><strong style="color:#1B5E20; font-size:14px;">₹${r.amount}</strong></td>
+                <td><span class="badge" style="background:#E8F5E9; color:#1B5E20;">${(r.payment_mode || 'upi').toUpperCase()}</span></td>
+                <td><code style="font-size:11px;">${r.transaction_id || '—'}</code></td>
+                <td><small class="text-muted">${(r.created_at || '').slice(0, 16).replace('T', ' ')}</small></td>
+                <td>
+                    <span class="badge ${r.status === 'approved' ? 'badge-active' : (r.status === 'rejected' ? 'badge-inactive' : 'badge-pending')}">
+                        ${(r.status || 'pending').toUpperCase()}
+                    </span>
+                </td>
+                <td style="text-align:right;">
+                    ${r.status === 'pending_verification' ? `
+                        <div class="flex-center gap-1 justify-end">
+                            <button class="btn btn-primary btn-sm" onclick="reviewRemittance('${r.id}', 'approved')">✓ Approve</button>
+                            <button class="btn btn-danger btn-sm" onclick="reviewRemittance('${r.id}', 'rejected')">✕ Reject</button>
+                        </div>
+                    ` : '<span class="text-muted text-xs">Reviewed</span>'}
+                </td>
+            </tr>
+        `).join("");
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-danger">Error loading remittances: ${err.message}</td></tr>`;
+    }
+}
+
+async function reviewRemittance(id, status) {
+    let reason = "";
+    if (status === "rejected") {
+        reason = prompt("Please provide a reason for rejecting this remittance (e.g. Invalid UTR / Bank mismatch):", "Invalid UTR reference");
+        if (!reason) return;
+    }
+
+    try {
+        const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
+        const res = await fetch(`/api/admin/delivery/remittances/${id}/review`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Admin-Name": safeAdminName,
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                status,
+                rejection_reason: reason
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Remittance #${id} ${status}.`);
+            openRemittanceQueueModal();
+        } else {
+            showToast(data.message || "Failed to update remittance.", "danger");
+        }
+    } catch (err) {
+        showToast("Error updating remittance: " + err.message, "danger");
+    }
+}
 
     document.getElementById("partnerDrawerOverlay").classList.add("show");
     document.getElementById("partnerDrawer").classList.add("show");
