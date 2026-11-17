@@ -17,7 +17,7 @@ const NAV_GROUPS = [
             { key: "orders", label: "Orders & Verification", url: "orders.html", icon: "shopping-bag", badgeId: "badge-orders" },
             { key: "subscriptions", label: "Subscriptions", url: "subscriptions.html", icon: "calendar-clock" },
             { key: "payments", label: "Payment Verification", url: "payment-verification.html", icon: "credit-card", badgeId: "badge-payments" },
-            { key: "payment-qr", label: "QR Code Management", url: "qr-management.html", icon: "credit-card" },
+            { key: "payment-qr", label: "QR Code Management", url: "qr-management.html", icon: "qr-code" },
             { key: "delivery-charges", label: "Delivery Charge Management", url: "delivery-charges.html", icon: "truck" },
             { key: "products", label: "Products Catalog", url: "products.html", icon: "package" },
             { key: "categories", label: "Categories", url: "categories.html", icon: "tags" },
@@ -39,7 +39,7 @@ const NAV_GROUPS = [
     {
         title: "Marketing & Content",
         items: [
-            { key: "announcements", label: "Announcement Management", url: "announcements.html", icon: "bell" },
+            { key: "announcements", label: "Announcement Management", url: "announcements.html", icon: "megaphone" },
             { key: "coupons", label: "Promo Codes", url: "coupons.html", icon: "ticket" },
             { key: "recipes", label: "Farm Recipes", url: "recipes.html", icon: "utensils" },
             { key: "notifications", label: "News & Notifications", url: "notifications.html", icon: "bell" }
@@ -61,6 +61,8 @@ const SVG_ICONS = {
     "shopping-bag": '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
     "calendar-clock": '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h5"/><circle cx="16" cy="16" r="6"/><path d="M16 14v2l1 1"/></svg>',
     "credit-card": '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>',
+    "qr-code": '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>',
+    "megaphone": '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>',
     "package": '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>',
     "tags": '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5 6.3 6.3a2.4 2.4 0 0 1 0 3.4L17 19"/><path d="M9.586 5.586A2 2 0 0 0 8.172 5H3a1 1 0 0 0-1 1v5.172a2 2 0 0 0 .586 1.414L8.29 18.29a2.42 2.42 0 0 0 3.42 0l3.58-3.58a2.42 2.42 0 0 0 0-3.42l-5.7-5.7Z"/><circle cx="6.5" cy="8.5" r=".5" fill="currentColor"/></svg>',
     "users": '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
@@ -568,8 +570,20 @@ async function executeOmniSearch(query) {
         return;
     }
 
+    let extraJumps = '';
+    if ('announcements'.includes(q) || 'banners'.includes(q)) {
+        extraJumps += `<a href="announcements.html" class="dropdown-item" style="border-radius:6px; background:#E8F5E9; color:#1B4332; font-weight:700;">${getIcon("megaphone")} Jump to Announcement Management</a>`;
+    }
+    if ('qr'.includes(q) || 'payment'.includes(q) || 'upi'.includes(q)) {
+        extraJumps += `<a href="qr-management.html" class="dropdown-item" style="border-radius:6px; background:#E8F5E9; color:#1B4332; font-weight:700;">${getIcon("qr-code")} Jump to QR Code Management</a>`;
+    }
+    if ('delivery'.includes(q) || 'charge'.includes(q) || 'fee'.includes(q) || 'rate'.includes(q)) {
+        extraJumps += `<a href="delivery-charges.html" class="dropdown-item" style="border-radius:6px; background:#E8F5E9; color:#1B4332; font-weight:700;">${getIcon("truck")} Jump to Delivery Charge Management</a>`;
+    }
+
     resultsBox.innerHTML = `
         <div style="display:flex; flex-direction:column; gap:6px;">
+            ${extraJumps}
             <a href="orders.html" class="dropdown-item" style="border-radius:6px; background:#FAF7F0;">
                 ${getIcon("shopping-bag")} Search Orders for "<strong>${q}</strong>"
             </a>

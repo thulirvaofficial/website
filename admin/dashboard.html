@@ -28,6 +28,16 @@
                         <span id="pickupModeLabel" style="font-size:11px; font-weight:800; color:#E74C3C;">OFF</span>
                     </div>
 
+                    <a href="announcements.html" class="btn btn-secondary" style="font-weight:700;">
+                        📢 Announcements
+                    </a>
+                    <a href="qr-management.html" class="btn btn-secondary" style="font-weight:700;">
+                        💳 Payment QR
+                    </a>
+                    <a href="delivery-charges.html" class="btn btn-secondary" style="font-weight:700;">
+                        🚚 Delivery Charges
+                    </a>
+
                     <button class="btn btn-secondary" onclick="generateSalesReportPDF()">
                         📄 Export PDF Report
                     </button>
@@ -146,6 +156,115 @@
                 </div>
             </div>
 
+            <!-- Store Operations & Live Controls Hub (Announcements, Payment QR, Delivery Charges) -->
+            <div class="panel-card" style="margin-bottom: 24px; background: linear-gradient(135deg, #FAF8F2 0%, #FFFFFF 100%); border: 1.5px solid rgba(27, 67, 50, 0.15); box-shadow: var(--shadow-sm);">
+                <div class="panel-header" style="border-bottom: 1px solid rgba(27, 67, 50, 0.08); padding-bottom: 14px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 42px; height: 42px; border-radius: 10px; background: #1B4332; display: flex; align-items: center; justify-content: center; color: #FAF8EF; font-size: 20px; box-shadow: 0 2px 6px rgba(27,67,50,0.2);">⚙️</div>
+                        <div>
+                            <h2 class="panel-title" style="font-size: 17px; font-weight: 800; color: #1B4332; margin: 0;">Store Operations &amp; Live Controls Hub</h2>
+                            <p class="panel-subtitle" style="font-size: 12.5px; margin: 2px 0 0 0; color: #6B7280;">Direct administration of customer announcement banners, checkout payment QR codes, and delivery charges.</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <a href="announcements.html" class="btn btn-secondary btn-sm" style="font-weight: 700; font-size: 12px;">📢 Manage Announcements</a>
+                        <a href="qr-management.html" class="btn btn-secondary btn-sm" style="font-weight: 700; font-size: 12px;">💳 Manage Payment QR</a>
+                        <a href="delivery-charges.html" class="btn btn-secondary btn-sm" style="font-weight: 700; font-size: 12px;">🚚 Manage Delivery Rates</a>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 18px;">
+                    <!-- Card 1: Announcement Management -->
+                    <div style="background: #FFFFFF; border: 1.5px solid #E5E7EB; border-radius: 14px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #FEF3C7; display: flex; align-items: center; justify-content: center; font-size: 18px;">📢</div>
+                                    <div>
+                                        <div style="font-size: 14.5px; font-weight: 800; color: #1B4332;">Customer Announcements</div>
+                                        <div style="font-size: 11px; color: #6B7280;">Website Hero &amp; Top-Bar Banners</div>
+                                    </div>
+                                </div>
+                                <span id="dashAnnounceBadge" class="badge badge-active" style="font-size: 11px; background: #E8F5E9; color: #1B4332;">Active</span>
+                            </div>
+                            <div id="dashAnnounceContent" style="background: #FAF8F2; border: 1px dashed #D4AF37; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 12.5px; color: #1F2937;">
+                                <div id="dashAnnounceTitle" style="font-weight: 800; color: #1B4332; line-height: 1.4;">THULIRVA deliveries start from 25/11/2026!</div>
+                                <div id="dashAnnounceSubtitle" style="font-size: 11.5px; color: #4B5563; margin-top: 4px;">Advance ordering active. Fresh dairy delivered directly to your doorstep.</div>
+                                <div id="dashAnnounceDates" style="font-size: 11px; color: #854D0E; margin-top: 6px; font-weight: 600;">Valid: 2026-11-15 &rarr; 2026-12-31</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #F3F4F6;">
+                            <span style="font-size: 11.5px; color: #6B7280;" id="dashAnnounceCount">2 active banners</span>
+                            <a href="announcements.html" class="btn btn-primary btn-sm" style="padding: 7px 16px; font-size: 12px; font-weight: 700;">Open Module &rarr;</a>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: QR Code Management -->
+                    <div style="background: #FFFFFF; border: 1.5px solid #E5E7EB; border-radius: 14px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #E0E7FF; display: flex; align-items: center; justify-content: center; font-size: 18px;">💳</div>
+                                    <div>
+                                        <div style="font-size: 14.5px; font-weight: 800; color: #1B4332;">Payment QR Management</div>
+                                        <div style="font-size: 11px; color: #6B7280;">Checkout UPI Receiving QR</div>
+                                    </div>
+                                </div>
+                                <span id="dashQrBadge" class="badge badge-active" style="font-size: 11px; background: #E8F5E9; color: #1B4332;">Live &amp; Verified</span>
+                            </div>
+                            <div style="background: #FAF8F2; border: 1px dashed #D4AF37; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 12.5px; color: #1F2937; display: flex; align-items: center; gap: 12px;">
+                                <div id="dashQrThumb" style="width: 48px; height: 48px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #1B4332; overflow: hidden; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=upi://pay?pa=7904880944@superyes&pn=THULIRVA" alt="QR" style="width:100%; height:100%; object-fit:contain;">
+                                </div>
+                                <div style="min-width: 0; flex: 1;">
+                                    <div style="font-size: 11px; color: #6B7280; font-weight: 600;">Active Receiving UPI ID:</div>
+                                    <div id="dashQrUpiId" style="font-weight: 800; color: #111827; word-break: break-all; font-family: monospace; font-size: 12.5px;">7904880944@superyes</div>
+                                    <div style="font-size: 11px; color: #15803D; margin-top: 3px; font-weight: 700;">🔒 Password Verified Audit Trail</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #F3F4F6;">
+                            <span style="font-size: 11.5px; color: #6B7280;" id="dashQrPurpose">Purpose: All Payments</span>
+                            <a href="qr-management.html" class="btn btn-primary btn-sm" style="padding: 7px 16px; font-size: 12px; font-weight: 700;">Open Module &rarr;</a>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Delivery Charges & Rates -->
+                    <div style="background: #FFFFFF; border: 1.5px solid #E5E7EB; border-radius: 14px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #DCFCE7; display: flex; align-items: center; justify-content: center; font-size: 18px;">🚚</div>
+                                    <div>
+                                        <div style="font-size: 14.5px; font-weight: 800; color: #1B4332;">Delivery Charge Controls</div>
+                                        <div style="font-size: 11px; color: #6B7280;">Checkout Fees &amp; Partner Rates</div>
+                                    </div>
+                                </div>
+                                <span id="dashDelivBadge" class="badge badge-active" style="font-size: 11px; background: #E8F5E9; color: #1B4332;">Active</span>
+                            </div>
+                            <div style="background: #FAF8F2; border: 1px dashed #D4AF37; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 12.5px; color: #1F2937;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span style="color: #6B7280;">Standard Delivery:</span>
+                                    <strong id="dashFixedCharge" style="color: #111827; font-weight: 800;">₹30</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span style="color: #6B7280;">Free Delivery Over:</span>
+                                    <strong id="dashFreeThreshold" style="color: #15803D; font-weight: 800;">₹299</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #6B7280;">Partner Base Payout:</span>
+                                    <strong id="dashPartnerBase" style="color: #1B4332; font-weight: 800;">₹35 + ₹6/km</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #F3F4F6;">
+                            <span style="font-size: 11.5px; color: #6B7280;">Zones: Padur, Navalur, Siruseri...</span>
+                            <a href="delivery-charges.html" class="btn btn-primary btn-sm" style="padding: 7px 16px; font-size: 12px; font-weight: 700;">Open Module &rarr;</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Main 2-Column Analytics Layout -->
             <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; margin-bottom: 24px;">
                 <!-- Left: Sales Trends & Bar Chart -->
@@ -248,7 +367,7 @@
 </div>
 
 <script src="js/api-client.js"></script>
-<script src="js/admin-shell.js"></script>
+<script src="js/admin-shell.js?v=20261117c"></script>
 <script>
 // Initialize Shell
 initAdminShell({
@@ -305,6 +424,95 @@ async function loadDashboard() {
 
     // Load Fleet and Subscriptions
     loadFleetAndSubscriptions();
+
+    // Load Live Store Controls Hub (Announcements, Payment QR, Delivery Charges)
+    loadStoreControlsHub();
+}
+
+async function loadStoreControlsHub() {
+    // 1. Announcements
+    try {
+        const res = await fetch('/api/announcements/active');
+        if (res.ok) {
+            const data = await res.json();
+            const list = data.announcements || [];
+            const countEl = document.getElementById('dashAnnounceCount');
+            if (countEl) countEl.textContent = `${list.length} active banner${list.length === 1 ? '' : 's'}`;
+            if (list.length > 0) {
+                const top = list[0];
+                const tEl = document.getElementById('dashAnnounceTitle');
+                const sEl = document.getElementById('dashAnnounceSubtitle');
+                const dEl = document.getElementById('dashAnnounceDates');
+                const bEl = document.getElementById('dashAnnounceBadge');
+                if (tEl) tEl.textContent = top.title || 'Active Announcement';
+                if (sEl) sEl.textContent = top.description || 'Live customer announcement banner.';
+                if (dEl) {
+                    const start = top.start_date || 'Active';
+                    const end = top.end_date || 'Permanent';
+                    dEl.textContent = `Valid: ${start} → ${end}`;
+                }
+                if (bEl) bEl.textContent = `Active (${(top.display_position || 'hero').replace('_', ' ')})`;
+            } else {
+                const tEl = document.getElementById('dashAnnounceTitle');
+                const sEl = document.getElementById('dashAnnounceSubtitle');
+                const dEl = document.getElementById('dashAnnounceDates');
+                const bEl = document.getElementById('dashAnnounceBadge');
+                if (tEl) tEl.textContent = 'No announcements currently published.';
+                if (sEl) sEl.textContent = 'Click "Open Module" to create and publish customer homepage banners.';
+                if (dEl) dEl.textContent = '--';
+                if (bEl) {
+                    bEl.textContent = 'None Active';
+                    bEl.style.background = '#F3F4F6';
+                    bEl.style.color = '#6B7280';
+                }
+            }
+        }
+    } catch (_) {}
+
+    // 2. Payment QR
+    try {
+        const res = await fetch('/api/config/payment-qr');
+        if (res.ok) {
+            const data = await res.json();
+            const qr = data.qr || {};
+            if (qr.upi_id) {
+                const upiEl = document.getElementById('dashQrUpiId');
+                const purEl = document.getElementById('dashQrPurpose');
+                const thumbEl = document.getElementById('dashQrThumb');
+                if (upiEl) upiEl.textContent = qr.upi_id;
+                if (purEl) purEl.textContent = 'Purpose: ' + (qr.purpose || 'all').toUpperCase();
+                if (thumbEl) {
+                    const fallbackUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=upi://pay?pa=${encodeURIComponent(qr.upi_id)}&pn=THULIRVA`;
+                    const imgUrl = (qr.qr_image_url && (qr.qr_image_url.startsWith('http') || qr.qr_image_url.startsWith('/')))
+                        ? qr.qr_image_url
+                        : fallbackUrl;
+                    thumbEl.innerHTML = `<img src="${imgUrl}" alt="QR" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='${fallbackUrl}'">`;
+                }
+            }
+        }
+    } catch (_) {}
+
+    // 3. Delivery Charges
+    try {
+        const res = await fetch('/api/config/delivery');
+        if (res.ok) {
+            const data = await res.json();
+            const cfg = data.config || {};
+            const fixEl = document.getElementById('dashFixedCharge');
+            const freeEl = document.getElementById('dashFreeThreshold');
+            const partEl = document.getElementById('dashPartnerBase');
+            if (fixEl && cfg.fixed_delivery_charge !== undefined) {
+                fixEl.textContent = '₹' + cfg.fixed_delivery_charge;
+            }
+            if (freeEl && cfg.free_delivery_threshold !== undefined) {
+                freeEl.textContent = '₹' + cfg.free_delivery_threshold;
+            }
+            if (partEl && cfg.partner_base_payout !== undefined) {
+                const bonus = cfg.partner_distance_bonus_per_km ? ` + ₹${cfg.partner_distance_bonus_per_km}/km` : '';
+                partEl.textContent = `₹${cfg.partner_base_payout}${bonus}`;
+            }
+        }
+    } catch (_) {}
 }
 
 function renderSalesChart(monthly_sales) {
