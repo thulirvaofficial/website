@@ -498,12 +498,12 @@ function renderTable() {
             </td>
             <td>
                 <label class="switch-toggle">
-                    <input type="checkbox" ${a.is_active ? 'checked' : ''} onchange="toggleStatus('${a.id}')">
+                    <input type="checkbox" id="toggle_${a.id}" ${a.is_active ? 'checked' : ''} onchange="toggleStatus('${a.id}', this)">
                     <span class="slider-round"></span>
                 </label>
             </td>
             <td>
-                <button class="btn btn-sm ${a.is_published ? 'btn-secondary' : 'btn-primary'}" onclick="togglePublish('${a.id}', ${!a.is_published})" style="padding:3px 8px; font-size:11px;">
+                <button class="btn btn-sm ${a.is_published ? 'btn-secondary' : 'btn-primary'}" onclick="togglePublish('${a.id}', ${!a.is_published}, this)" style="padding:3px 8px; font-size:11px;">
                     ${a.is_published ? '✓ Published' : 'Publish'}
                 </button>
             </td>
@@ -671,7 +671,13 @@ async function handleFormSubmit(event) {
     }
 }
 
-async function toggleStatus(id) {
+async function toggleStatus(id, checkboxEl) {
+    if (!checkboxEl) return;
+    const targetState = checkboxEl.checked;
+    const previousState = !targetState;
+
+    checkboxEl.disabled = true;
+
     try {
         const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
         const res = await fetch(`/api/admin/announcements/${id}/toggle`, {
@@ -681,21 +687,33 @@ async function toggleStatus(id) {
                 "X-Admin-Name": safeAdminName,
                 Authorization: `Bearer ${token}`
             },
-            body: JSON.stringify({ admin_name: safeAdminName })
+            body: JSON.stringify({
+                is_active: targetState,
+                admin_name: safeAdminName
+            })
         });
         const data = await res.json();
-        if (data.success) {
-            showToast(data.message || "Status updated.");
-            loadAnnouncements();
+        if (data.success && data.announcement) {
+            showToast(data.message || (targetState ? "Announcement activated." : "Announcement disabled."), "success");
+            const item = announcements.find(a => a.id == id);
+            if (item) {
+                item.is_active = data.announcement.is_active;
+            }
+            applyFilters();
         } else {
+            checkboxEl.checked = previousState;
             showToast(data.message || "Failed to toggle status", "error");
         }
     } catch (e) {
-        showToast("Error: " + e.message, "error");
+        checkboxEl.checked = previousState;
+        showToast("Error updating status: " + e.message, "error");
+    } finally {
+        checkboxEl.disabled = false;
     }
 }
 
-async function togglePublish(id, isPublished) {
+async function togglePublish(id, isPublished, btnEl) {
+    if (btnEl) btnEl.disabled = true;
     try {
         const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
         const res = await fetch(`/api/admin/announcements/${id}/publish`, {
@@ -708,14 +726,20 @@ async function togglePublish(id, isPublished) {
             body: JSON.stringify({ is_published: isPublished, admin_name: safeAdminName })
         });
         const data = await res.json();
-        if (data.success) {
-            showToast(data.message || "Publish state changed.");
-            loadAnnouncements();
+        if (data.success && data.announcement) {
+            showToast(data.message || "Publish state changed.", "success");
+            const item = announcements.find(a => a.id == id);
+            if (item) {
+                item.is_published = data.announcement.is_published;
+            }
+            applyFilters();
         } else {
             showToast(data.message || "Failed to update publish state", "error");
         }
     } catch (e) {
         showToast("Error: " + e.message, "error");
+    } finally {
+        if (btnEl) btnEl.disabled = false;
     }
 }
 
