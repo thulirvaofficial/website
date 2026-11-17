@@ -307,6 +307,11 @@ async function handleAuthSubmit(e, type) {
             const data = await res.json();
 
             if (res.ok && data.success) {
+                // Ensure customer login completely purges any admin tokens
+                localStorage.removeItem('thulirva_admin_token');
+                localStorage.removeItem('thulirva_admin_user');
+                localStorage.removeItem('admin');
+
                 if (data.token) localStorage.setItem('thulirva_token', data.token);
                 const userObj = {
                     id: data.user.id,
@@ -393,6 +398,11 @@ async function handleAuthSubmit(e, type) {
             const data = await res.json();
 
             if (res.ok && data.success) {
+                // Ensure customer login completely purges any admin tokens
+                localStorage.removeItem('thulirva_admin_token');
+                localStorage.removeItem('thulirva_admin_user');
+                localStorage.removeItem('admin');
+
                 if (data.token) localStorage.setItem('thulirva_token', data.token);
                 const userObj = {
                     id: data.user.id,

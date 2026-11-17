@@ -3,6 +3,20 @@
    Colors: Dark Forest Green, Warm Cream, Ivory, Muted Gold Accents
    ========================================================================== */
 
+/* Zero-Flicker RBAC Page Lock: Hides admin content until server verifies role */
+html.auth-verifying body {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+html.auth-verifying .admin-layout,
+html.auth-verifying .admin-container,
+html.auth-verifying main,
+html.auth-verifying .sidebar,
+html.auth-verifying .main-content {
+    display: none !important;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {

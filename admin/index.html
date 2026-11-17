@@ -363,10 +363,29 @@
     </div>
 
     <script>
-        // Check if admin is already authenticated
-        if (localStorage.getItem("thulirva_admin_token")) {
-            window.location.href = "dashboard.html";
-        }
+        // Verify admin token if already stored
+        (async function checkExistingAdminSession() {
+            const token = localStorage.getItem("thulirva_admin_token");
+            if (token) {
+                try {
+                    const res = await fetch("/api/admin/profile", {
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        const role = (data.admin?.role || data.user?.role || "").toLowerCase();
+                        if (role === "admin" || role === "super_admin" || role === "super admin") {
+                            window.location.replace("dashboard.html");
+                            return;
+                        }
+                    }
+                } catch (_) {}
+                // Token invalid, expired, or belongs to a customer
+                localStorage.removeItem("thulirva_admin_token");
+                localStorage.removeItem("thulirva_admin_user");
+                localStorage.removeItem("admin");
+            }
+        })();
 
         // Restore remembered email if present
         document.addEventListener("DOMContentLoaded", () => {
@@ -419,15 +438,31 @@
                 const response = await fetch("/api/auth/login", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email, password, admin_login: true, is_admin_portal: true })
                 });
                 const data = await response.json();
 
-                if (data.success && (data.user?.role === "admin" || !data.user?.role || data.token)) {
+                const role = (data.user?.role || data.admin?.role || "").toLowerCase();
+                const isAdmin = role === "admin" || role === "super_admin" || role === "super admin";
+
+                if (data.success && data.token && isAdmin) {
                     localStorage.setItem("thulirva_admin_token", data.token);
-                    window.location.href = "dashboard.html";
+                    const adminUser = {
+                        id: data.user?.id || 1,
+                        name: data.user?.name || "Super Admin",
+                        admin_name: data.user?.name || "Super Admin",
+                        email: data.user?.email || email,
+                        role: role === "super_admin" ? "Super Admin" : "Admin",
+                        profile_photo: data.user?.profile_photo || ""
+                    };
+                    localStorage.setItem("thulirva_admin_user", JSON.stringify(adminUser));
+                    localStorage.setItem("admin", JSON.stringify(adminUser));
+                    window.location.replace("dashboard.html");
                 } else {
-                    errorText.textContent = data.message || "Invalid administrative credentials or insufficient privileges.";
+                    localStorage.removeItem("thulirva_admin_token");
+                    localStorage.removeItem("thulirva_admin_user");
+                    localStorage.removeItem("admin");
+                    errorText.textContent = data.message || "Access Denied: Customer accounts are not authorized to sign in to the Administrative Portal.";
                     errorEl.style.display = "flex";
                 }
             } catch (err) {
