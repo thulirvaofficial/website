@@ -373,15 +373,16 @@ let announcements = [];
 let filteredList = [];
 
 async function loadAnnouncements() {
+    const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
     try {
-        const res = await fetch("/api/admin/announcements/all", {
+        const res = await fetch(apiBase + "/api/admin/announcements/all", {
             headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
         announcements = data.announcements || [];
     } catch (_) {
         try {
-            const fallbackRes = await fetch("/api/announcements/active");
+            const fallbackRes = await fetch(apiBase + "/api/announcements/active");
             const fData = await fallbackRes.json();
             announcements = fData.announcements || [];
         } catch (e) {
@@ -449,6 +450,10 @@ function filterAnnouncements() {
     });
 
     renderTable();
+}
+
+function applyFilters() {
+    filterAnnouncements();
 }
 
 function renderTable() {
@@ -646,7 +651,8 @@ async function handleFormSubmit(event) {
     }
 
     try {
-        const url = id ? `/api/admin/announcements/${id}` : `/api/admin/announcements`;
+        const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
+        const url = id ? `${apiBase}/api/admin/announcements/${id}` : `${apiBase}/api/admin/announcements`;
         const method = id ? "PUT" : "POST";
 
         const res = await fetch(url, {
@@ -680,7 +686,8 @@ async function toggleStatus(id, checkboxEl) {
 
     try {
         const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
-        const res = await fetch(`/api/admin/announcements/${id}/toggle`, {
+        const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
+        const res = await fetch(`${apiBase}/api/admin/announcements/${id}/toggle`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -699,7 +706,9 @@ async function toggleStatus(id, checkboxEl) {
             if (item) {
                 item.is_active = data.announcement.is_active;
             }
-            applyFilters();
+            calculateMetrics();
+            filterAnnouncements();
+            renderLivePreview();
         } else {
             checkboxEl.checked = previousState;
             showToast(data.message || "Failed to toggle status", "error");
@@ -716,7 +725,8 @@ async function togglePublish(id, isPublished, btnEl) {
     if (btnEl) btnEl.disabled = true;
     try {
         const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
-        const res = await fetch(`/api/admin/announcements/${id}/publish`, {
+        const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
+        const res = await fetch(`${apiBase}/api/admin/announcements/${id}/publish`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -732,7 +742,9 @@ async function togglePublish(id, isPublished, btnEl) {
             if (item) {
                 item.is_published = data.announcement.is_published;
             }
-            applyFilters();
+            calculateMetrics();
+            filterAnnouncements();
+            renderLivePreview();
         } else {
             showToast(data.message || "Failed to update publish state", "error");
         }
@@ -748,7 +760,8 @@ async function deleteAnnouncementConfirm(id) {
 
     try {
         const safeAdminName = (window.getAdminName && window.getAdminName()) || "Super Admin";
-        const res = await fetch(`/api/admin/announcements/${id}/delete`, {
+        const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
+        const res = await fetch(`${apiBase}/api/admin/announcements/${id}/delete`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
