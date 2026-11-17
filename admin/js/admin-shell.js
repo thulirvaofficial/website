@@ -11,6 +11,14 @@
     }
 })();
 
+// Global safety fallbacks for table filtering across admin modules
+window.applyFilters = window.applyFilters || function() {
+    if (typeof window.filterAnnouncements === "function") {
+        return window.filterAnnouncements();
+    }
+};
+window.filterAnnouncements = window.filterAnnouncements || function() {};
+
 const NAV_GROUPS = [
     {
         title: "Overview",

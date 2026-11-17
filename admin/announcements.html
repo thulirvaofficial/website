@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>THULIRVA Admin — Announcement Management</title>
     <link rel="stylesheet" href="css/admin.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -360,9 +363,17 @@
     </div>
 </div>
 
-<script src="js/api-client.js"></script>
-<script src="js/admin-shell.js?v=20261117d"></script>
+<script src="js/api-client.js?v=20261117e"></script>
+<script src="js/admin-shell.js?v=20261117e"></script>
 <script>
+// Expose global filter fallbacks immediately before any code execution
+function applyFilters() {
+    if (typeof filterAnnouncements === "function") {
+        filterAnnouncements();
+    }
+}
+window.applyFilters = applyFilters;
+
 initAdminShell({
     activePage: "announcements",
     breadcrumbs: [{ label: "Marketing" }, { label: "Announcements" }]
@@ -703,6 +714,7 @@ async function toggleStatus(id, checkboxEl) {
         });
         const data = await res.json();
         if (data.success && data.announcement) {
+            checkboxEl.checked = !!data.announcement.is_active;
             showToast(data.message || (targetState ? "Announcement activated." : "Announcement disabled."), "success");
             const item = announcements.find(a => a.id == id);
             if (item) {
@@ -710,13 +722,16 @@ async function toggleStatus(id, checkboxEl) {
             }
             try {
                 if (typeof calculateMetrics === "function") calculateMetrics();
+            } catch (mErr) { console.warn("Metrics err:", mErr); }
+            try {
                 if (typeof filterAnnouncements === "function") filterAnnouncements();
                 else if (typeof applyFilters === "function") applyFilters();
                 else if (typeof renderTable === "function") renderTable();
+            } catch (tErr) { console.warn("Table refresh err:", tErr); }
+            try {
                 if (typeof renderLivePreview === "function") renderLivePreview();
-            } catch (renderErr) {
-                console.warn("UI refresh warning:", renderErr);
-            }
+            } catch (pErr) { console.warn("Preview err:", pErr); }
+            return;
         } else {
             checkboxEl.checked = previousState;
             showToast(data.message || "Failed to toggle status", "error");
@@ -752,13 +767,16 @@ async function togglePublish(id, isPublished, btnEl) {
             }
             try {
                 if (typeof calculateMetrics === "function") calculateMetrics();
+            } catch (mErr) { console.warn("Metrics err:", mErr); }
+            try {
                 if (typeof filterAnnouncements === "function") filterAnnouncements();
                 else if (typeof applyFilters === "function") applyFilters();
                 else if (typeof renderTable === "function") renderTable();
+            } catch (tErr) { console.warn("Table refresh err:", tErr); }
+            try {
                 if (typeof renderLivePreview === "function") renderLivePreview();
-            } catch (renderErr) {
-                console.warn("UI refresh warning:", renderErr);
-            }
+            } catch (pErr) { console.warn("Preview err:", pErr); }
+            return;
         } else {
             showToast(data.message || "Failed to update publish state", "error");
         }

@@ -9,6 +9,14 @@
 (function (global) {
     "use strict";
 
+    // Global safety fallbacks for filtering and table rendering across admin panels
+    global.applyFilters = global.applyFilters || function() {
+        if (typeof global.filterAnnouncements === "function") {
+            return global.filterAnnouncements();
+        }
+    };
+    global.filterAnnouncements = global.filterAnnouncements || function() {};
+
     class ThulirvaApiClient {
         constructor() {
             this.tokenKey = "thulirva_admin_token";
