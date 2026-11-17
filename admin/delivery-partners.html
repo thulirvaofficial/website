@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>THULIRVA Enterprise — Delivery Fleet Management</title>
     <link rel="stylesheet" href="css/admin.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -509,8 +512,8 @@
     </div>
 </div>
 
-<script src="js/api-client.js"></script>
-<script src="js/admin-shell.js?v=20261117d"></script>
+<script src="js/api-client.js?v=20261117f"></script>
+<script src="js/admin-shell.js?v=20261117f"></script>
 <script>
 let allPartners = [];
 let displayedPartners = [];
@@ -518,7 +521,7 @@ let currentPage = 1;
 const pageSize = 10;
 const token = localStorage.getItem("thulirva_admin_token") || "";
 
-document.addEventListener("DOMContentLoaded", () => {
+function initPartnersPage() {
     initAdminShell({
         activePage: "partners",
         breadcrumbs: [
@@ -529,11 +532,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     loadPartners();
-});
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initPartnersPage);
+} else {
+    initPartnersPage();
+}
 
 async function loadPartners() {
+    const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
     try {
-        const res = await fetch("/api/v1/partners", {
+        const res = await fetch(apiBase + "/api/v1/partners", {
             headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
@@ -1304,10 +1314,6 @@ async function reviewRemittance(id, status) {
     } catch (err) {
         showToast("Error updating remittance: " + err.message, "danger");
     }
-}
-
-    document.getElementById("partnerDrawerOverlay").classList.add("show");
-    document.getElementById("partnerDrawer").classList.add("show");
 }
 
 function closePartnerDrawer() {
