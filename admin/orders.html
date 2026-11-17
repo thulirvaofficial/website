@@ -88,27 +88,46 @@
 
             <!-- Main Panel -->
             <div class="panel-card">
-                <!-- Filters Bar -->
+                <!-- Status Navigation Tabs -->
+                <div class="tabs-nav" style="display:flex; gap:8px; margin-bottom:16px; border-bottom:1px solid var(--thulirva-border); padding-bottom:10px; overflow-x:auto;">
+                    <button class="btn btn-sm btn-primary tab-status-btn" id="tabBtnAll" onclick="setStatusTab('')">All Orders</button>
+                    <button class="btn btn-sm btn-secondary tab-status-btn" id="tabBtnPending" onclick="setStatusTab('pending')">⏳ To Deliver / Pending</button>
+                    <button class="btn btn-sm btn-secondary tab-status-btn" id="tabBtnInTransit" onclick="setStatusTab('out_for_delivery')">🚚 Out for Delivery</button>
+                    <button class="btn btn-sm btn-secondary tab-status-btn" id="tabBtnDelivered" onclick="setStatusTab('delivered')">✓ Delivered</button>
+                    <button class="btn btn-sm btn-secondary tab-status-btn" id="tabBtnCancelled" onclick="setStatusTab('cancelled')">✕ Cancelled</button>
+                </div>
+
+                <!-- Filters Bar with Date-Wise Selector -->
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
                     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                        <input type="text" id="orderSearch" placeholder="Search order ID, customer, UTR, phone..." onkeyup="filterOrders()" class="form-control" style="width:260px;">
+                        <input type="text" id="orderSearch" placeholder="Search order ID, customer, UTR, phone..." onkeyup="filterOrders()" class="form-control" style="width:240px;">
                         
-                        <select id="statusFilter" onchange="filterOrders()" class="form-select" style="width:160px;">
+                        <!-- Strict Date-Wise Filter -->
+                        <div style="display:flex; align-items:center; gap:6px; background:#FAF8EF; padding:4px 8px; border-radius:8px; border:1px solid var(--thulirva-border);">
+                            <span style="font-size:12px; font-weight:700; color:var(--thulirva-forest);">📅 Date:</span>
+                            <input type="date" id="orderDateFilter" class="form-control" style="width:145px; padding:3px 6px; font-size:12px; height:32px;" onchange="onDateFilterChanged()">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="setQuickDate('today')" style="padding:2px 8px; font-size:11px;">Today</button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="setQuickDate('yesterday')" style="padding:2px 8px; font-size:11px;">Yesterday</button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="setQuickDate('all')" style="padding:2px 8px; font-size:11px;">All Time</button>
+                        </div>
+
+                        <select id="statusFilter" onchange="filterOrders()" class="form-select" style="width:140px;">
                             <option value="">All Statuses</option>
                             <option value="pending">Pending</option>
                             <option value="processing">Processing</option>
+                            <option value="assigned">Assigned</option>
                             <option value="in_transit">In Transit / Shipped</option>
                             <option value="delivered">Delivered</option>
                             <option value="cancelled">Cancelled</option>
                         </select>
 
-                        <select id="paymentFilter" onchange="filterOrders()" class="form-select" style="width:170px;">
+                        <select id="paymentFilter" onchange="filterOrders()" class="form-select" style="width:140px;">
                             <option value="">All Payments</option>
                             <option value="verified">Verified</option>
                             <option value="pending">Verification Pending</option>
                         </select>
 
-                        <select id="typeFilter" onchange="filterOrders()" class="form-select" style="width:160px;">
+                        <select id="typeFilter" onchange="filterOrders()" class="form-select" style="width:140px;">
                             <option value="">All Types</option>
                             <option value="delivery">Doorstep Delivery</option>
                             <option value="pickup">Store Pickup</option>
@@ -241,6 +260,180 @@
     </div>
 </div>
 
+<!-- COMPREHENSIVE ORDER DETAILS & DISPATCH MODAL -->
+<div class="modal-overlay" id="orderDetailsModal">
+    <div class="modal-content" style="max-width: 780px;">
+        <div class="modal-header">
+            <div>
+                <h3 class="modal-title" id="odModalTitle" style="display:inline-block; margin-right:8px;">📦 Order Details #THU-000000</h3>
+                <span id="odModalStatusBadge" class="badge badge-pending">PENDING</span>
+            </div>
+            <button class="modal-close-btn" onclick="closeOrderDetailsModal()">✕</button>
+        </div>
+        <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
+            <!-- Customer Information Card -->
+            <div style="background:#FAF8EF; border:1px solid var(--thulirva-border); border-radius:12px; padding:16px; margin-bottom:16px;">
+                <div style="font-weight:700; color:var(--thulirva-forest); font-size:13.5px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <span>👤 Customer Information</span>
+                    <span id="odCustomerTypeBadge" class="badge" style="background:#E8F5E9; color:var(--thulirva-forest);">Customer ID: #000</span>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; font-size:13px;">
+                    <div>
+                        <div style="color:var(--thulirva-text-muted); font-size:11px;">Customer Name</div>
+                        <div style="font-weight:700; color:var(--thulirva-forest); font-size:14px;" id="odCustomerName">—</div>
+                    </div>
+                    <div>
+                        <div style="color:var(--thulirva-text-muted); font-size:11px;">Phone Number</div>
+                        <div style="display:flex; align-items:center; gap:8px; margin-top:2px;">
+                            <span style="font-weight:700; font-family:monospace;" id="odCustomerPhone">—</span>
+                            <span id="odCallCustomerWrap">
+                                <!-- Call button injected here -->
+                            </span>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="color:var(--thulirva-text-muted); font-size:11px;">Email Address</div>
+                        <div id="odCustomerEmail" style="color:var(--thulirva-text-muted);">—</div>
+                    </div>
+                    <div>
+                        <div style="color:var(--thulirva-text-muted); font-size:11px;">Order Placed At</div>
+                        <div id="odCreatedAt" style="font-weight:600;">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Doorstep Delivery Address & Instructions -->
+            <div style="background:#fff; border:1px solid var(--thulirva-border); border-radius:12px; padding:16px; margin-bottom:16px;">
+                <div style="font-weight:700; color:var(--thulirva-forest); font-size:13.5px; margin-bottom:10px;">
+                    📍 Doorstep Delivery Destination
+                </div>
+                <div style="font-size:13px; line-height:1.5;">
+                    <div style="font-weight:600; color:#1f2937;" id="odAddress">—</div>
+                    <div style="color:var(--thulirva-text-muted); font-size:12px; margin-top:4px;" id="odCityPincode">—</div>
+                    <div id="odInstructionsWrap" style="background:#FEF3C7; padding:8px 12px; border-radius:6px; margin-top:8px; font-size:12px; color:#B45309; display:none;">
+                        <strong>🔔 Doorstep Instructions:</strong> <span id="odInstructionsText"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Ordered Breakdown -->
+            <div style="background:#fff; border:1px solid var(--thulirva-border); border-radius:12px; overflow:hidden; margin-bottom:16px;">
+                <div style="background:#FAF8EF; padding:12px 16px; font-weight:700; color:var(--thulirva-forest); font-size:13px; border-bottom:1px solid var(--thulirva-border);">
+                    🛍️ Items in this Order
+                </div>
+                <table class="admin-table" style="margin:0;">
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Unit Price</th>
+                            <th>Qty</th>
+                            <th style="text-align:right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="odItemsTable">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" style="text-align:right; font-weight:600;">Delivery Fee:</td>
+                            <td style="text-align:right; font-weight:600;" id="odDeliveryFee">₹0</td>
+                        </tr>
+                        <tr style="background:#FAF8EF;">
+                            <td colspan="3" style="text-align:right; font-weight:800; font-size:14px; color:var(--thulirva-forest);">Total Paid / Payable:</td>
+                            <td style="text-align:right; font-weight:900; font-size:16px; color:var(--thulirva-forest);" id="odTotalAmount">₹0</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Payment Details & Verification Section -->
+            <div style="background:#FAF8EF; border:1px solid var(--thulirva-border); border-radius:12px; padding:16px; margin-bottom:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <span style="font-weight:700; color:var(--thulirva-forest); font-size:13.5px;">💳 UPI Payment Verification</span>
+                    <span id="odPaymentStatusBadge" class="badge badge-pending">Verification Pending</span>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 140px; gap:16px; align-items:center;">
+                    <div style="font-size:13px;">
+                        <div>Method: <strong id="odPaymentMethod">UPI QR</strong></div>
+                        <div style="margin-top:4px;">Transaction / UTR: <strong class="font-mono" style="background:#fff; padding:2px 8px; border-radius:4px; border:1px solid #cbd5e1;" id="odTxnId">N/A</strong></div>
+                        <div style="margin-top:8px; display:flex; gap:8px;" id="odPaymentActionBtns">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="verifyOdPayment()">✓ Verify Payment</button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="rejectOdPayment()">Reject</button>
+                        </div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div id="odProofThumbWrap">
+                            <img id="odProofThumb" src="" style="width:100px; height:100px; object-fit:cover; border-radius:8px; border:1px solid var(--thulirva-border); cursor:pointer;" onclick="zoomProofImage()">
+                            <small style="display:block; font-size:10px; color:var(--thulirva-text-muted); margin-top:2px;">Click to enlarge</small>
+                        </div>
+                        <div id="odNoProofNotice" style="display:none; color:var(--thulirva-text-muted); font-size:11px; padding:20px 4px;">
+                            No payment proof uploaded
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dispatch & Partner Fulfillment Section -->
+            <div style="background:#fff; border:1px solid var(--thulirva-border); border-radius:12px; padding:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-weight:700; color:var(--thulirva-forest); font-size:13.5px;">🚚 Dispatch &amp; Partner Assignment</span>
+                    <button type="button" class="btn btn-primary btn-sm" id="odSmartDispatchBtn" onclick="smartDispatchOd()" style="background:#15803D;">
+                        ⚡ Smart Auto-Dispatch
+                    </button>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; font-size:13px;">
+                    <div>
+                        <div style="color:var(--thulirva-text-muted); font-size:11px;">Assigned Delivery Partner</div>
+                        <div style="font-weight:700; color:var(--thulirva-forest); font-size:14px;" id="odPartnerName">Unassigned</div>
+                        <div style="font-size:12px; color:var(--thulirva-text-muted);" id="odPartnerPhone">—</div>
+                    </div>
+                    <div>
+                        <label class="form-label" style="font-size:11px; margin-bottom:4px;">Manual Partner Override</label>
+                        <div style="display:flex; gap:6px;">
+                            <select id="odPartnerSelect" class="form-select" style="font-size:12px; padding:4px 8px;">
+                                <!-- Populated dynamically -->
+                            </select>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="manualAssignOdPartner()">Assign</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delivery Proof Photo if completed -->
+                <div id="odDeliveredProofCard" style="display:none; margin-top:14px; background:#FAF8EF; padding:12px; border-radius:8px; border:1px solid #86EFAC;">
+                    <div style="font-weight:700; color:#15803D; font-size:12.5px; margin-bottom:6px;">📸 Doorstep Delivery Photo Proof</div>
+                    <div style="display:flex; gap:14px; align-items:center;">
+                        <img id="odDeliveredPhotoImg" src="" style="width:70px; height:70px; object-fit:cover; border-radius:6px; cursor:pointer;" onclick="zoomDeliveredPhoto()">
+                        <div style="font-size:12px;">
+                            <div>Handover Time: <strong id="odDeliveredTime">—</strong></div>
+                            <div id="odDeliveredGpsWrap">GPS: <a id="odDeliveredGpsLink" href="#" target="_blank" style="color:var(--thulirva-forest); font-weight:700; text-decoration:underline;">📍 View on Maps</a></div>
+                            <div style="color:var(--thulirva-text-muted); font-size:11px; margin-top:2px;" id="odDeliveredRemarks">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer" style="justify-content:space-between;">
+            <div>
+                <button type="button" class="btn btn-secondary" onclick="closeOrderDetailsModal()">Close</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:12px; font-weight:600;">Update Status:</label>
+                <select id="odStatusSelect" class="form-select" style="width:auto; font-size:12px; padding:4px 8px;">
+                    <option value="placed">Placed</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="preparing">Preparing</option>
+                    <option value="assigned">Assigned</option>
+                    <option value="picked_up">Picked Up</option>
+                    <option value="out_for_delivery">Out for Delivery</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+                <button type="button" class="btn btn-primary btn-sm" onclick="saveOdStatusChange()">Save Status</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="js/api-client.js"></script>
 <script src="js/admin-shell.js"></script>
 <script>
@@ -256,23 +449,69 @@ let deliveryPartners = [];
 let activeModalOrderId = null;
 let currentPage = 1;
 const pageSize = 12;
+let currentSelectedDate = "";
+let currentStatusTab = "";
+
+function setStatusTab(tab) {
+    currentStatusTab = tab;
+    document.querySelectorAll('.tab-status-btn').forEach(b => {
+        b.className = 'btn btn-sm btn-secondary tab-status-btn';
+    });
+    if (!tab) document.getElementById('tabBtnAll').className = 'btn btn-sm btn-primary tab-status-btn';
+    else if (tab === 'pending') document.getElementById('tabBtnPending').className = 'btn btn-sm btn-primary tab-status-btn';
+    else if (tab === 'out_for_delivery') document.getElementById('tabBtnInTransit').className = 'btn btn-sm btn-primary tab-status-btn';
+    else if (tab === 'delivered') document.getElementById('tabBtnDelivered').className = 'btn btn-sm btn-primary tab-status-btn';
+    else if (tab === 'cancelled') document.getElementById('tabBtnCancelled').className = 'btn btn-sm btn-primary tab-status-btn';
+
+    filterOrders();
+}
+
+function onDateFilterChanged() {
+    currentSelectedDate = document.getElementById("orderDateFilter").value;
+    loadOrders();
+}
+
+function setQuickDate(type) {
+    const input = document.getElementById("orderDateFilter");
+    if (type === 'today') {
+        input.value = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    } else if (type === 'yesterday') {
+        const d = new Date();
+        d.setDate(d.getDate() - 1);
+        input.value = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    } else {
+        input.value = '';
+    }
+    currentSelectedDate = input.value;
+    loadOrders();
+}
 
 async function loadOrders() {
     try {
-        const res = await fetch("/api/v1/orders", {
+        const dateQuery = currentSelectedDate ? `?date=${encodeURIComponent(currentSelectedDate)}` : '';
+        const res = await fetch(`/api/orders${dateQuery}`, {
             headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
             const data = await res.json();
             allOrders = data.orders || [];
+            if (data.stats) {
+                document.getElementById("totalOrdersMetric").textContent = data.stats.total || allOrders.length;
+                document.getElementById("pendingOrdersMetric").textContent = data.stats.pending || 0;
+                document.getElementById("deliveredMetric").textContent = data.stats.delivered || 0;
+            }
         } else {
-            // Fallback to legacy
-            const legRes = await fetch("/api/orders/admin/all", {
+            const v1Res = await fetch(`/api/v1/orders${dateQuery}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            if (legRes.ok) {
-                const lData = await legRes.json();
-                allOrders = lData.orders || [];
+            if (v1Res.ok) {
+                const vData = await v1Res.json();
+                allOrders = vData.orders || [];
+                if (vData.stats) {
+                    document.getElementById("totalOrdersMetric").textContent = vData.stats.total || allOrders.length;
+                    document.getElementById("pendingOrdersMetric").textContent = vData.stats.pending || 0;
+                    document.getElementById("deliveredMetric").textContent = vData.stats.delivered || 0;
+                }
             }
         }
     } catch (_) {
@@ -297,29 +536,52 @@ async function loadPartnersList() {
 }
 
 function calculateMetrics() {
-    document.getElementById("totalOrdersMetric").textContent = allOrders.length;
-    const pending = allOrders.filter(o => o.order_status === 'pending');
-    document.getElementById("pendingOrdersMetric").textContent = pending.length;
-    const inTransit = allOrders.filter(o => o.order_status === 'in_transit' || o.order_status === 'shipped' || o.order_status === 'out_for_delivery');
-    document.getElementById("inTransitMetric").textContent = inTransit.length;
-    const delivered = allOrders.filter(o => o.order_status === 'delivered');
-    document.getElementById("deliveredMetric").textContent = delivered.length;
+    // If stats were already updated by backend date filter, keep them, otherwise compute
+    if (!currentSelectedDate) {
+        document.getElementById("totalOrdersMetric").textContent = allOrders.length;
+        const pending = allOrders.filter(o => {
+            const s = (o.order_status || '').toLowerCase();
+            return s !== 'delivered' && s !== 'cancelled';
+        });
+        document.getElementById("pendingOrdersMetric").textContent = pending.length;
+        const inTransit = allOrders.filter(o => o.order_status === 'in_transit' || o.order_status === 'shipped' || o.order_status === 'out_for_delivery');
+        document.getElementById("inTransitMetric").textContent = inTransit.length;
+        const delivered = allOrders.filter(o => (o.order_status || '').toLowerCase() === 'delivered');
+        document.getElementById("deliveredMetric").textContent = delivered.length;
+    } else {
+        const inTransit = allOrders.filter(o => o.order_status === 'in_transit' || o.order_status === 'shipped' || o.order_status === 'out_for_delivery');
+        document.getElementById("inTransitMetric").textContent = inTransit.length;
+    }
 }
 
 function filterOrders() {
     const q = (document.getElementById("orderSearch").value || "").trim().toLowerCase();
-    const status = document.getElementById("statusFilter").value;
+    const dropdownStatus = document.getElementById("statusFilter").value;
     const payment = document.getElementById("paymentFilter").value;
     const type = document.getElementById("typeFilter").value;
 
     filteredOrders = allOrders.filter(o => {
         const idMatch = String(o.id || o.order_number || "").toLowerCase().includes(q);
         const nameMatch = (o.customer_name || "").toLowerCase().includes(q);
-        const phoneMatch = (o.customer_phone || "").includes(q);
+        const phone = o.customer_phone || o.customerPhone || "";
+        const phoneMatch = phone.includes(q);
         const utrMatch = String(o.transaction_id || o.utr || "").toLowerCase().includes(q);
         const matchesQ = !q || idMatch || nameMatch || phoneMatch || utrMatch;
 
-        const matchesStatus = !status || (o.order_status || "").toLowerCase() === status.toLowerCase();
+        // Status filter: tab takes precedence if active, else dropdown
+        let matchesStatus = true;
+        const os = (o.order_status || "").toLowerCase();
+        if (currentStatusTab) {
+            if (currentStatusTab === 'pending') {
+                matchesStatus = os !== 'delivered' && os !== 'cancelled';
+            } else if (currentStatusTab === 'out_for_delivery') {
+                matchesStatus = os === 'out_for_delivery' || os === 'in_transit' || os === 'shipped';
+            } else {
+                matchesStatus = os === currentStatusTab.toLowerCase();
+            }
+        } else if (dropdownStatus) {
+            matchesStatus = os === dropdownStatus.toLowerCase();
+        }
         
         let matchesPayment = true;
         if (payment === "verified") matchesPayment = o.payment_status === "verified";
@@ -397,7 +659,7 @@ function renderOrdersTable() {
         const utrHtml = txnId ? `<div class="font-mono" style="font-size:11px; background:#EAF2E4; color:var(--thulirva-forest); padding:2px 6px; border-radius:4px; margin-top:2px;">UTR: ${txnId}</div>` : `<span style="font-size:11px; color:var(--thulirva-text-muted);">Unverified</span>`;
         const proofHtml = proofImg ? `
             <img src="${proofImg}" class="proof-thumb" onclick="openProofModal('${o.id}')" title="Click to view full payment screenshot proof">
-        ` : `<span style="color:var(--thulirva-text-muted); font-size:11px;">No UTR Screenshot</span>`;
+        ` : `<span style="color:var(--thulirva-text-muted); font-size:11px;">No Screenshot</span>`;
 
         const deliveryProofUrl = o.delivery_proof_url || o.delivery_proof || o.proof_url || '';
         let deliveryProofBadge = '';
@@ -408,7 +670,7 @@ function renderOrdersTable() {
                 deliveryProofBadge = `<button class="btn btn-secondary btn-sm" onclick="openDeliveryProofModal('${o.id}')" style="padding:2px 8px; font-size:11px; font-weight:700; color:#B45309; background:#FEF3C7; border-color:#FDE68A; margin-top:4px;">⚠️ No Photo</button>`;
             }
         } else if (o.order_status === 'out_for_delivery' || o.order_status === 'in_transit' || o.order_status === 'shipped') {
-            deliveryProofBadge = `<span style="font-size:10.5px; color:#1D4ED8; font-weight:600; display:block; margin-top:4px;">🚚 Out for Delivery</span>`;
+            deliveryProofBadge = `<span style="font-size:10.5px; color:#1D4ED8; font-weight:600; display:block; margin-top:4px;">🚚 In Transit</span>`;
         } else if (o.order_status === 'picked_up' || o.order_status === 'pickup_confirmed') {
             deliveryProofBadge = `<span style="font-size:10.5px; color:#D97706; font-weight:600; display:block; margin-top:4px;">📦 Picked Up</span>`;
         } else {
@@ -417,12 +679,18 @@ function renderOrdersTable() {
 
         const partnerText = o.partner_name || o.partner_id ? `<span style="font-weight:600; color:var(--thulirva-forest);">${o.partner_name || o.partner_id}</span>` : `<button class="btn btn-secondary btn-sm" onclick="openAssignModal('${o.id}', '${o.order_number || o.id}')">＋ Assign</button>`;
 
+        const safeCustomerPhone = o.customer_phone || o.customerPhone || "";
+
         row.innerHTML = `
-            <td><strong>#${o.id || o.order_number}</strong></td>
+            <td>
+                <a href="javascript:void(0)" onclick="openOrderDetailsModal('${o.id}')" style="color:var(--thulirva-forest); font-weight:800; text-decoration:underline;">
+                    #${o.id || o.order_number}
+                </a>
+            </td>
             <td><small style="color:var(--thulirva-text-muted);">${(o.created_at || "Recent").slice(0, 16).replace("T", " ")}</small></td>
             <td>
-                <div style="font-weight:700; color:var(--thulirva-forest);">${o.customer_name || "Customer"}</div>
-                <small style="color:var(--thulirva-text-muted);">${o.customer_phone || ""}</small>
+                <div style="font-weight:700; color:var(--thulirva-forest); cursor:pointer;" onclick="openOrderDetailsModal('${o.id}')">${o.customer_name || "Customer"}</div>
+                <small style="color:var(--thulirva-text-muted);">${safeCustomerPhone}</small>
             </td>
             <td style="max-width:180px; font-size:11.5px; line-height:1.35;">${o.address || ""}${o.city ? ', ' + o.city : ''}</td>
             <td style="max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${itemsDesc}">${itemsDesc}</td>
@@ -437,8 +705,9 @@ function renderOrdersTable() {
             <td><strong>₹${totalAmt}</strong></td>
             <td>${partnerText}</td>
             <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
-            <td style="text-align:right;">
-                <select onchange="updateOrderStatus('${o.id}', this.value)" class="form-select" style="padding:4px 8px; font-size:11px; width:auto; display:inline-block;">
+            <td style="text-align:right; white-space:nowrap;">
+                <button class="btn btn-secondary btn-sm" onclick="openOrderDetailsModal('${o.id}')" style="padding:3px 8px; font-size:11px; margin-right:4px;">👁️ Details</button>
+                <select onchange="updateOrderStatus('${o.id}', this.value)" class="form-select" style="padding:3px 6px; font-size:11px; width:auto; display:inline-block;">
                     <option value="placed" ${o.order_status === 'placed' ? 'selected' : ''}>Placed</option>
                     <option value="confirmed" ${o.order_status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
                     <option value="preparing" ${o.order_status === 'preparing' ? 'selected' : ''}>Preparing</option>
@@ -479,6 +748,291 @@ async function updateOrderStatus(orderId, newStatus) {
     } catch (e) {
         showToast("Error updating order: " + e.message, "error");
     }
+}
+
+// -------------------------------------------------------------
+// COMPREHENSIVE ORDER DETAILS MODAL IMPLEMENTATION
+// -------------------------------------------------------------
+function openOrderDetailsModal(orderId) {
+    const o = allOrders.find(ord => ord.id == orderId || ord.order_number == orderId);
+    if (!o) return;
+    activeModalOrderId = o.id;
+
+    // Safely resolve customer phone to prevent ANY undefined error!
+    const customerPhone = o.customer_phone || o.customerPhone || (o.customer && (o.customer.phone || o.customer.customer_phone)) || "";
+    const customerName = o.customer_name || o.customerName || "Valued Customer";
+    const customerEmail = o.customer_email || o.customerEmail || "Not provided";
+    const formattedId = o.order_number || `#${o.id}`;
+
+    document.getElementById("odModalTitle").textContent = `📦 Order Details ${formattedId}`;
+    
+    // Status Badge
+    let sBadge = 'badge-pending';
+    let sText = (o.order_status || 'placed').replace(/_/g, ' ').toUpperCase();
+    if (o.order_status === 'delivered') sBadge = 'badge-delivered';
+    else if (['out_for_delivery', 'in_transit', 'shipped'].includes(o.order_status)) sBadge = 'badge-shipped';
+    else if (o.order_status === 'cancelled') sBadge = 'badge-cancelled';
+    
+    const badgeEl = document.getElementById("odModalStatusBadge");
+    badgeEl.className = `badge ${sBadge}`;
+    badgeEl.textContent = sText;
+
+    // Customer fields
+    document.getElementById("odCustomerName").textContent = customerName;
+    document.getElementById("odCustomerPhone").textContent = customerPhone || "Phone unavailable";
+    document.getElementById("odCustomerEmail").textContent = customerEmail;
+    document.getElementById("odCreatedAt").textContent = o.created_at ? new Date(o.created_at).toLocaleString() : "Recent";
+    document.getElementById("odCustomerTypeBadge").textContent = o.user_id ? `User ID: #${o.user_id}` : "Guest Checkout";
+
+    // Call customer button
+    const callWrap = document.getElementById("odCallCustomerWrap");
+    if (customerPhone && customerPhone.trim().length >= 8) {
+        callWrap.innerHTML = `
+            <a href="tel:${customerPhone.trim()}" class="btn btn-primary btn-sm" style="padding:2px 8px; font-size:11px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; background:#15803D;">
+                📞 Call Customer
+            </a>
+        `;
+    } else {
+        callWrap.innerHTML = `<span style="font-size:11px; color:var(--thulirva-text-muted);">No phone</span>`;
+    }
+
+    // Address
+    document.getElementById("odAddress").textContent = o.address || "Doorstep Address";
+    document.getElementById("odCityPincode").textContent = `${o.city || 'Chennai'} - ${o.pincode || '603103'}${o.landmark ? ` (Landmark: ${o.landmark})` : ''}`;
+
+    // Instructions
+    const instructions = o.delivery_instructions || o.instructions || "";
+    const instWrap = document.getElementById("odInstructionsWrap");
+    if (instructions) {
+        document.getElementById("odInstructionsText").textContent = instructions;
+        instWrap.style.display = "block";
+    } else {
+        instWrap.style.display = "none";
+    }
+
+    // Items table
+    const itemsTbody = document.getElementById("odItemsTable");
+    itemsTbody.innerHTML = "";
+    let items = Array.isArray(o.items) && o.items.length ? o.items : [
+        { name: o.items_summary || "Farm Fresh Products", quantity: 1, price: o.subtotal || o.total || 0 }
+    ];
+    let subtotalCalc = 0;
+    items.forEach(it => {
+        const qty = Number(it.quantity) || 1;
+        const price = Number(it.price) || 0;
+        const lineTotal = it.total ? Number(it.total) : qty * price;
+        subtotalCalc += lineTotal;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><strong>${it.name || it.product_name || 'Farm Item'}</strong>${it.weight ? `<small style="color:var(--thulirva-text-muted); display:block;">${it.weight}</small>` : ''}</td>
+            <td>₹${price.toFixed(2)}</td>
+            <td>${qty}</td>
+            <td style="text-align:right;"><strong>₹${lineTotal.toFixed(2)}</strong></td>
+        `;
+        itemsTbody.appendChild(tr);
+    });
+
+    const deliveryFee = Number(o.delivery_charge !== undefined ? o.delivery_charge : (o.delivery || 0));
+    const totalAmount = Number(o.total !== undefined ? o.total : (o.total_price || subtotalCalc + deliveryFee));
+    document.getElementById("odDeliveryFee").textContent = deliveryFee === 0 ? "FREE" : `₹${deliveryFee.toFixed(2)}`;
+    document.getElementById("odTotalAmount").textContent = `₹${totalAmount.toFixed(2)}`;
+
+    // Payment details
+    document.getElementById("odPaymentMethod").textContent = o.payment_method || "UPI QR";
+    const txnId = o.transaction_id || o.transactionId || o.utr || "N/A";
+    document.getElementById("odTxnId").textContent = txnId;
+
+    const pStatusBadge = document.getElementById("odPaymentStatusBadge");
+    const isPaid = (o.payment_status || '').toLowerCase() === 'verified' || (o.payment_status || '').toLowerCase() === 'paid';
+    pStatusBadge.className = `badge ${isPaid ? 'badge-active' : 'badge-pending'}`;
+    pStatusBadge.textContent = isPaid ? "✓ Verified & Paid" : "Verification Pending";
+
+    // Proof screenshot
+    const proofUrl = o.payment_proof || o.paymentProof || o.proof || "";
+    const proofWrap = document.getElementById("odProofThumbWrap");
+    const noProofNotice = document.getElementById("odNoProofNotice");
+    const proofImg = document.getElementById("odProofThumb");
+    if (proofUrl) {
+        proofImg.src = proofUrl;
+        proofWrap.style.display = "block";
+        noProofNotice.style.display = "none";
+    } else {
+        proofWrap.style.display = "none";
+        noProofNotice.style.display = "block";
+    }
+
+    // Partner info & Dropdown
+    document.getElementById("odPartnerName").textContent = o.partner_name || o.partner_id || "Unassigned";
+    document.getElementById("odPartnerPhone").textContent = o.partner_phone ? `📞 ${o.partner_phone}` : "No phone recorded";
+
+    const pSelect = document.getElementById("odPartnerSelect");
+    pSelect.innerHTML = `<option value="">Choose partner...</option>`;
+    deliveryPartners.forEach(p => {
+        const isAssigned = (o.partner_id && o.partner_id == p.partner_id) || (o.partner_name && o.partner_name == p.name);
+        pSelect.innerHTML += `<option value="${p.partner_id}" ${isAssigned ? 'selected' : ''}>${p.name} (${p.partner_id})</option>`;
+    });
+
+    // Delivered Proof photo if completed
+    const delCard = document.getElementById("odDeliveredProofCard");
+    const delPhoto = o.delivery_proof_url || o.delivery_proof || o.proof_url || "";
+    if (o.order_status === 'delivered' && delPhoto) {
+        document.getElementById("odDeliveredPhotoImg").src = delPhoto;
+        document.getElementById("odDeliveredTime").textContent = o.delivered_at || o.delivery_proof_timestamp || "Delivered";
+        document.getElementById("odDeliveredRemarks").textContent = o.delivery_remarks || o.remarks || "Safely handed over to customer";
+        const lat = o.delivery_latitude || o.delivery_lat;
+        const lng = o.delivery_longitude || o.delivery_lng;
+        if (lat && lng) {
+            document.getElementById("odDeliveredGpsLink").href = `https://maps.google.com/?q=${lat},${lng}`;
+            document.getElementById("odDeliveredGpsWrap").style.display = "block";
+        } else {
+            document.getElementById("odDeliveredGpsWrap").style.display = "none";
+        }
+        delCard.style.display = "block";
+    } else {
+        delCard.style.display = "none";
+    }
+
+    // Status select
+    document.getElementById("odStatusSelect").value = o.order_status || "placed";
+
+    document.getElementById("orderDetailsModal").classList.add("active");
+}
+
+function closeOrderDetailsModal() {
+    document.getElementById("orderDetailsModal").classList.remove("active");
+}
+
+async function verifyOdPayment() {
+    if (!activeModalOrderId) return;
+    try {
+        const res = await fetch(`/api/orders/${activeModalOrderId}/verify-payment`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ verified_by: "Admin" })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`✓ Payment for Order #${activeModalOrderId} verified!`);
+            closeOrderDetailsModal();
+            loadOrders();
+        } else {
+            showToast(data.message || "Failed to verify", "error");
+        }
+    } catch (e) {
+        showToast("Error: " + e.message, "error");
+    }
+}
+
+async function rejectOdPayment() {
+    if (!activeModalOrderId) return;
+    const reason = prompt("Enter payment rejection reason:", "Invalid UTR / Screenshot mismatch");
+    if (!reason) return;
+    try {
+        const res = await fetch(`/api/orders/${activeModalOrderId}/reject-payment`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ reason })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Payment rejected for Order #${activeModalOrderId}.`, "info");
+            closeOrderDetailsModal();
+            loadOrders();
+        } else {
+            showToast(data.message || "Failed to reject", "error");
+        }
+    } catch (e) {
+        showToast("Error: " + e.message, "error");
+    }
+}
+
+async function smartDispatchOd() {
+    if (!activeModalOrderId) return;
+    try {
+        const res = await fetch("/api/v1/assignments/smart", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ order_id: activeModalOrderId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`⚡ Order #${activeModalOrderId} auto-dispatched to ${data.partner_name || data.partner_id || 'delivery partner'}!`);
+            closeOrderDetailsModal();
+            loadOrders();
+        } else {
+            // Fallback to first active partner
+            if (deliveryPartners.length > 0) {
+                const p = deliveryPartners[0];
+                await fetch("/api/v1/assignments/manual", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ order_id: activeModalOrderId, partner_id: p.partner_id })
+                });
+                showToast(`Order #${activeModalOrderId} dispatched to ${p.name}.`);
+                closeOrderDetailsModal();
+                loadOrders();
+            } else {
+                showToast(data.message || "No delivery partner available for dispatch", "error");
+            }
+        }
+    } catch (e) {
+        showToast("Dispatch error: " + e.message, "error");
+    }
+}
+
+async function manualAssignOdPartner() {
+    if (!activeModalOrderId) return;
+    const partnerId = document.getElementById("odPartnerSelect").value;
+    if (!partnerId) {
+        showToast("Please choose a delivery partner to assign.", "error");
+        return;
+    }
+    try {
+        const res = await fetch("/api/v1/assignments/manual", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ order_id: activeModalOrderId, partner_id: partnerId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Order #${activeModalOrderId} assigned to ${partnerId}.`);
+            closeOrderDetailsModal();
+            loadOrders();
+        } else {
+            showToast(data.message || "Assignment failed", "error");
+        }
+    } catch (e) {
+        showToast("Error assigning: " + e.message, "error");
+    }
+}
+
+async function saveOdStatusChange() {
+    if (!activeModalOrderId) return;
+    const newStatus = document.getElementById("odStatusSelect").value;
+    await updateOrderStatus(activeModalOrderId, newStatus);
+    closeOrderDetailsModal();
+}
+
+function zoomProofImage() {
+    if (!activeModalOrderId) return;
+    openProofModal(activeModalOrderId);
+}
+
+function zoomDeliveredPhoto() {
+    if (!activeModalOrderId) return;
+    openDeliveryProofModal(activeModalOrderId);
 }
 
 function openProofModal(orderId) {
@@ -760,8 +1314,8 @@ function initOrdersRealtime() {
             const orders = Array.isArray(data) ? data : (data.orders || data.data || []);
             if (orders && orders.length) {
                 allOrders = orders;
-                updateMetrics();
-                renderOrders();
+                calculateMetrics();
+                renderOrdersTable();
             }
         } catch (_) {}
     }, 5000);

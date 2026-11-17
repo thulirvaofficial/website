@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THULIRVA Admin — Payment QR Code Management</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <style>
+        .qr-card-active {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 2px solid var(--thulirva-forest);
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(27, 67, 50, 0.08);
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 28px;
+            align-items: center;
+        }
+        .qr-img-wrap {
+            background: #FAF8EF;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid var(--thulirva-border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .qr-img-wrap:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+        }
+        .qr-img-wrap img {
+            max-width: 100%;
+            height: 200px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        .upi-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #E8F5E9;
+            color: var(--thulirva-forest);
+            font-family: monospace;
+            font-size: 15px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid #86EFAC;
+            margin: 8px 0 14px 0;
+        }
+        .upi-copy-btn {
+            background: var(--thulirva-forest);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 11px;
+            cursor: pointer;
+            font-family: var(--font-primary, sans-serif);
+        }
+        .history-thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: 6px;
+            object-fit: contain;
+            background: #FAF8EF;
+            border: 1px solid var(--thulirva-border);
+            cursor: pointer;
+        }
+        .zoom-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .zoom-overlay.active {
+            display: flex;
+        }
+        .zoom-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 440px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-layout">
+    <aside class="sidebar" id="adminSidebar"></aside>
+
+    <main class="main-content">
+        <header class="topbar" id="adminTopbar"></header>
+
+        <div class="page-container">
+            <div class="page-header flex-between">
+                <div>
+                    <h1 class="page-title">Payment QR Code Management</h1>
+                    <p class="page-subtitle">Configure real-time UPI payment QR codes, manage multiple accounts, and track replacement audit logs</p>
+                </div>
+                <div class="flex-center gap-3">
+                    <button class="btn btn-secondary" onclick="openSecurityPasswordModal()">
+                        🔒 Security Settings
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadQrData()">
+                        🔄 Refresh
+                    </button>
+                    <button class="btn btn-primary" onclick="openUploadModal()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                        Upload / Replace QR
+                    </button>
+                </div>
+            </div>
+
+            <!-- Security Warning Alert -->
+            <div style="background:#FAF8EF; border-left:4px solid #E5C97A; padding:12px 18px; border-radius:8px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:13px; color:#8A6508;">
+                    <strong>🛡️ High-Security Financial Control:</strong> Every QR code replacement or status toggle requires the Dedicated Security Password. Active QR updates immediately propagate to customer checkout in real time.
+                </div>
+                <span style="font-size:11px; background:#fff; padding:4px 8px; border-radius:4px; font-weight:700; color:var(--thulirva-forest);">256-BIT ENCRYPTION</span>
+            </div>
+
+            <!-- Active QR Code Showcase -->
+            <div class="card mb-4" id="activeQrSection">
+                <div class="card-header flex-between" style="padding:12px 20px; background:#FAF8EF; border-bottom:1px solid var(--thulirva-border);">
+                    <div style="font-weight:700; color:var(--thulirva-forest); font-size:14px; display:flex; align-items:center; gap:8px;">
+                        <span>📱 Live Active Customer Payment QR</span>
+                        <span id="activeStatusBadge" class="badge badge-active">ACTIVE NOW</span>
+                    </div>
+                    <span id="activeVersionTag" style="font-family:monospace; font-size:12px; font-weight:700; color:var(--thulirva-forest);">Version: v1</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="qr-card-active">
+                        <div class="qr-img-wrap" onclick="zoomActiveQr()" title="Click to zoom / inspect QR code">
+                            <img id="activeQrImg" src="/uploads/payments/sample_qr.png" alt="Live Payment QR">
+                            <div style="font-size:11px; color:var(--thulirva-text-muted); margin-top:6px;">🔍 Click to enlarge</div>
+                        </div>
+                        <div>
+                            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                <span class="badge" style="background:#E8F5E9; color:var(--thulirva-forest); font-weight:700;" id="activePurposeBadge">All Orders &amp; Subscriptions</span>
+                                <span class="badge" style="background:#FEF3C7; color:#B45309;" id="activeVerifiedBadge">UPI Verified</span>
+                            </div>
+                            <h2 style="font-family:'Playfair Display', serif; font-size:22px; font-weight:800; color:var(--thulirva-forest); margin-top:8px;" id="activeMerchantName">THULIRVA A2 DAIRY</h2>
+                            
+                            <div>
+                                <span style="font-size:12px; color:var(--thulirva-text-muted); display:block;">Active Receiving UPI ID:</span>
+                                <div class="upi-pill">
+                                    <span id="activeUpiText">7904880944@superyes</span>
+                                    <button class="upi-copy-btn" onclick="copyUpi()">Copy</button>
+                                </div>
+                            </div>
+
+                            <p style="font-size:13px; color:var(--thulirva-text-muted); line-height:1.5; margin-bottom:16px;" id="activeNotes">
+                                Official primary UPI QR for all customer milk subscriptions and doorstep product orders.
+                            </p>
+
+                            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; font-size:12px; color:var(--thulirva-text-muted);">
+                                <div>Last Updated: <strong id="activeLastUpdated" style="color:var(--thulirva-forest);">Today</strong></div>
+                                <div>•</div>
+                                <div>Updated By: <strong id="activeUpdatedBy" style="color:var(--thulirva-forest);">Super Admin</strong></div>
+                            </div>
+
+                            <div style="margin-top:20px; display:flex; gap:12px;">
+                                <button class="btn btn-primary" onclick="openUploadModal()">
+                                    🔄 Replace QR Code
+                                </button>
+                                <button class="btn btn-secondary" id="toggleStatusBtn" onclick="promptToggleStatus()">
+                                    ⏸️ Deactivate Temporarily
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Version History / Audit Trail -->
+            <div class="card">
+                <div class="card-header flex-between" style="padding:14px 20px;">
+                    <div style="font-weight:700; color:var(--thulirva-forest); font-size:14px;">
+                        📜 QR Code Version History &amp; Audit Trail
+                    </div>
+                    <span style="font-size:12px; color:var(--thulirva-text-muted);">Permanent immutable record of previous QRs</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Version</th>
+                                <th>QR Code</th>
+                                <th>UPI ID</th>
+                                <th>Merchant Name</th>
+                                <th>Reason / Notes</th>
+                                <th>Published At</th>
+                                <th>Published By</th>
+                                <th>Status</th>
+                                <th style="text-align:right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTable">
+                            <tr>
+                                <td colspan="9" style="text-align:center; padding:36px; color:var(--thulirva-text-muted);">
+                                    Loading QR version history...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- UPLOAD / REPLACE QR MODAL -->
+<div class="modal-overlay" id="uploadModal">
+    <div class="modal-content" style="max-width: 580px;">
+        <div class="modal-header">
+            <h3 class="modal-title">📤 Upload &amp; Publish Payment QR</h3>
+            <button class="modal-close-btn" onclick="closeUploadModal()">✕</button>
+        </div>
+        <form id="uploadQrForm" onsubmit="handleQrUploadSubmit(event)">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Payment QR Image File <span style="color:red;">*</span></label>
+                    <input type="file" id="uploadQrFile" class="form-control" accept="image/*" required onchange="previewUploadQr(this)">
+                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Upload high-contrast QR PNG or JPG. Square format (at least 600x600px) recommended.</small>
+                    
+                    <div id="uploadPreviewWrap" style="display:none; text-align:center; margin-top:12px; background:#FAF8EF; padding:10px; border-radius:8px; border:1px solid var(--thulirva-border);">
+                        <img id="uploadPreviewImg" src="" style="max-height:160px; object-fit:contain; border-radius:6px;">
+                    </div>
+                </div>
+
+                <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                    <div class="form-group">
+                        <label class="form-label">Associated UPI ID <span style="color:red;">*</span></label>
+                        <input type="text" id="uploadUpiId" class="form-control" placeholder="e.g. 7904880944@superyes" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Merchant / Business Name</label>
+                        <input type="text" id="uploadMerchantName" class="form-control" placeholder="e.g. THULIRVA A2 DAIRY" value="THULIRVA A2 DAIRY">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">QR Purpose</label>
+                    <select id="uploadPurpose" class="form-select">
+                        <option value="all">All Orders &amp; Subscriptions (Default)</option>
+                        <option value="order_payment">Product Orders Only</option>
+                        <option value="subscription_payment">Milk Subscriptions Only</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Change Notes / Reason for Replacement</label>
+                    <textarea id="uploadNotes" class="form-control" rows="2" placeholder="e.g. Updated bank account QR for Q4 2026 operations..."></textarea>
+                </div>
+
+                <div style="background:#FAF8EF; padding:14px; border-radius:8px; border:1px solid #E5C97A; margin-top:10px;">
+                    <label class="form-label" style="color:#8A6508; font-weight:700;">
+                        🔒 Enter QR Security Password <span style="color:red;">*</span>
+                    </label>
+                    <input type="password" id="uploadSecurityPassword" class="form-control" placeholder="Enter dedicated security password" required>
+                    <small style="color:#8A6508; font-size:11px; display:block; margin-top:4px;">
+                        Default system password: <code>admin123</code> (or your custom security PIN)
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeUploadModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="uploadSubmitBtn">Verify &amp; Activate QR</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- CHANGE SECURITY PASSWORD MODAL -->
+<div class="modal-overlay" id="passwordModal">
+    <div class="modal-content" style="max-width: 460px;">
+        <div class="modal-header">
+            <h3 class="modal-title">🔒 QR Security Password Settings</h3>
+            <button class="modal-close-btn" onclick="closeSecurityPasswordModal()">✕</button>
+        </div>
+        <form id="passwordForm" onsubmit="handleChangePasswordSubmit(event)">
+            <div class="modal-body">
+                <p style="font-size:13px; color:var(--thulirva-text-muted); margin-bottom:14px;">
+                    The QR Security Password protects your receiving UPI IDs from unauthorized modifications.
+                </p>
+                <div class="form-group">
+                    <label class="form-label">Current Password</label>
+                    <input type="password" id="currentPassword" class="form-control" placeholder="Current security password" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">New Security Password</label>
+                    <input type="password" id="newPassword" class="form-control" placeholder="Minimum 6 characters" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Confirm New Password</label>
+                    <input type="password" id="confirmPassword" class="form-control" placeholder="Re-enter new password" required minlength="6">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeSecurityPasswordModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Security Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- FULLSCREEN QR ZOOM DIALOG -->
+<div class="zoom-overlay" id="zoomOverlay" onclick="closeZoom(event)">
+    <div class="zoom-content" onclick="event.stopPropagation()">
+        <h3 style="font-size:16px; font-weight:800; color:var(--thulirva-forest); margin-bottom:12px;" id="zoomTitle">THULIRVA Payment QR</h3>
+        <div style="background:#FAF8EF; padding:16px; border-radius:12px; margin-bottom:14px; border:1px solid var(--thulirva-border);">
+            <img id="zoomImg" src="" style="max-width:100%; max-height:340px; object-fit:contain; border-radius:8px;">
+        </div>
+        <div class="upi-pill" style="justify-content:center;">
+            <span id="zoomUpi">7904880944@superyes</span>
+        </div>
+        <div style="margin-top:10px;">
+            <a id="zoomDownloadLink" href="#" target="_blank" download class="btn btn-secondary btn-sm">⬇ Download High-Res Image</a>
+            <button class="btn btn-primary btn-sm" onclick="closeZoom()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/api-client.js"></script>
+<script src="js/admin-shell.js"></script>
+<script>
+initAdminShell({
+    activePage: "payment-qr",
+    breadcrumbs: [{ label: "Commerce" }, { label: "Payment QR Management" }]
+});
+
+const token = localStorage.getItem("thulirva_admin_token");
+let currentQrData = null;
+let qrHistory = [];
+
+async function loadQrData() {
+    try {
+        const res = await fetch("/api/config/payment-qr");
+        const data = await res.json();
+        currentQrData = data.qr || data;
+        renderActiveQr(currentQrData);
+    } catch (_) {}
+
+    try {
+        const hRes = await fetch("/api/admin/payment-qr/history", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const hData = await hRes.json();
+        qrHistory = hData.history || [];
+        renderHistoryTable(qrHistory);
+    } catch (_) {}
+}
+
+function renderActiveQr(qr) {
+    if (!qr) return;
+
+    const imgEl = document.getElementById("activeQrImg");
+    const upiText = document.getElementById("activeUpiText");
+    const merchantName = document.getElementById("activeMerchantName");
+    const notes = document.getElementById("activeNotes");
+    const badge = document.getElementById("activeStatusBadge");
+    const versionTag = document.getElementById("activeVersionTag");
+    const toggleBtn = document.getElementById("toggleStatusBtn");
+    const lastUpdated = document.getElementById("activeLastUpdated");
+    const updatedBy = document.getElementById("activeUpdatedBy");
+
+    imgEl.src = qr.qr_image_url || "/uploads/payments/sample_qr.png";
+    upiText.textContent = qr.upi_id || "7904880944@superyes";
+    merchantName.textContent = qr.merchant_name || "THULIRVA A2 DAIRY";
+    notes.textContent = qr.notes || "Official primary receiving UPI QR for all customer milk subscriptions and doorstep orders.";
+    versionTag.textContent = `Version: ${qr.version || 'v1'}`;
+
+    if (qr.updated_at) {
+        lastUpdated.textContent = new Date(qr.updated_at).toLocaleString();
+    }
+    if (qr.updated_by) {
+        updatedBy.textContent = qr.updated_by;
+    }
+
+    if (qr.is_active) {
+        badge.className = "badge badge-active";
+        badge.textContent = "ACTIVE NOW";
+        toggleBtn.textContent = "⏸️ Deactivate Temporarily";
+        toggleBtn.className = "btn btn-secondary";
+    } else {
+        badge.className = "badge badge-cancelled";
+        badge.textContent = "INACTIVE";
+        toggleBtn.textContent = "▶️ Activate QR";
+        toggleBtn.className = "btn btn-primary";
+    }
+}
+
+function renderHistoryTable(list) {
+    const table = document.getElementById("historyTable");
+    if (!list || !list.length) {
+        table.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:36px; color:var(--thulirva-text-muted);">No prior QR versions recorded yet.</td></tr>`;
+        return;
+    }
+
+    table.innerHTML = "";
+    list.forEach(item => {
+        const tr = document.createElement("tr");
+        const isCurrent = item.is_active;
+
+        tr.innerHTML = `
+            <td><strong>${item.version || 'v1'}</strong></td>
+            <td>
+                <img src="${item.qr_image_url}" class="history-thumb" onclick="zoomSpecificQr('${item.qr_image_url}', '${item.upi_id}', '${item.version}')" title="Click to view full image">
+            </td>
+            <td><code style="font-size:12px; font-weight:700; color:var(--thulirva-forest);">${item.upi_id}</code></td>
+            <td>${item.merchant_name || 'THULIRVA'}</td>
+            <td style="max-width:200px; font-size:12px; color:var(--thulirva-text-muted);">${item.notes || 'Routine update'}</td>
+            <td style="font-size:11.5px;">${item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Previous'}</td>
+            <td><small>${item.created_by || 'Admin'}</small></td>
+            <td>
+                <span class="badge ${isCurrent ? 'badge-active' : 'badge-cancelled'}">
+                    ${isCurrent ? 'ACTIVE' : 'ARCHIVED'}
+                </span>
+            </td>
+            <td style="text-align:right;">
+                ${!isCurrent ? `<button class="btn btn-secondary btn-sm" onclick="reactivateVersion('${item.version}', '${item.upi_id}', '${item.qr_image_url}')">Reactivate</button>` : '<span style="font-size:11px; font-weight:700; color:var(--thulirva-forest);">Current Active</span>'}
+            </td>
+        `;
+        table.appendChild(tr);
+    });
+}
+
+function copyUpi() {
+    const upi = document.getElementById("activeUpiText").textContent;
+    navigator.clipboard.writeText(upi).then(() => {
+        showToast("UPI ID copied to clipboard: " + upi);
+    });
+}
+
+function zoomActiveQr() {
+    if (!currentQrData) return;
+    zoomSpecificQr(currentQrData.qr_image_url, currentQrData.upi_id, currentQrData.version);
+}
+
+function zoomSpecificQr(url, upi, version) {
+    document.getElementById("zoomImg").src = url;
+    document.getElementById("zoomUpi").textContent = upi || "";
+    document.getElementById("zoomTitle").textContent = `THULIRVA Payment QR (${version || 'Current'})`;
+    document.getElementById("zoomDownloadLink").href = url;
+    document.getElementById("zoomOverlay").classList.add("active");
+}
+
+function closeZoom() {
+    document.getElementById("zoomOverlay").classList.remove("active");
+}
+
+function openUploadModal() {
+    document.getElementById("uploadModal").classList.add("active");
+}
+
+function closeUploadModal() {
+    document.getElementById("uploadModal").classList.remove("active");
+}
+
+function previewUploadQr(input) {
+    const wrap = document.getElementById("uploadPreviewWrap");
+    const img = document.getElementById("uploadPreviewImg");
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            img.src = e.target.result;
+            wrap.style.display = "block";
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+async function handleQrUploadSubmit(event) {
+    event.preventDefault();
+    const fileInput = document.getElementById("uploadQrFile");
+    const upiId = document.getElementById("uploadUpiId").value.trim();
+    const merchantName = document.getElementById("uploadMerchantName").value.trim();
+    const notes = document.getElementById("uploadNotes").value.trim();
+    const securityPassword = document.getElementById("uploadSecurityPassword").value.trim();
+
+    if (!fileInput.files || !fileInput.files[0]) {
+        showToast("Please choose a QR code image file.", "error");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("qr_image", fileInput.files[0]);
+    formData.append("upi_id", upiId);
+    formData.append("merchant_name", merchantName);
+    formData.append("notes", notes);
+    formData.append("security_password", securityPassword);
+
+    try {
+        const res = await fetch("/api/admin/payment-qr/upload", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`
+            },
+            body: formData
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            showToast("Payment QR successfully uploaded and activated!");
+            closeUploadModal();
+            loadQrData();
+        } else {
+            showToast(data.message || "Failed to update payment QR", "error");
+        }
+    } catch (e) {
+        showToast("Error updating QR: " + e.message, "error");
+    }
+}
+
+async function promptToggleStatus() {
+    if (!currentQrData) return;
+    const nextState = !currentQrData.is_active;
+    const actionName = nextState ? "activate" : "deactivate";
+
+    const password = prompt(`Enter Dedicated QR Security Password to ${actionName} this QR:`, "");
+    if (!password) return;
+
+    try {
+        const res = await fetch("/api/admin/payment-qr/status", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                security_password: password,
+                is_active: nextState
+            })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            showToast(`QR Code is now ${nextState ? 'ACTIVE' : 'DEACTIVATED'}.`);
+            loadQrData();
+        } else {
+            showToast(data.message || "Failed to toggle status", "error");
+        }
+    } catch (e) {
+        showToast("Error: " + e.message, "error");
+    }
+}
+
+function openSecurityPasswordModal() {
+    document.getElementById("passwordModal").classList.add("active");
+}
+
+function closeSecurityPasswordModal() {
+    document.getElementById("passwordModal").classList.remove("active");
+}
+
+async function handleChangePasswordSubmit(event) {
+    event.preventDefault();
+    const cur = document.getElementById("currentPassword").value;
+    const np = document.getElementById("newPassword").value;
+    const conf = document.getElementById("confirmPassword").value;
+
+    if (np !== conf) {
+        showToast("New passwords do not match.", "error");
+        return;
+    }
+
+    try {
+        const res = await fetch("/api/admin/payment-qr/set-password", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                current_password: cur,
+                new_password: np
+            })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            showToast("QR Security Password updated successfully!");
+            closeSecurityPasswordModal();
+        } else {
+            showToast(data.message || "Failed to update security password", "error");
+        }
+    } catch (e) {
+        showToast("Error: " + e.message, "error");
+    }
+}
+
+async function reactivateVersion(ver, upi, url) {
+    const password = prompt(`Enter Security Password to reactivate version ${ver} (${upi}):`, "");
+    if (!password) return;
+
+    try {
+        const res = await fetch("/api/admin/payment-qr/upload", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                security_password: password,
+                upi_id: upi,
+                qr_image_url: url,
+                notes: `Reactivated previous version ${ver}`
+            })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Version ${ver} reactivated successfully!`);
+            loadQrData();
+        } else {
+            showToast(data.message || "Failed to reactivate version", "error");
+        }
+    } catch (e) {
+        showToast("Error: " + e.message, "error");
+    }
+}
+
+loadQrData();
+</script>
+</body>
+</html>

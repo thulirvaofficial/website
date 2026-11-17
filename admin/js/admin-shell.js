@@ -17,6 +17,8 @@ const NAV_GROUPS = [
             { key: "orders", label: "Orders & Verification", url: "orders.html", icon: "shopping-bag", badgeId: "badge-orders" },
             { key: "subscriptions", label: "Subscriptions", url: "subscriptions.html", icon: "calendar-clock" },
             { key: "payments", label: "Payment Verification", url: "payment-verification.html", icon: "credit-card", badgeId: "badge-payments" },
+            { key: "payment-qr", label: "QR Code Management", url: "qr-management.html", icon: "credit-card" },
+            { key: "delivery-charges", label: "Delivery Charge Management", url: "delivery-charges.html", icon: "truck" },
             { key: "products", label: "Products Catalog", url: "products.html", icon: "package" },
             { key: "categories", label: "Categories", url: "categories.html", icon: "tags" },
             { key: "customers", label: "Customer Directory", url: "customers.html", icon: "users" }
@@ -37,6 +39,7 @@ const NAV_GROUPS = [
     {
         title: "Marketing & Content",
         items: [
+            { key: "announcements", label: "Announcement Management", url: "announcements.html", icon: "bell" },
             { key: "coupons", label: "Promo Codes", url: "coupons.html", icon: "ticket" },
             { key: "recipes", label: "Farm Recipes", url: "recipes.html", icon: "utensils" },
             { key: "notifications", label: "News & Notifications", url: "notifications.html", icon: "bell" }

@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THULIRVA Admin — Announcement Management</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <style>
+        .banner-preview-card {
+            border-radius: 14px;
+            padding: 20px 24px;
+            color: #ffffff;
+            box-shadow: 0 8px 24px rgba(27, 67, 50, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            background: linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%);
+        }
+        .banner-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            background: rgba(229, 201, 122, 0.25);
+            color: #E5C97A;
+            border: 1px solid rgba(229, 201, 122, 0.5);
+            margin-bottom: 8px;
+        }
+        .banner-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+        .banner-desc {
+            font-size: 13px;
+            opacity: 0.9;
+            line-height: 1.5;
+            max-width: 600px;
+        }
+        .banner-cta-btn {
+            background: #E5C97A;
+            color: #1B4332;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 9px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+            white-space: nowrap;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        .banner-cta-btn:hover {
+            background: #f0dc9e;
+            transform: translateY(-1px);
+        }
+        .switch-toggle {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider-round {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s;
+            border-radius: 24px;
+        }
+        .slider-round:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider-round {
+            background-color: #1B4332;
+        }
+        input:checked + .slider-round:before {
+            transform: translateX(20px);
+        }
+        .color-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: inline-block;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 1px #cbd5e1;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-layout">
+    <aside class="sidebar" id="adminSidebar"></aside>
+
+    <main class="main-content">
+        <header class="topbar" id="adminTopbar"></header>
+
+        <div class="page-container">
+            <div class="page-header flex-between">
+                <div>
+                    <h1 class="page-title">Announcement Management</h1>
+                    <p class="page-subtitle">Publish dynamic marketing announcements, launch countdowns & store alerts to the customer website and mobile app</p>
+                </div>
+                <div class="flex-center gap-3">
+                    <button class="btn btn-secondary" onclick="loadAnnouncements()">
+                        🔄 Refresh
+                    </button>
+                    <button class="btn btn-primary" onclick="openCreateModal()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="12" y1="12" y2="12"/></svg>
+                        Create Announcement
+                    </button>
+                </div>
+            </div>
+
+            <!-- Metrics Overview -->
+            <div class="metrics-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Active Announcements</div>
+                    <div class="stat-value text-success" id="metricActiveCount">0</div>
+                    <div class="stat-sub">Visible to customers now</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Published Campaigns</div>
+                    <div class="stat-value text-gold" id="metricPublishedCount">0</div>
+                    <div class="stat-sub">In live circulation</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Announcements</div>
+                    <div class="stat-value" id="metricTotalCount">0</div>
+                    <div class="stat-sub">Historical & planned</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Display Coverage</div>
+                    <div class="stat-value" style="font-size:18px; color:var(--thulirva-forest);">Homepage & Top Bar</div>
+                    <div class="stat-sub">Multi-channel broadcast</div>
+                </div>
+            </div>
+
+            <!-- Live Active Banner Preview Box -->
+            <div class="card mb-4" id="livePreviewContainer" style="display:none;">
+                <div class="card-header flex-between" style="padding:12px 20px; background:#FAF8EF; border-bottom:1px solid var(--thulirva-border);">
+                    <div style="font-weight:700; color:var(--thulirva-forest); font-size:13.5px; display:flex; align-items:center; gap:8px;">
+                        <span>📢 Live Website Hero Banner Preview</span>
+                        <span class="badge badge-active" style="font-size:11px;">ACTIVE NOW</span>
+                    </div>
+                    <span style="font-size:12px; color:var(--thulirva-text-muted);">Matches customer homepage styling</span>
+                </div>
+                <div class="card-body p-4" id="liveBannerCardBody">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Table Actions & Filter -->
+            <div class="card mb-4">
+                <div class="card-body p-3">
+                    <div class="table-actions" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <input type="text" id="announcementSearch" class="form-control" placeholder="Search announcement title, description..." oninput="filterAnnouncements()" style="width:260px;">
+                            
+                            <select id="positionFilter" class="form-select" onchange="filterAnnouncements()" style="width:180px;">
+                                <option value="">All Positions</option>
+                                <option value="homepage_hero">Homepage Hero</option>
+                                <option value="top_bar">Top Bar</option>
+                                <option value="popup">Modal Popup</option>
+                                <option value="bottom_banner">Bottom Banner</option>
+                            </select>
+
+                            <select id="statusFilter" class="form-select" onchange="filterAnnouncements()" style="width:160px;">
+                                <option value="">All Statuses</option>
+                                <option value="active">Active Only</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="published">Published</option>
+                            </select>
+                        </div>
+                        <div style="font-size:12px; color:var(--thulirva-text-muted);">
+                            Showing <strong id="visibleCount">0</strong> announcements
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Announcements Table -->
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Announcement</th>
+                                <th>Position</th>
+                                <th>Active Window</th>
+                                <th>Display Style</th>
+                                <th>Notify Customers</th>
+                                <th>Active</th>
+                                <th>Published</th>
+                                <th style="text-align:right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="announcementsTable">
+                            <tr>
+                                <td colspan="8" style="text-align:center; padding:36px; color:var(--thulirva-text-muted);">
+                                    Loading announcements...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- CREATE / EDIT ANNOUNCEMENT MODAL -->
+<div class="modal-overlay" id="announcementModal">
+    <div class="modal-content" style="max-width: 720px;">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalTitle">📢 Create New Announcement</h3>
+            <button class="modal-close-btn" onclick="closeModal()">✕</button>
+        </div>
+        <form id="announcementForm" onsubmit="handleFormSubmit(event)">
+            <input type="hidden" id="editAnnouncementId" value="">
+            
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <div class="form-row" style="display:grid; grid-template-columns: 2fr 1fr; gap:16px;">
+                    <div class="form-group">
+                        <label class="form-label">Announcement Title <span style="color:red;">*</span></label>
+                        <input type="text" id="formTitle" class="form-control" placeholder="e.g. THULIRVA deliveries start from 25/11/2026!" required oninput="updateModalPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Badge Text</label>
+                        <input type="text" id="formBadge" class="form-control" placeholder="e.g. DELIVERY LAUNCH" oninput="updateModalPreview()">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description / Announcement Body <span style="color:red;">*</span></label>
+                    <textarea id="formDescription" class="form-control" rows="3" placeholder="Enter clear, engaging announcement details for customers..." required oninput="updateModalPreview()"></textarea>
+                </div>
+
+                <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                    <div class="form-group">
+                        <label class="form-label">Display Position <span style="color:red;">*</span></label>
+                        <select id="formPosition" class="form-select" required>
+                            <option value="homepage_hero">Homepage Hero (Primary Banner)</option>
+                            <option value="top_bar">Top Bar (Sticky Announcement)</option>
+                            <option value="popup">Modal Popup (Welcome Alert)</option>
+                            <option value="bottom_banner">Bottom Strip Banner</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Priority Order (1 = Highest)</label>
+                        <input type="number" id="formPriority" class="form-control" value="1" min="1" max="100">
+                    </div>
+                </div>
+
+                <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                    <div class="form-group">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" id="formStartDate" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Expiry Date</label>
+                        <input type="date" id="formExpiryDate" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                    <div class="form-group">
+                        <label class="form-label">Call to Action (CTA) Button Text</label>
+                        <input type="text" id="formCtaText" class="form-control" placeholder="e.g. Shop Farm Fresh" oninput="updateModalPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">CTA Target URL</label>
+                        <input type="text" id="formCtaUrl" class="form-control" placeholder="e.g. /pages/shop.html or /products.html">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Upload Banner Image (Optional)</label>
+                    <input type="file" id="formBannerFile" class="form-control" accept="image/*" onchange="handleBannerFileSelect(this)">
+                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Recommended size: 1200x400px (JPG, PNG, WebP). Max 10MB.</small>
+                    <input type="hidden" id="formImageUrl" value="">
+                </div>
+
+                <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:16px;">
+                    <div class="form-group">
+                        <label class="form-label">Background Color</label>
+                        <input type="color" id="formBgColor" class="form-control" value="#1B4332" style="height:38px; padding:2px;" onchange="updateModalPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Accent / Badge Color</label>
+                        <input type="color" id="formAccentColor" class="form-control" value="#E5C97A" style="height:38px; padding:2px;" onchange="updateModalPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Text Color</label>
+                        <input type="color" id="formTextColor" class="form-control" value="#FFFFFF" style="height:38px; padding:2px;" onchange="updateModalPreview()">
+                    </div>
+                </div>
+
+                <div style="background:#FAF8EF; padding:14px; border-radius:8px; border:1px solid var(--thulirva-border); margin-top:8px;">
+                    <label class="form-label" style="margin-bottom:8px; font-weight:700;">Live Interactive Preview</label>
+                    <div id="modalLivePreviewCard" class="banner-preview-card" style="background:#1B4332;">
+                        <div>
+                            <span id="prevBadge" class="banner-badge">DELIVERY LAUNCH</span>
+                            <div id="prevTitle" class="banner-title">THULIRVA deliveries start from 25/11/2026!</div>
+                            <div id="prevDesc" class="banner-desc">Farm-fresh A2 cow milk, artisanal paneer, and bilona ghee delivered right to your doorstep.</div>
+                        </div>
+                        <div id="prevCtaWrap">
+                            <button type="button" id="prevCtaBtn" class="banner-cta-btn">Shop Farm Fresh</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:24px; margin-top:16px; flex-wrap:wrap;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="formIsActive" checked>
+                        <span style="font-weight:600; font-size:13px;">Enable Announcement (Active)</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="formIsPublished" checked>
+                        <span style="font-weight:600; font-size:13px;">Publish Immediately</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="formSendNotification">
+                        <span style="font-weight:600; font-size:13px; color:var(--thulirva-forest);">🔔 Send Customer App Notification</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="saveAnnouncementBtn">Save &amp; Publish Announcement</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="js/api-client.js"></script>
+<script src="js/admin-shell.js"></script>
+<script>
+initAdminShell({
+    activePage: "announcements",
+    breadcrumbs: [{ label: "Marketing" }, { label: "Announcements" }]
+});
+
+const token = localStorage.getItem("thulirva_admin_token");
+let announcements = [];
+let filteredList = [];
+
+async function loadAnnouncements() {
+    try {
+        const res = await fetch("/api/admin/announcements/all", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        announcements = data.announcements || [];
+    } catch (_) {
+        try {
+            const fallbackRes = await fetch("/api/announcements/active");
+            const fData = await fallbackRes.json();
+            announcements = fData.announcements || [];
+        } catch (e) {
+            announcements = [];
+        }
+    }
+
+    calculateMetrics();
+    filterAnnouncements();
+    renderLivePreview();
+}
+
+function calculateMetrics() {
+    document.getElementById("metricTotalCount").textContent = announcements.length;
+    const active = announcements.filter(a => a.is_active);
+    document.getElementById("metricActiveCount").textContent = active.length;
+    const published = announcements.filter(a => a.is_published);
+    document.getElementById("metricPublishedCount").textContent = published.length;
+}
+
+function renderLivePreview() {
+    const liveContainer = document.getElementById("livePreviewContainer");
+    const liveBody = document.getElementById("liveBannerCardBody");
+    const hero = announcements.find(a => a.is_active && a.is_published && a.position === "homepage_hero");
+
+    if (hero) {
+        liveContainer.style.display = "block";
+        liveBody.innerHTML = `
+            <div class="banner-preview-card" style="background:${hero.bg_color || '#1B4332'}; color:${hero.text_color || '#fff'};">
+                <div style="flex:1;">
+                    ${hero.badge_text ? `<span class="banner-badge" style="background:rgba(229,201,122,0.25); color:${hero.accent_color || '#E5C97A'};">${hero.badge_text}</span>` : ''}
+                    <div class="banner-title" style="color:${hero.text_color || '#fff'};">${hero.title}</div>
+                    <div class="banner-desc" style="color:${hero.text_color || '#fff'}; opacity:0.9;">${hero.description}</div>
+                    <div style="margin-top:10px; font-size:11px; opacity:0.75;">
+                        Valid from <strong>${hero.start_date}</strong> to <strong>${hero.expiry_date}</strong>
+                    </div>
+                </div>
+                ${hero.cta_text ? `
+                    <div>
+                        <a href="${hero.cta_url || '#'}" class="banner-cta-btn" style="background:${hero.accent_color || '#E5C97A'}; color:${hero.bg_color || '#1B4332'};">
+                            ${hero.cta_text} &rarr;
+                        </a>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    } else {
+        liveContainer.style.display = "none";
+    }
+}
+
+function filterAnnouncements() {
+    const q = (document.getElementById("announcementSearch").value || "").trim().toLowerCase();
+    const pos = document.getElementById("positionFilter").value;
+    const stat = document.getElementById("statusFilter").value;
+
+    filteredList = announcements.filter(a => {
+        const matchesQ = !q || (a.title && a.title.toLowerCase().includes(q)) || (a.description && a.description.toLowerCase().includes(q));
+        const matchesPos = !pos || a.position === pos;
+        let matchesStat = true;
+        if (stat === "active") matchesStat = a.is_active;
+        else if (stat === "inactive") matchesStat = !a.is_active;
+        else if (stat === "published") matchesStat = a.is_published;
+        return matchesQ && matchesPos && matchesStat;
+    });
+
+    renderTable();
+}
+
+function renderTable() {
+    const table = document.getElementById("announcementsTable");
+    document.getElementById("visibleCount").textContent = filteredList.length;
+
+    if (!filteredList.length) {
+        table.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:36px; color:var(--thulirva-text-muted);">No announcements found matching your criteria.</td></tr>`;
+        return;
+    }
+
+    table.innerHTML = "";
+    filteredList.forEach(a => {
+        const tr = document.createElement("tr");
+
+        const posMap = {
+            homepage_hero: "Homepage Hero",
+            top_bar: "Top Bar",
+            popup: "Modal Popup",
+            bottom_banner: "Bottom Strip"
+        };
+
+        tr.innerHTML = `
+            <td style="max-width:280px;">
+                <div style="font-weight:700; color:var(--thulirva-forest); font-size:13.5px;">${a.title}</div>
+                <div style="font-size:12px; color:var(--thulirva-text-muted); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="${a.description}">${a.description}</div>
+                ${a.badge_text ? `<span style="font-size:10px; background:#FAF8EF; border:1px solid #E5C97A; color:#8A6508; padding:1px 6px; border-radius:4px; font-weight:700; margin-top:3px; display:inline-block;">${a.badge_text}</span>` : ''}
+            </td>
+            <td>
+                <span class="badge" style="background:#E8F5E9; color:var(--thulirva-forest); font-weight:600;">
+                    ${posMap[a.position] || a.position}
+                </span>
+            </td>
+            <td style="font-size:12px;">
+                <div>From: <strong>${a.start_date || 'Immediate'}</strong></div>
+                <div style="color:var(--thulirva-text-muted);">To: <strong>${a.expiry_date || 'Indefinite'}</strong></div>
+            </td>
+            <td>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span class="color-dot" style="background:${a.bg_color || '#1B4332'};" title="Background"></span>
+                    <span class="color-dot" style="background:${a.accent_color || '#E5C97A'};" title="Accent"></span>
+                    <span style="font-size:11px; color:var(--thulirva-text-muted);">${a.cta_text || 'No CTA'}</span>
+                </div>
+            </td>
+            <td>
+                ${a.send_notification ? '<span class="badge badge-active">✓ Push Active</span>' : '<span style="color:var(--thulirva-text-muted); font-size:12px;">Disabled</span>'}
+            </td>
+            <td>
+                <label class="switch-toggle">
+                    <input type="checkbox" ${a.is_active ? 'checked' : ''} onchange="toggleStatus('${a.id}')">
+                    <span class="slider-round"></span>
+                </label>
+            </td>
+            <td>
+                <button class="btn btn-sm ${a.is_published ? 'btn-secondary' : 'btn-primary'}" onclick="togglePublish('${a.id}', ${!a.is_published})" style="padding:3px 8px; font-size:11px;">
+                    ${a.is_published ? '✓ Published' : 'Publish'}
+                </button>
+            </td>
+            <td style="text-align:right;">
+                <div style="display:flex; justify-content:flex-end; gap:6px;">
+                    <button class="btn btn-secondary btn-sm" onclick="openEditModal('${a.id}')" title="Edit">✏️ Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteAnnouncementConfirm('${a.id}')" title="Delete">🗑️</button>
+                </div>
+            </td>
+        `;
+        table.appendChild(tr);
+    });
+}
+
+function updateModalPreview() {
+    const title = document.getElementById("formTitle").value || "THULIRVA Announcement Title";
+    const badge = document.getElementById("formBadge").value || "ANNOUNCEMENT";
+    const desc = document.getElementById("formDescription").value || "Announcement description and offer details...";
+    const cta = document.getElementById("formCtaText").value || "Learn More";
+    const bg = document.getElementById("formBgColor").value || "#1B4332";
+    const accent = document.getElementById("formAccentColor").value || "#E5C97A";
+    const text = document.getElementById("formTextColor").value || "#FFFFFF";
+
+    const card = document.getElementById("modalLivePreviewCard");
+    card.style.background = bg;
+    card.style.color = text;
+
+    document.getElementById("prevTitle").textContent = title;
+    document.getElementById("prevTitle").style.color = text;
+
+    document.getElementById("prevDesc").textContent = desc;
+    document.getElementById("prevDesc").style.color = text;
+
+    document.getElementById("prevBadge").textContent = badge;
+    document.getElementById("prevBadge").style.color = accent;
+    document.getElementById("prevBadge").style.borderColor = accent;
+
+    const ctaBtn = document.getElementById("prevCtaBtn");
+    ctaBtn.textContent = cta;
+    ctaBtn.style.background = accent;
+    ctaBtn.style.color = bg;
+}
+
+function openCreateModal() {
+    document.getElementById("modalTitle").textContent = "📢 Create New Announcement";
+    document.getElementById("editAnnouncementId").value = "";
+    document.getElementById("formTitle").value = "";
+    document.getElementById("formBadge").value = "DELIVERY LAUNCH";
+    document.getElementById("formDescription").value = "";
+    document.getElementById("formPosition").value = "homepage_hero";
+    document.getElementById("formPriority").value = "1";
+
+    const today = new Date().toISOString().split("T")[0];
+    const nextMonth = new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0];
+    document.getElementById("formStartDate").value = today;
+    document.getElementById("formExpiryDate").value = nextMonth;
+
+    document.getElementById("formCtaText").value = "Shop Farm Fresh";
+    document.getElementById("formCtaUrl").value = "/pages/shop.html";
+    document.getElementById("formBannerFile").value = "";
+    document.getElementById("formImageUrl").value = "";
+    document.getElementById("formBgColor").value = "#1B4332";
+    document.getElementById("formAccentColor").value = "#E5C97A";
+    document.getElementById("formTextColor").value = "#FFFFFF";
+
+    document.getElementById("formIsActive").checked = true;
+    document.getElementById("formIsPublished").checked = true;
+    document.getElementById("formSendNotification").checked = false;
+
+    updateModalPreview();
+    document.getElementById("announcementModal").classList.add("active");
+}
+
+function openEditModal(id) {
+    const a = announcements.find(item => item.id == id);
+    if (!a) return;
+
+    document.getElementById("modalTitle").textContent = `✏️ Edit Announcement #${a.id}`;
+    document.getElementById("editAnnouncementId").value = a.id;
+    document.getElementById("formTitle").value = a.title || "";
+    document.getElementById("formBadge").value = a.badge_text || "";
+    document.getElementById("formDescription").value = a.description || "";
+    document.getElementById("formPosition").value = a.position || "homepage_hero";
+    document.getElementById("formPriority").value = a.priority || "1";
+    document.getElementById("formStartDate").value = (a.start_date || "").slice(0, 10);
+    document.getElementById("formExpiryDate").value = (a.expiry_date || "").slice(0, 10);
+    document.getElementById("formCtaText").value = a.cta_text || "";
+    document.getElementById("formCtaUrl").value = a.cta_url || "";
+    document.getElementById("formBannerFile").value = "";
+    document.getElementById("formImageUrl").value = a.image_url || "";
+    document.getElementById("formBgColor").value = a.bg_color || "#1B4332";
+    document.getElementById("formAccentColor").value = a.accent_color || "#E5C97A";
+    document.getElementById("formTextColor").value = a.text_color || "#FFFFFF";
+
+    document.getElementById("formIsActive").checked = Boolean(a.is_active);
+    document.getElementById("formIsPublished").checked = Boolean(a.is_published);
+    document.getElementById("formSendNotification").checked = Boolean(a.send_notification);
+
+    updateModalPreview();
+    document.getElementById("announcementModal").classList.add("active");
+}
+
+function closeModal() {
+    document.getElementById("announcementModal").classList.remove("active");
+}
+
+function handleBannerFileSelect(input) {
+    if (input.files && input.files[0]) {
+        showToast("Image selected: " + input.files[0].name, "info");
+    }
+}
+
+async function handleFormSubmit(event) {
+    event.preventDefault();
+    const id = document.getElementById("editAnnouncementId").value;
+    const fileInput = document.getElementById("formBannerFile");
+
+    const formData = new FormData();
+    formData.append("title", document.getElementById("formTitle").value.trim());
+    formData.append("badge_text", document.getElementById("formBadge").value.trim());
+    formData.append("description", document.getElementById("formDescription").value.trim());
+    formData.append("position", document.getElementById("formPosition").value);
+    formData.append("priority", document.getElementById("formPriority").value);
+    formData.append("start_date", document.getElementById("formStartDate").value);
+    formData.append("expiry_date", document.getElementById("formExpiryDate").value);
+    formData.append("cta_text", document.getElementById("formCtaText").value.trim());
+    formData.append("cta_url", document.getElementById("formCtaUrl").value.trim());
+    formData.append("bg_color", document.getElementById("formBgColor").value);
+    formData.append("accent_color", document.getElementById("formAccentColor").value);
+    formData.append("text_color", document.getElementById("formTextColor").value);
+    formData.append("is_active", document.getElementById("formIsActive").checked);
+    formData.append("is_published", document.getElementById("formIsPublished").checked);
+    formData.append("send_notification", document.getElementById("formSendNotification").checked);
+    formData.append("image_url", document.getElementById("formImageUrl").value);
+
+    if (fileInput.files && fileInput.files[0]) {
+        formData.append("banner_image", fileInput.files[0]);
+    }
+
+    try {
+        const url = id ? `/api/admin/announcements/${id}` : `/api/admin/announcements`;
+        const method = id ? "PUT" : "POST";
+
+        const res = await fetch(url, {
+            method,
+            headers: {
+                Authorization: `Bearer ${token}`
+            },
+            body: formData
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            showToast(id ? "Announcement updated successfully!" : "Announcement published successfully!");
+            closeModal();
+            loadAnnouncements();
+        } else {
+            showToast(data.message || "Failed to save announcement", "error");
+        }
+    } catch (e) {
+        showToast("Error saving: " + e.message, "error");
+    }
+}
+
+async function toggleStatus(id) {
+    try {
+        const res = await fetch(`/api/admin/announcements/${id}/toggle`, {
+            method: "PATCH",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(data.message || "Status updated.");
+            loadAnnouncements();
+        } else {
+            showToast(data.message || "Failed to toggle status", "error");
+        }
+    } catch (e) {
+        showToast("Error: " + e.message, "error");
+    }
+}
+
+async function togglePublish(id, isPublished) {
+    try {
+        const res = await fetch(`/api/admin/announcements/${id}/publish`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ is_published: isPublished })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(data.message || "Publish state changed.");
+            loadAnnouncements();
+        } else {
+            showToast(data.message || "Failed to update publish state", "error");
+        }
+    } catch (e) {
+        showToast("Error: " + e.message, "error");
+    }
+}
+
+async function deleteAnnouncementConfirm(id) {
+    if (!confirm(`Are you sure you want to permanently delete announcement #${id}?`)) return;
+
+    try {
+        const res = await fetch(`/api/admin/announcements/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Announcement #${id} deleted.`);
+            loadAnnouncements();
+        } else {
+            showToast(data.message || "Failed to delete", "error");
+        }
+    } catch (e) {
+        showToast("Error deleting: " + e.message, "error");
+    }
+}
+
+loadAnnouncements();
+</script>
+</body>
+</html>

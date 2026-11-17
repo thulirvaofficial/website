@@ -645,10 +645,66 @@ function copyOfferCode(code, discVal) {
 }
 
 /* =========================================================
+   DYNAMIC ACTIVE ANNOUNCEMENTS SYSTEM
+========================================================= */
+async function loadActiveAnnouncements() {
+    try {
+        const res = await fetch("/api/announcements/active");
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = data.announcements || [];
+        if (!list.length) return;
+
+        // 1. Top bar sticky announcement
+        const topBarAnn = list.find(a => a.position === "top_bar" || a.position === "all");
+        const topBarContainer = document.getElementById("announcementTopBar");
+        if (topBarAnn && topBarContainer) {
+            topBarContainer.innerHTML = `
+                <div style="background:${topBarAnn.bg_color || '#1B4332'}; color:${topBarAnn.text_color || '#ffffff'}; padding:8px 16px; font-size:12.5px; text-align:center; display:flex; justify-content:center; align-items:center; gap:12px; font-weight:600; border-bottom:1px solid rgba(229,201,122,0.3);">
+                    ${topBarAnn.badge_text ? `<span style="background:${topBarAnn.accent_color || '#E5C97A'}; color:${topBarAnn.bg_color || '#1B4332'}; padding:2px 8px; border-radius:12px; font-size:10.5px; font-weight:800;">${topBarAnn.badge_text}</span>` : ''}
+                    <span>${topBarAnn.title}</span>
+                    ${topBarAnn.cta_text ? `<a href="${topBarAnn.cta_url || 'pages/shop.html'}" style="color:${topBarAnn.accent_color || '#E5C97A'}; text-decoration:underline; font-weight:700;">${topBarAnn.cta_text} &rarr;</a>` : ''}
+                    <button onclick="this.parentElement.remove()" style="background:none; border:none; color:${topBarAnn.text_color || '#fff'}; cursor:pointer; font-size:14px; margin-left:12px; opacity:0.8;">✕</button>
+                </div>
+            `;
+        }
+
+        // 2. Homepage Hero Banner
+        const heroAnn = list.find(a => a.position === "homepage_hero");
+        const heroContainer = document.getElementById("announcementHeroBanner");
+        if (heroAnn && heroContainer) {
+            heroContainer.innerHTML = `
+                <div class="container" style="margin-top:16px; margin-bottom:16px;">
+                    <div style="background:${heroAnn.bg_color || '#1B4332'}; color:${heroAnn.text_color || '#fff'}; border-radius:16px; padding:22px 28px; box-shadow:0 8px 24px rgba(27,67,50,0.2); display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; border:1.5px solid rgba(229,201,122,0.4); position:relative; overflow:hidden;">
+                        <div style="flex:1; min-width:280px; z-index:2;">
+                            ${heroAnn.badge_text ? `<span style="background:rgba(229,201,122,0.25); color:${heroAnn.accent_color || '#E5C97A'}; border:1px solid rgba(229,201,122,0.6); padding:4px 12px; border-radius:20px; font-size:11px; font-weight:800; letter-spacing:0.5px; display:inline-block; margin-bottom:10px;">${heroAnn.badge_text}</span>` : ''}
+                            <h2 style="font-family:'Playfair Display', serif; font-size:24px; font-weight:800; color:${heroAnn.text_color || '#fff'}; margin-bottom:6px; line-height:1.2;">
+                                ${heroAnn.title}
+                            </h2>
+                            <p style="font-size:14px; opacity:0.92; line-height:1.5; max-width:620px; color:${heroAnn.text_color || '#fff'};">
+                                ${heroAnn.description}
+                            </p>
+                        </div>
+                        ${heroAnn.cta_text ? `
+                            <div style="z-index:2;">
+                                <a href="${heroAnn.cta_url || 'pages/shop.html'}" style="background:${heroAnn.accent_color || '#E5C97A'}; color:${heroAnn.bg_color || '#1B4332'}; font-weight:800; font-size:14px; padding:12px 24px; border-radius:10px; text-decoration:none; display:inline-block; box-shadow:0 4px 12px rgba(0,0,0,0.15); transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='none'">
+                                    ${heroAnn.cta_text} &rarr;
+                                </a>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+    } catch (_) {}
+}
+
+/* =========================================================
    INIT
 ========================================================= */
 updateCartCount();
 loadProducts();
 document.addEventListener("DOMContentLoaded", () => {
     initOffersDrawer();
+    loadActiveAnnouncements();
 });

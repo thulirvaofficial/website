@@ -14,6 +14,61 @@ let currentCheckoutStep = 1;
 let isSubmittingOrder = false;
 let isPickupMode = false;
 let storeSettings = null;
+let activePaymentQr = {
+    upi_id: "7904880944@superyes",
+    merchant_name: "THULIRVA A2 DAIRY",
+    qr_image_url: "../assets/images/payment_qr.jpg"
+};
+
+async function loadActivePaymentQr() {
+    try {
+        const res = await fetch("/api/config/payment-qr?purpose=order_payment");
+        if (res.ok) {
+            const data = await res.json();
+            const qr = data.qr || data;
+            if (qr && qr.upi_id) {
+                activePaymentQr = qr;
+                const qrImgs = document.querySelectorAll(".themed-qr-img, .upi-qr-image, #checkoutQrImg");
+                qrImgs.forEach(img => {
+                    if (qr.qr_image_url) img.src = qr.qr_image_url;
+                });
+                const upiEl = document.getElementById("checkoutUpiId");
+                if (upiEl) upiEl.textContent = qr.upi_id;
+            }
+        }
+    } catch (_) {}
+}
+
+async function fetchAuthoritativeDeliveryCharge() {
+    if (isPickupMode) {
+        deliveryCharge = 0;
+        updateCheckoutTotalsDisplay();
+        return;
+    }
+    try {
+        const selectedArea = (document.getElementById("deliveryLocation")?.value || "").trim();
+        const res = await fetch("/api/config/delivery/calculate-charge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                subtotal: subtotal,
+                order_type: "delivery",
+                zone: selectedArea || null
+            })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            deliveryCharge = Number(data.delivery_charge !== undefined ? data.delivery_charge : data.delivery_fee) || 0;
+            updateCheckoutTotalsDisplay();
+        } else {
+            deliveryCharge = subtotal >= 299 ? 0 : 30;
+            updateCheckoutTotalsDisplay();
+        }
+    } catch (_) {
+        deliveryCharge = subtotal >= 299 ? 0 : 30;
+        updateCheckoutTotalsDisplay();
+    }
+}
 
 const DEFAULT_LOCATIONS = [
     { name: "Oragadam", pincode: "603109" },
@@ -129,6 +184,7 @@ function onDeliveryLocationChange(locName) {
     if (cityEl && !cityEl.value) {
         cityEl.value = "Chennai / Kanchipuram";
     }
+    fetchAuthoritativeDeliveryCharge();
 }
 
 function updateCheckoutTotalsDisplay() {
@@ -370,6 +426,8 @@ function loadCart() {
     }
 
     updateCheckoutTotalsDisplay();
+    fetchAuthoritativeDeliveryCharge();
+    loadActivePaymentQr();
     if (placeBtn) placeBtn.disabled = false;
 }
 
@@ -400,7 +458,7 @@ function prefillUserData() {
 }
 
 function copyCheckoutUpi() {
-    const upi = "7904880944@superyes";
+    const upi = activePaymentQr.upi_id || "7904880944@superyes";
     navigator.clipboard.writeText(upi).then(() => {
         showToast("✓ UPI ID copied to clipboard: " + upi);
     }).catch(() => {
@@ -637,7 +695,7 @@ async function placeOrder() {
         order_type: isPickupMode ? "pickup" : "delivery",
         is_pickup: isPickupMode,
         delivery_charge: deliveryCharge,
-        payment_method: "UPI QR (7904880944@superyes)",
+        payment_method: `UPI QR (${activePaymentQr.upi_id || '7904880944@superyes'})`,
         transaction_id: transactionId,
         payment_proof: orderProofBase64,
         promo_code: appliedCheckoutPromo || null,

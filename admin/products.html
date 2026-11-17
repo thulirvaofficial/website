@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,283 +16,297 @@
         }
     </style>
 </head>
+
 <body>
 
-<div class="admin-layout">
-    <aside class="sidebar" id="adminSidebar"></aside>
+    <div class="admin-layout">
+        <aside class="sidebar" id="adminSidebar"></aside>
 
-    <div class="admin-container">
-        <header class="topbar" id="adminTopbar"></header>
+        <div class="admin-container">
+            <header class="topbar" id="adminTopbar"></header>
 
-        <main class="admin-main">
-            <!-- Header -->
-            <div class="page-header">
-                <div>
-                    <h1 class="page-title">Products Catalog</h1>
-                    <p class="page-subtitle">Manage fresh A2 dairy, ghee, paneer, honey, and cold-pressed oils inventory.</p>
-                </div>
-                <div class="header-actions">
-                    <a href="categories.html" class="btn btn-secondary">
-                        🏷 Manage Categories
-                    </a>
-                    <button class="btn btn-primary" onclick="openAddModal()">
-                        ＋ Add New Product
-                    </button>
-                </div>
-            </div>
-
-            <!-- Metric Summary Cards -->
-            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <span class="stat-title">Catalog Items</span>
-                        <div class="stat-icon">🛍️</div>
+            <main class="admin-main">
+                <!-- Header -->
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Products Catalog</h1>
+                        <p class="page-subtitle">Manage fresh A2 dairy, ghee, paneer, honey, and cold-pressed oils
+                            inventory.</p>
                     </div>
-                    <div class="stat-value" id="totalProductsCount">0</div>
-                    <div class="stat-meta"><span>Active catalog items</span></div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <span class="stat-title">In Stock</span>
-                        <div class="stat-icon" style="background:#E8F5E9; color:#1E6F43;">✓</div>
-                    </div>
-                    <div class="stat-value" id="inStockCount" style="color:#1E6F43;">0</div>
-                    <div class="stat-meta"><span class="stat-trend-up">Available to order</span></div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <span class="stat-title">Low Stock Alert</span>
-                        <div class="stat-icon" style="background:#FEF3C7; color:#B45309;">⚠️</div>
-                    </div>
-                    <div class="stat-value" id="lowStockCount" style="color:#B45309;">0</div>
-                    <div class="stat-meta"><span>Less than 10 units</span></div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <span class="stat-title">Subscription Eligible</span>
-                        <div class="stat-icon" style="background:#E0F2FE; color:#0369A1;">🔄</div>
-                    </div>
-                    <div class="stat-value" id="subsEligibleCount">3</div>
-                    <div class="stat-meta"><span>Daily milk &amp; paneer</span></div>
-                </div>
-            </div>
-
-            <!-- Main Panel -->
-            <div class="panel-card">
-                <!-- Filters Bar -->
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
-                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                        <input type="text" id="searchInput" placeholder="Search product name, category..." onkeyup="filterProducts()" class="form-control" style="width:260px;">
-                        
-                        <select id="categoryFilter" onchange="filterProducts()" class="form-select" style="width:160px;">
-                            <option value="">All Categories</option>
-                            <option value="Dairy">Dairy</option>
-                            <option value="Ghee">Ghee</option>
-                            <option value="Paneer">Paneer</option>
-                            <option value="Oils">Oils</option>
-                            <option value="Honey">Honey</option>
-                        </select>
-
-                        <select id="stockFilter" onchange="filterProducts()" class="form-select" style="width:160px;">
-                            <option value="">All Inventory</option>
-                            <option value="in_stock">In Stock (&gt;0)</option>
-                            <option value="out_of_stock">Out of Stock (0)</option>
-                        </select>
-                    </div>
-
-                    <div style="font-size:12px; color:var(--thulirva-text-muted);">
-                        Showing <strong id="visibleProductsCount">0</strong> products
+                    <div class="header-actions">
+                        <a href="categories.html" class="btn btn-secondary">
+                            🏷 Manage Categories
+                        </a>
+                        <button class="btn btn-primary" onclick="openAddModal()">
+                            ＋ Add New Product
+                        </button>
                     </div>
                 </div>
 
-                <!-- Products Table -->
-                <div class="table-responsive">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Photo</th>
-                                <th>Product Details</th>
-                                <th>Category</th>
-                                <th>Unit / Weight</th>
-                                <th>Selling Price</th>
-                                <th>Stock Status</th>
-                                <th>Subscription</th>
-                                <th style="text-align: right;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="productsTable">
-                            <!-- Injected by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
-    </div>
-</div>
-
-<!-- ADD / EDIT PRODUCT MODAL -->
-<div class="modal-overlay" id="productModal">
-    <div class="modal-content" style="max-width: 620px;">
-        <div class="modal-header">
-            <h3 class="modal-title" id="modalTitle">Add New Farm Product</h3>
-            <button class="modal-close-btn" onclick="closeModal()">✕</button>
-        </div>
-        <form id="productForm" onsubmit="handleProductSubmit(event)">
-            <input type="hidden" id="prodId">
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Product Name *</label>
-                    <input type="text" id="prodName" required placeholder="e.g. Farm Fresh A2 Desi Cow Milk" class="form-control">
-                </div>
-
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-                    <div class="form-group">
-                        <label class="form-label">Category *</label>
-                        <select id="prodCategory" required class="form-select">
-                            <option value="Dairy">Dairy</option>
-                            <option value="Ghee">Ghee</option>
-                            <option value="Paneer">Paneer</option>
-                            <option value="Curd">Curd</option>
-                            <option value="Oils">Oils</option>
-                            <option value="Honey">Honey</option>
-                        </select>
+                <!-- Metric Summary Cards -->
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Catalog Items</span>
+                            <div class="stat-icon">🛍️</div>
+                        </div>
+                        <div class="stat-value" id="totalProductsCount">0</div>
+                        <div class="stat-meta"><span>Active catalog items</span></div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Weight / Volume *</label>
-                        <input type="text" id="prodWeight" placeholder="e.g. 1 Litre / 500g" class="form-control">
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">In Stock</span>
+                            <div class="stat-icon" style="background:#E8F5E9; color:#1E6F43;">✓</div>
+                        </div>
+                        <div class="stat-value" id="inStockCount" style="color:#1E6F43;">0</div>
+                        <div class="stat-meta"><span class="stat-trend-up">Available to order</span></div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Low Stock Alert</span>
+                            <div class="stat-icon" style="background:#FEF3C7; color:#B45309;">⚠️</div>
+                        </div>
+                        <div class="stat-value" id="lowStockCount" style="color:#B45309;">0</div>
+                        <div class="stat-meta"><span>Less than 10 units</span></div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Subscription Eligible</span>
+                            <div class="stat-icon" style="background:#E0F2FE; color:#0369A1;">🔄</div>
+                        </div>
+                        <div class="stat-value" id="subsEligibleCount">3</div>
+                        <div class="stat-meta"><span>Daily milk &amp; paneer</span></div>
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-                    <div class="form-group">
-                        <label class="form-label">Selling Price (₹) *</label>
-                        <input type="number" id="prodPrice" required min="1" placeholder="75" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Compare / Original Price (₹)</label>
-                        <input type="number" id="prodComparePrice" placeholder="90" class="form-control">
-                    </div>
-                </div>
+                <!-- Main Panel -->
+                <div class="panel-card">
+                    <!-- Filters Bar -->
+                    <div
+                        style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <input type="text" id="searchInput" placeholder="Search product name, category..."
+                                onkeyup="filterProducts()" class="form-control" style="width:260px;">
 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-                    <div class="form-group">
-                        <label class="form-label">Inventory Stock Units *</label>
-                        <input type="number" id="prodStock" required min="0" value="50" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Storefront Badge Tag</label>
-                        <input type="text" id="prodBadge" placeholder="e.g. Best Seller / Fresh Batch" class="form-control">
-                    </div>
-                </div>
+                            <select id="categoryFilter" onchange="filterProducts()" class="form-select"
+                                style="width:160px;">
+                                <option value="">All Categories</option>
+                                <option value="Dairy">Dairy</option>
+                                <option value="Ghee">Ghee</option>
+                                <option value="Paneer">Paneer</option>
+                                <option value="Oils">Oils</option>
+                                <option value="Honey">Honey</option>
+                            </select>
 
-                <!-- Product Photo Preview & Upload -->
-                <div class="form-group">
-                    <label class="form-label">Product Image</label>
-                    <div style="display:flex; align-items:center; gap:16px; margin-bottom:10px;">
-                        <img id="imagePreview" src="/assets/images/products/fresh_cow_milk.jpg" alt="Preview" style="width:64px; height:64px; border-radius:var(--radius-sm); object-fit:cover; border:1px solid var(--thulirva-border);">
-                        <div>
-                            <input type="file" id="prodImageFile" accept="image/*" onchange="handleImageFileUpload(event)" style="font-size:12px;">
-                            <small id="previewLabel" style="display:block; color:var(--thulirva-text-muted); font-size:11px; margin-top:4px;">Upload JPG, PNG or WEBP.</small>
+                            <select id="stockFilter" onchange="filterProducts()" class="form-select"
+                                style="width:160px;">
+                                <option value="">All Inventory</option>
+                                <option value="in_stock">In Stock (&gt;0)</option>
+                                <option value="out_of_stock">Out of Stock (0)</option>
+                            </select>
+                        </div>
+
+                        <div style="font-size:12px; color:var(--thulirva-text-muted);">
+                            Showing <strong id="visibleProductsCount">0</strong> products
                         </div>
                     </div>
-                    <input type="text" id="prodCustomImage" placeholder="Or enter image URL" oninput="previewCustomUrl(this.value)" class="form-control" style="font-size:12px;">
-                </div>
 
-                <div class="form-group">
-                    <label class="form-label">Short Description</label>
-                    <textarea id="prodDescription" rows="2" placeholder="Rich in A2 protein, ethically milked, delivered chilled." class="form-control"></textarea>
+                    <!-- Products Table -->
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Photo</th>
+                                    <th>Product Details</th>
+                                    <th>Category</th>
+                                    <th>Unit / Weight</th>
+                                    <th>Selling Price</th>
+                                    <th>Stock Status</th>
+                                    <th>Subscription</th>
+                                    <th style="text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTable">
+                                <!-- Injected by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary" id="modalSubmitBtn">Save Product</button>
-            </div>
-        </form>
+            </main>
+        </div>
     </div>
-</div>
 
-<script src="js/api-client.js"></script>
-<script src="js/admin-shell.js"></script>
-<script>
-initAdminShell({
-    activePage: "products",
-    breadcrumbs: [{ label: "Product Catalog" }]
-});
+    <!-- ADD / EDIT PRODUCT MODAL -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal-content" style="max-width: 620px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Add New Farm Product</h3>
+                <button class="modal-close-btn" onclick="closeModal()">✕</button>
+            </div>
+            <form id="productForm" onsubmit="handleProductSubmit(event)">
+                <input type="hidden" id="prodId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Product Name *</label>
+                        <input type="text" id="prodName" required placeholder="e.g. Farm Fresh A2 Desi Cow Milk"
+                            class="form-control">
+                    </div>
 
-const token = localStorage.getItem("thulirva_admin_token");
-let catalog = [];
-let filteredCatalog = [];
-let currentUploadedImageBase64 = "/assets/images/products/fresh_cow_milk.jpg";
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                        <div class="form-group">
+                            <label class="form-label">Category *</label>
+                            <select id="prodCategory" required class="form-select">
+                                <option value="Dairy">Dairy</option>
+                                <option value="Ghee">Ghee</option>
+                                <option value="Paneer">Paneer</option>
+                                <option value="Curd">Curd</option>
+                                <option value="Oils">Oils</option>
+                                <option value="Honey">Honey</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Weight / Volume *</label>
+                            <input type="text" id="prodWeight" placeholder="e.g. 1 Litre / 500g" class="form-control">
+                        </div>
+                    </div>
 
-async function loadProducts() {
-    try {
-        const res = await fetch("/api/admin/products", {
-            headers: { Authorization: `Bearer ${token}` }
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                        <div class="form-group">
+                            <label class="form-label">Selling Price (₹) *</label>
+                            <input type="number" id="prodPrice" required min="1" placeholder="75" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Compare / Original Price (₹)</label>
+                            <input type="number" id="prodComparePrice" placeholder="90" class="form-control">
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                        <div class="form-group">
+                            <label class="form-label">Inventory Stock Units *</label>
+                            <input type="number" id="prodStock" required min="0" value="50" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Storefront Badge Tag</label>
+                            <input type="text" id="prodBadge" placeholder="e.g. Best Seller / Fresh Batch"
+                                class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Product Photo Preview & Upload -->
+                    <div class="form-group">
+                        <label class="form-label">Product Image</label>
+                        <div style="display:flex; align-items:center; gap:16px; margin-bottom:10px;">
+                            <img id="imagePreview" src="/assets/images/products/fresh_cow_milk.jpg" alt="Preview"
+                                style="width:64px; height:64px; border-radius:var(--radius-sm); object-fit:cover; border:1px solid var(--thulirva-border);">
+                            <div>
+                                <input type="file" id="prodImageFile" accept="image/*"
+                                    onchange="handleImageFileUpload(event)" style="font-size:12px;">
+                                <small id="previewLabel"
+                                    style="display:block; color:var(--thulirva-text-muted); font-size:11px; margin-top:4px;">Upload
+                                    JPG, PNG or WEBP.</small>
+                            </div>
+                        </div>
+                        <input type="text" id="prodCustomImage" placeholder="Or enter image URL"
+                            oninput="previewCustomUrl(this.value)" class="form-control" style="font-size:12px;">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Short Description</label>
+                        <textarea id="prodDescription" rows="2"
+                            placeholder="Rich in A2 protein, ethically milked, delivered chilled."
+                            class="form-control"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="modalSubmitBtn">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/admin-shell.js"></script>
+    <script>
+        initAdminShell({
+            activePage: "products",
+            breadcrumbs: [{ label: "Product Catalog" }]
         });
-        if (res.ok) {
-            const data = await res.json();
-            catalog = data.products || [];
-        } else {
-            // Fallback catalog
-            const pubRes = await fetch("/api/products");
-            if (pubRes.ok) {
-                const pData = await pubRes.json();
-                catalog = pData.products || [];
-            }
+
+        const token = localStorage.getItem("thulirva_admin_token");
+        let catalog = [];
+        let filteredCatalog = [];
+        let currentUploadedImageBase64 = "/assets/images/products/fresh_cow_milk.jpg";
+
+        async function loadProducts() {
+            try {
+                const res = await fetch("/api/admin/products", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    catalog = data.products || [];
+                } else {
+                    // Fallback catalog
+                    const pubRes = await fetch("/api/products");
+                    if (pubRes.ok) {
+                        const pData = await pubRes.json();
+                        catalog = pData.products || [];
+                    }
+                }
+            } catch (_) { }
+
+            calculateProductMetrics();
+            filterProducts();
         }
-    } catch (_) {}
 
-    calculateProductMetrics();
-    filterProducts();
-}
+        function calculateProductMetrics() {
+            document.getElementById("totalProductsCount").textContent = catalog.length;
+            const inStock = catalog.filter(p => (Number(p.stock) || 0) > 0);
+            document.getElementById("inStockCount").textContent = inStock.length;
+            const lowStock = catalog.filter(p => (Number(p.stock) || 0) <= 10 && (Number(p.stock) || 0) > 0);
+            document.getElementById("lowStockCount").textContent = lowStock.length;
+        }
 
-function calculateProductMetrics() {
-    document.getElementById("totalProductsCount").textContent = catalog.length;
-    const inStock = catalog.filter(p => (Number(p.stock) || 0) > 0);
-    document.getElementById("inStockCount").textContent = inStock.length;
-    const lowStock = catalog.filter(p => (Number(p.stock) || 0) <= 10 && (Number(p.stock) || 0) > 0);
-    document.getElementById("lowStockCount").textContent = lowStock.length;
-}
+        function filterProducts() {
+            const q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+            const cat = (document.getElementById("categoryFilter").value || "").toLowerCase();
+            const stock = document.getElementById("stockFilter").value;
 
-function filterProducts() {
-    const q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
-    const cat = (document.getElementById("categoryFilter").value || "").toLowerCase();
-    const stock = document.getElementById("stockFilter").value;
+            filteredCatalog = catalog.filter(p => {
+                const matchesQ = !q || (p.name || "").toLowerCase().includes(q) || (p.category || "").toLowerCase().includes(q);
+                const matchesCat = !cat || (p.category || "").toLowerCase() === cat;
 
-    filteredCatalog = catalog.filter(p => {
-        const matchesQ = !q || (p.name || "").toLowerCase().includes(q) || (p.category || "").toLowerCase().includes(q);
-        const matchesCat = !cat || (p.category || "").toLowerCase() === cat;
-        
-        let matchesStock = true;
-        if (stock === "in_stock") matchesStock = (Number(p.stock) || 0) > 0;
-        else if (stock === "out_of_stock") matchesStock = (Number(p.stock) || 0) <= 0;
+                let matchesStock = true;
+                if (stock === "in_stock") matchesStock = (Number(p.stock) || 0) > 0;
+                else if (stock === "out_of_stock") matchesStock = (Number(p.stock) || 0) <= 0;
 
-        return matchesQ && matchesCat && matchesStock;
-    });
+                return matchesQ && matchesCat && matchesStock;
+            });
 
-    renderProductsTable();
-}
+            renderProductsTable();
+        }
 
-function renderProductsTable() {
-    const table = document.getElementById("productsTable");
-    document.getElementById("visibleProductsCount").textContent = filteredCatalog.length;
-    table.innerHTML = "";
+        function renderProductsTable() {
+            const table = document.getElementById("productsTable");
+            document.getElementById("visibleProductsCount").textContent = filteredCatalog.length;
+            table.innerHTML = "";
 
-    if (!filteredCatalog.length) {
-        table.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:36px; color:var(--thulirva-text-muted);">No products found in catalog.</td></tr>`;
-        return;
-    }
+            if (!filteredCatalog.length) {
+                table.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:36px; color:var(--thulirva-text-muted);">No products found in catalog.</td></tr>`;
+                return;
+            }
 
-    filteredCatalog.forEach(p => {
-        const row = document.createElement("tr");
-        const img = p.image || "/assets/images/products/fresh_cow_milk.jpg";
-        const inStock = (Number(p.stock) || 0) > 0;
-        const isSub = (p.category || "").toLowerCase() === "dairy" || (p.name || "").toLowerCase().includes("milk");
+            filteredCatalog.forEach(p => {
+                const row = document.createElement("tr");
+                const img = p.image || "/assets/images/products/fresh_cow_milk.jpg";
+                const inStock = (Number(p.stock) || 0) > 0;
+                const isSub = (p.category || "").toLowerCase() === "dairy" || (p.name || "").toLowerCase().includes("milk");
 
-        row.innerHTML = `
+                row.innerHTML = `
             <td>
                 <img src="${img}" alt="${p.name}" class="product-thumb">
             </td>
@@ -324,127 +339,128 @@ function renderProductsTable() {
                 </div>
             </td>
         `;
-        table.appendChild(row);
-    });
-}
-
-function handleImageFileUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-        currentUploadedImageBase64 = event.target.result;
-        document.getElementById("imagePreview").src = currentUploadedImageBase64;
-        document.getElementById("previewLabel").textContent = "✓ Uploaded: " + file.name;
-    };
-    reader.readAsDataURL(file);
-}
-
-function previewCustomUrl(url) {
-    if (url) {
-        currentUploadedImageBase64 = url;
-        document.getElementById("imagePreview").src = url;
-    }
-}
-
-function openAddModal() {
-    document.getElementById("modalTitle").textContent = "Add New Farm Product";
-    document.getElementById("modalSubmitBtn").textContent = "Create Product";
-    document.getElementById("prodId").value = "";
-    document.getElementById("productForm").reset();
-    currentUploadedImageBase64 = "/assets/images/products/fresh_cow_milk.jpg";
-    document.getElementById("imagePreview").src = currentUploadedImageBase64;
-    document.getElementById("productModal").classList.add("active");
-}
-
-function openEditModal(id) {
-    const p = catalog.find(item => item.id === id);
-    if (!p) return;
-    document.getElementById("modalTitle").textContent = "Edit Product: " + p.name;
-    document.getElementById("modalSubmitBtn").textContent = "Update Product";
-    document.getElementById("prodId").value = p.id;
-    document.getElementById("prodName").value = p.name || "";
-    document.getElementById("prodCategory").value = p.category || "Dairy";
-    document.getElementById("prodWeight").value = p.weight || "";
-    document.getElementById("prodPrice").value = p.price || "";
-    document.getElementById("prodComparePrice").value = p.compare_price || "";
-    document.getElementById("prodStock").value = p.stock || 0;
-    document.getElementById("prodBadge").value = p.badge || "";
-    document.getElementById("prodDescription").value = p.description || "";
-    
-    currentUploadedImageBase64 = p.image || "/assets/images/products/fresh_cow_milk.jpg";
-    document.getElementById("imagePreview").src = currentUploadedImageBase64;
-    document.getElementById("prodCustomImage").value = p.image || "";
-    document.getElementById("productModal").classList.add("active");
-}
-
-function closeModal() {
-    document.getElementById("productModal").classList.remove("active");
-}
-
-async function handleProductSubmit(e) {
-    e.preventDefault();
-    const id = document.getElementById("prodId").value;
-    const isEdit = Boolean(id);
-
-    const payload = {
-        name: document.getElementById("prodName").value.trim(),
-        category: document.getElementById("prodCategory").value,
-        weight: document.getElementById("prodWeight").value.trim(),
-        price: Number(document.getElementById("prodPrice").value),
-        compare_price: Number(document.getElementById("prodComparePrice").value) || null,
-        stock: Number(document.getElementById("prodStock").value),
-        badge: document.getElementById("prodBadge").value.trim(),
-        description: document.getElementById("prodDescription").value.trim(),
-        image: currentUploadedImageBase64
-    };
-
-    try {
-        const url = isEdit ? `/api/admin/products/${id}` : "/api/admin/products";
-        const method = isEdit ? "PUT" : "POST";
-        const res = await fetch(url, {
-            method: method,
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (data.success) {
-            showToast(isEdit ? "Product updated successfully." : "Product added to catalog.");
-            closeModal();
-            loadProducts();
-        } else {
-            showToast(data.message || "Failed to save product", "error");
+                table.appendChild(row);
+            });
         }
-    } catch (err) {
-        showToast("Error saving product: " + err.message, "error");
-    }
-}
 
-async function deleteProduct(id, encodedName) {
-    const name = decodeURIComponent(encodedName);
-    if (!confirm(`Are you sure you want to remove '${name}' from the catalog?`)) return;
-
-    try {
-        const res = await fetch(`/api/admin/products/${id}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await res.json();
-        if (data.success) {
-            showToast("Product deleted from catalog.");
-            loadProducts();
-        } else {
-            showToast(data.message || "Failed to delete product", "error");
+        function handleImageFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                currentUploadedImageBase64 = event.target.result;
+                document.getElementById("imagePreview").src = currentUploadedImageBase64;
+                document.getElementById("previewLabel").textContent = "✓ Uploaded: " + file.name;
+            };
+            reader.readAsDataURL(file);
         }
-    } catch (e) {
-        showToast("Error: " + e.message, "error");
-    }
-}
 
-loadProducts();
-</script>
+        function previewCustomUrl(url) {
+            if (url) {
+                currentUploadedImageBase64 = url;
+                document.getElementById("imagePreview").src = url;
+            }
+        }
+
+        function openAddModal() {
+            document.getElementById("modalTitle").textContent = "Add New Farm Product";
+            document.getElementById("modalSubmitBtn").textContent = "Create Product";
+            document.getElementById("prodId").value = "";
+            document.getElementById("productForm").reset();
+            currentUploadedImageBase64 = "/assets/images/products/fresh_cow_milk.jpg";
+            document.getElementById("imagePreview").src = currentUploadedImageBase64;
+            document.getElementById("productModal").classList.add("active");
+        }
+
+        function openEditModal(id) {
+            const p = catalog.find(item => item.id === id);
+            if (!p) return;
+            document.getElementById("modalTitle").textContent = "Edit Product: " + p.name;
+            document.getElementById("modalSubmitBtn").textContent = "Update Product";
+            document.getElementById("prodId").value = p.id;
+            document.getElementById("prodName").value = p.name || "";
+            document.getElementById("prodCategory").value = p.category || "Dairy";
+            document.getElementById("prodWeight").value = p.weight || "";
+            document.getElementById("prodPrice").value = p.price || "";
+            document.getElementById("prodComparePrice").value = p.compare_price || "";
+            document.getElementById("prodStock").value = p.stock || 0;
+            document.getElementById("prodBadge").value = p.badge || "";
+            document.getElementById("prodDescription").value = p.description || "";
+
+            currentUploadedImageBase64 = p.image || "/assets/images/products/fresh_cow_milk.jpg";
+            document.getElementById("imagePreview").src = currentUploadedImageBase64;
+            document.getElementById("prodCustomImage").value = p.image || "";
+            document.getElementById("productModal").classList.add("active");
+        }
+
+        function closeModal() {
+            document.getElementById("productModal").classList.remove("active");
+        }
+
+        async function handleProductSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById("prodId").value;
+            const isEdit = Boolean(id);
+
+            const payload = {
+                name: document.getElementById("prodName").value.trim(),
+                category: document.getElementById("prodCategory").value,
+                weight: document.getElementById("prodWeight").value.trim(),
+                price: Number(document.getElementById("prodPrice").value),
+                compare_price: Number(document.getElementById("prodComparePrice").value) || null,
+                stock: Number(document.getElementById("prodStock").value),
+                badge: document.getElementById("prodBadge").value.trim(),
+                description: document.getElementById("prodDescription").value.trim(),
+                image: currentUploadedImageBase64
+            };
+
+            try {
+                const url = isEdit ? `/api/admin/products/${id}` : "/api/admin/products";
+                const method = isEdit ? "PUT" : "POST";
+                const res = await fetch(url, {
+                    method: method,
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(isEdit ? "Product updated successfully." : "Product added to catalog.");
+                    closeModal();
+                    loadProducts();
+                } else {
+                    showToast(data.message || "Failed to save product", "error");
+                }
+            } catch (err) {
+                showToast("Error saving product: " + err.message, "error");
+            }
+        }
+
+        async function deleteProduct(id, encodedName) {
+            const name = decodeURIComponent(encodedName);
+            if (!confirm(`Are you sure you want to remove '${name}' from the catalog?`)) return;
+
+            try {
+                const res = await fetch(`/api/admin/products/${id}`, {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("Product deleted from catalog.");
+                    loadProducts();
+                } else {
+                    showToast(data.message || "Failed to delete product", "error");
+                }
+            } catch (e) {
+                showToast("Error: " + e.message, "error");
+            }
+        }
+
+        loadProducts();
+    </script>
 </body>
+
 </html>

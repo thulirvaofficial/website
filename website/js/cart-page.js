@@ -4,6 +4,24 @@
 
 let cartDiscount = 0;
 let appliedCartPromo = null;
+let cartDeliveryConfig = {
+    delivery_charges_enabled: true,
+    fixed_delivery_charge: 30,
+    free_delivery_threshold: 299
+};
+
+async function loadCartDeliveryConfig() {
+    try {
+        const res = await fetch("/api/config/delivery");
+        if (res.ok) {
+            const data = await res.json();
+            if (data.config) {
+                cartDeliveryConfig = data.config;
+                renderCartPage();
+            }
+        }
+    } catch (_) {}
+}
 
 function renderCartPage() {
     const layout = document.getElementById("cartLayout");
@@ -11,7 +29,11 @@ function renderCartPage() {
 
     const cart = getCart();
     const subtotal = getCartSubtotal();
-    const delivery = subtotal >= 299 ? 0 : 30;
+    const threshold = Number(cartDeliveryConfig.free_delivery_threshold) || 299;
+    const baseFee = Number(cartDeliveryConfig.fixed_delivery_charge) || 30;
+    const isFree = !cartDeliveryConfig.delivery_charges_enabled || subtotal >= threshold;
+    const delivery = isFree ? 0 : baseFee;
+    const shortfall = Math.max(0, threshold - subtotal);
 
     // Check stored coupon
     try {
@@ -67,7 +89,7 @@ function renderCartPage() {
             <div class="summary-row"><span>Subtotal</span><span>₹${subtotal}</span></div>
             ${discountRowHtml}
             <div class="summary-row"><span>Delivery Charge</span><span>${delivery === 0 ? '<span style="color:var(--natural-green)">FREE</span>' : '₹' + delivery}</span></div>
-            ${delivery > 0 ? `<div style="font-size:11px;color:var(--text-muted);padding:6px 0">Add ₹${299 - subtotal} more for free delivery</div>` : ""}
+            ${delivery > 0 ? `<div style="font-size:11px;color:var(--text-muted);padding:6px 0">Add ₹${shortfall} more for free delivery</div>` : ""}
             <div class="summary-row total"><span>Total</span><span>₹${total}</span></div>
             <div class="coupon-row" style="margin-top:14px;">
                 <input type="text" class="coupon-input" id="couponInput" value="${appliedCartPromo || ''}" placeholder="Enter promo code (e.g. FARM10)" style="text-transform:uppercase; font-weight:700;">
@@ -238,4 +260,7 @@ function removeCartCoupon() {
 }
 
 // Init
-document.addEventListener("DOMContentLoaded", renderCartPage);
+document.addEventListener("DOMContentLoaded", () => {
+    loadCartDeliveryConfig();
+    renderCartPage();
+});

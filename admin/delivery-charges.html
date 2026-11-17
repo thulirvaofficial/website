@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THULIRVA Admin — Delivery Charge & Payout Management</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <style>
+        .calc-preview-card {
+            background: linear-gradient(135deg, #FAF8EF 0%, #F3EFE0 100%);
+            border: 2px solid var(--thulirva-forest);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(27,67,50,0.08);
+        }
+        .rate-input-group {
+            display: flex;
+            align-items: center;
+        }
+        .rate-prefix {
+            background: #E8EDE6;
+            color: var(--thulirva-forest);
+            font-weight: 700;
+            padding: 9px 12px;
+            border-radius: 8px 0 0 8px;
+            border: 1px solid var(--thulirva-border);
+            border-right: none;
+            font-size: 14px;
+        }
+        .rate-input {
+            border-radius: 0 8px 8px 0 !important;
+        }
+        .switch-toggle {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider-round {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s;
+            border-radius: 24px;
+        }
+        .slider-round:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider-round {
+            background-color: #1B4332;
+        }
+        input:checked + .slider-round:before {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-layout">
+    <aside class="sidebar" id="adminSidebar"></aside>
+
+    <main class="main-content">
+        <header class="topbar" id="adminTopbar"></header>
+
+        <div class="page-container">
+            <div class="page-header flex-between">
+                <div>
+                    <h1 class="page-title">Delivery Charge Management</h1>
+                    <p class="page-subtitle">Configure dynamic customer delivery fees, free delivery thresholds, area rate cards &amp; partner delivery payouts</p>
+                </div>
+                <div class="flex-center gap-3">
+                    <button class="btn btn-secondary" onclick="loadDeliveryConfig()">
+                        🔄 Reload
+                    </button>
+                    <button class="btn btn-primary" onclick="saveAllSettings()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        Save Configuration
+                    </button>
+                </div>
+            </div>
+
+            <!-- Metrics Overview -->
+            <div class="metrics-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Default Delivery Charge</div>
+                    <div class="stat-value text-gold" id="statDefaultCharge">₹30</div>
+                    <div class="stat-sub">Under free threshold</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Free Delivery Threshold</div>
+                    <div class="stat-value text-success" id="statThreshold">₹299</div>
+                    <div class="stat-sub">Cart order minimum</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Zone Rules</div>
+                    <div class="stat-value" id="statZoneRulesCount">4 Zones</div>
+                    <div class="stat-sub">Padur, Navalur, etc.</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Partner Base Payout</div>
+                    <div class="stat-value" id="statPartnerPayout" style="color:var(--thulirva-forest);">₹35</div>
+                    <div class="stat-sub">Per completed delivery</div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1.4fr 1fr; gap:24px; align-items:start;">
+                <!-- Left Column: Settings Configuration -->
+                <div style="display:flex; flex-direction:column; gap:20px;">
+                    
+                    <!-- 1. General Delivery Fee & Free Delivery Threshold -->
+                    <div class="card">
+                        <div class="card-header flex-between" style="padding:14px 20px;">
+                            <div style="font-weight:700; color:var(--thulirva-forest); font-size:14px;">
+                                📦 Standard Delivery Charge &amp; Free Threshold
+                            </div>
+                            <label class="switch-toggle" title="Enable/Disable all delivery charges">
+                                <input type="checkbox" id="cfgDeliveryChargesEnabled" checked onchange="updateCalcPreview()">
+                                <span class="slider-round"></span>
+                            </label>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                                <div class="form-group">
+                                    <label class="form-label">Fixed Default Delivery Fee <span style="color:red;">*</span></label>
+                                    <div class="rate-input-group">
+                                        <span class="rate-prefix">₹</span>
+                                        <input type="number" id="cfgFixedCharge" class="form-control rate-input" value="30" min="0" step="1" oninput="updateCalcPreview()">
+                                    </div>
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Standard charge applied to customer orders below threshold.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Free Delivery Threshold Amount <span style="color:red;">*</span></label>
+                                    <div class="rate-input-group">
+                                        <span class="rate-prefix">₹</span>
+                                        <input type="number" id="cfgFreeThreshold" class="form-control rate-input" value="299" min="0" step="1" oninput="updateCalcPreview()">
+                                    </div>
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Orders at or above this value get 100% FREE delivery.</small>
+                                </div>
+                            </div>
+
+                            <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:8px;">
+                                <div class="form-group">
+                                    <label class="form-label">Minimum Order Value for Delivery</label>
+                                    <div class="rate-input-group">
+                                        <span class="rate-prefix">₹</span>
+                                        <input type="number" id="cfgMinOrderValue" class="form-control rate-input" value="150" min="0" step="1">
+                                    </div>
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Minimum cart total required to place doorstep delivery.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Store Pickup Policy</label>
+                                    <input type="text" class="form-control" value="Always 100% Free (No delivery fee)" disabled style="background:#FAF8EF; color:var(--thulirva-forest); font-weight:600;">
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Self pickup from farm hub is never charged.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Area / Zone Delivery Charges Table -->
+                    <div class="card">
+                        <div class="card-header flex-between" style="padding:14px 20px;">
+                            <div>
+                                <div style="font-weight:700; color:var(--thulirva-forest); font-size:14px;">
+                                    📍 Area / Zone Specific Delivery Rates
+                                </div>
+                                <div style="font-size:11.5px; color:var(--thulirva-text-muted);">Overrides the default ₹30 charge for specific delivery clusters</div>
+                            </div>
+                            <button class="btn btn-secondary btn-sm" onclick="addNewZoneRow()">＋ Add Zone</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Delivery Zone / Cluster</th>
+                                        <th>Specific Delivery Fee (₹)</th>
+                                        <th>Threshold Rule</th>
+                                        <th style="text-align:right;">Remove</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="zoneTableBody">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 3. Distance-Based Charge Rules -->
+                    <div class="card">
+                        <div class="card-header flex-between" style="padding:14px 20px;">
+                            <div style="font-weight:700; color:var(--thulirva-forest); font-size:14px;">
+                                📏 Distance-Based Billing (GPS Dynamic)
+                            </div>
+                            <label class="switch-toggle" title="Enable/Disable distance billing">
+                                <input type="checkbox" id="cfgDistanceEnabled" onchange="updateCalcPreview()">
+                                <span class="slider-round"></span>
+                            </label>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                                <div class="form-group">
+                                    <label class="form-label">Base Distance Included (KM)</label>
+                                    <div class="rate-input-group">
+                                        <input type="number" id="cfgDistanceBaseKm" class="form-control" value="5.0" min="1" step="0.5" oninput="updateCalcPreview()">
+                                        <span class="rate-prefix" style="border-radius:0 8px 8px 0; border-left:none; border-right:1px solid var(--thulirva-border);">km</span>
+                                    </div>
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Deliveries up to this distance pay only the base delivery fee.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Per-KM Additional Rate Beyond Base</label>
+                                    <div class="rate-input-group">
+                                        <span class="rate-prefix">₹</span>
+                                        <input type="number" id="cfgDistanceRatePerKm" class="form-control rate-input" value="8.0" min="1" step="0.5" oninput="updateCalcPreview()">
+                                    </div>
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Added per extra kilometer beyond the base distance.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Delivery Partner Earnings & Incentives -->
+                    <div class="card">
+                        <div class="card-header flex-between" style="padding:14px 20px;">
+                            <div style="font-weight:700; color:var(--thulirva-forest); font-size:14px;">
+                                🛵 Delivery Partner Earning Rates (Payout Structure)
+                            </div>
+                            <span class="badge" style="background:#E8F5E9; color:var(--thulirva-forest); font-weight:700;">PROFIT PROTECTED</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                                <div class="form-group">
+                                    <label class="form-label">Base Partner Payout Per Delivery</label>
+                                    <div class="rate-input-group">
+                                        <span class="rate-prefix">₹</span>
+                                        <input type="number" id="cfgPartnerBasePayout" class="form-control rate-input" value="35" min="10" step="1" oninput="updateCalcPreview()">
+                                    </div>
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Credited to partner wallet upon successful doorstep delivery.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Partner Distance Bonus Per KM</label>
+                                    <div class="rate-input-group">
+                                        <span class="rate-prefix">₹</span>
+                                        <input type="number" id="cfgPartnerDistanceBonus" class="form-control rate-input" value="6" min="0" step="1" oninput="updateCalcPreview()">
+                                    </div>
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Additional partner incentive for long-distance deliveries.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Interactive Live Calculator & Simulator -->
+                <div style="position:sticky; top:84px;">
+                    <div class="calc-preview-card">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+                            <span style="font-size:22px;">🧮</span>
+                            <h3 style="font-family:'Playfair Display', serif; font-size:18px; font-weight:800; color:var(--thulirva-forest); margin:0;">
+                                Instant Delivery Fee Simulator
+                            </h3>
+                        </div>
+                        <p style="font-size:12.5px; color:var(--thulirva-text-muted); margin-bottom:18px; line-height:1.4;">
+                            Test cart combinations live to verify what customers will see and what delivery partners will earn.
+                        </p>
+
+                        <div class="form-group">
+                            <label class="form-label">Sample Customer Cart Subtotal</label>
+                            <div class="rate-input-group">
+                                <span class="rate-prefix">₹</span>
+                                <input type="number" id="simSubtotal" class="form-control rate-input" value="250" min="0" step="10" oninput="updateCalcPreview()">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Selected Customer Delivery Zone</label>
+                            <select id="simZone" class="form-select" onchange="updateCalcPreview()">
+                                <option value="">Default Area (Unlisted)</option>
+                                <option value="Padur" selected>Padur Cluster</option>
+                                <option value="Navalur">Navalur Cluster</option>
+                                <option value="Siruseri">Siruseri SIPCOT</option>
+                                <option value="Kelambakkam">Kelambakkam Junction</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Delivery Distance From Hub</label>
+                            <div class="rate-input-group">
+                                <input type="number" id="simDistance" class="form-control" value="6.5" min="0.5" step="0.5" oninput="updateCalcPreview()">
+                                <span class="rate-prefix" style="border-radius:0 8px 8px 0; border-left:none; border-right:1px solid var(--thulirva-border);">km</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Order Type</label>
+                            <select id="simOrderType" class="form-select" onchange="updateCalcPreview()">
+                                <option value="delivery" selected>Doorstep Delivery</option>
+                                <option value="pickup">Farm Store Pickup</option>
+                            </select>
+                        </div>
+
+                        <div class="divider" style="margin:18px 0;"></div>
+
+                        <!-- Computed Result Showcase -->
+                        <div style="background:#fff; border-radius:12px; padding:16px; border:1px solid var(--thulirva-border);">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <span style="font-size:13px; font-weight:700; color:var(--thulirva-forest);">Customer Delivery Fee:</span>
+                                <span id="simResultFee" style="font-size:18px; font-weight:900; color:var(--thulirva-forest);">₹20.00</span>
+                            </div>
+                            <div id="simResultBadgeWrap" style="margin-bottom:10px;">
+                                <span id="simResultBadge" class="badge" style="background:#FEF3C7; color:#B45309;">Standard Fee Applied</span>
+                            </div>
+                            <div id="simResultReason" style="font-size:11.5px; color:var(--thulirva-text-muted); line-height:1.4; margin-bottom:12px;">
+                                Standard delivery charge. Add ₹49 more for FREE delivery.
+                            </div>
+
+                            <div style="background:#FAF8EF; padding:10px 12px; border-radius:8px; border:1px solid #E5C97A; font-size:12px;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                                    <span>Partner Earning Payout:</span>
+                                    <strong id="simPartnerPayout" style="color:var(--thulirva-forest);">₹44.00</strong>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--thulirva-text-muted);">
+                                    <span>Base ₹35 + Distance Bonus ₹9</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:16px; text-align:center;">
+                            <button class="btn btn-primary" style="width:100%;" onclick="saveAllSettings()">
+                                💾 Apply &amp; Save All Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="js/api-client.js"></script>
+<script src="js/admin-shell.js"></script>
+<script>
+initAdminShell({
+    activePage: "delivery-charges",
+    breadcrumbs: [{ label: "Commerce" }, { label: "Delivery Charges" }]
+});
+
+const token = localStorage.getItem("thulirva_admin_token");
+let currentConfig = {};
+
+async function loadDeliveryConfig() {
+    try {
+        const res = await fetch("/api/config/delivery");
+        const data = await res.json();
+        currentConfig = data.config || {};
+        populateForm(currentConfig);
+        updateCalcPreview();
+    } catch (e) {
+        showToast("Error loading delivery configuration", "error");
+    }
+}
+
+function populateForm(cfg) {
+    document.getElementById("cfgDeliveryChargesEnabled").checked = cfg.delivery_charges_enabled !== false;
+    document.getElementById("cfgFixedCharge").value = cfg.fixed_delivery_charge !== undefined ? cfg.fixed_delivery_charge : 30;
+    document.getElementById("cfgFreeThreshold").value = cfg.free_delivery_threshold !== undefined ? cfg.free_delivery_threshold : 299;
+    document.getElementById("cfgMinOrderValue").value = cfg.min_order_value_for_delivery !== undefined ? cfg.min_order_value_for_delivery : 150;
+    document.getElementById("cfgDistanceEnabled").checked = Boolean(cfg.distance_charges_enabled);
+    document.getElementById("cfgDistanceBaseKm").value = cfg.distance_base_km !== undefined ? cfg.distance_base_km : 5.0;
+    document.getElementById("cfgDistanceRatePerKm").value = cfg.distance_rate_per_km !== undefined ? cfg.distance_rate_per_km : 8.0;
+    document.getElementById("cfgPartnerBasePayout").value = cfg.partner_base_payout !== undefined ? cfg.partner_base_payout : 35;
+    document.getElementById("cfgPartnerDistanceBonus").value = cfg.partner_distance_bonus_per_km !== undefined ? cfg.partner_distance_bonus_per_km : 6;
+
+    // Stat Cards
+    document.getElementById("statDefaultCharge").textContent = `₹${cfg.fixed_delivery_charge || 30}`;
+    document.getElementById("statThreshold").textContent = `₹${cfg.free_delivery_threshold || 299}`;
+    document.getElementById("statPartnerPayout").textContent = `₹${cfg.partner_base_payout || 35}`;
+
+    renderZoneTable(cfg.zone_charges || {
+        "Padur": 20,
+        "Navalur": 30,
+        "Siruseri": 30,
+        "Kelambakkam": 40
+    });
+}
+
+function renderZoneTable(zones) {
+    const tbody = document.getElementById("zoneTableBody");
+    tbody.innerHTML = "";
+
+    const entries = Object.entries(zones || {});
+    document.getElementById("statZoneRulesCount").textContent = `${entries.length} Zones`;
+
+    if (!entries.length) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:18px; color:var(--thulirva-text-muted);">No custom area overrides. All areas use default rate.</td></tr>`;
+        return;
+    }
+
+    entries.forEach(([zone, fee]) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>
+                <input type="text" class="form-control zone-name-input" value="${zone}" style="font-weight:700; color:var(--thulirva-forest);">
+            </td>
+            <td>
+                <div class="rate-input-group" style="max-width:140px;">
+                    <span class="rate-prefix">₹</span>
+                    <input type="number" class="form-control rate-input zone-fee-input" value="${fee}" min="0" step="1" oninput="updateCalcPreview()">
+                </div>
+            </td>
+            <td>
+                <small style="color:var(--thulirva-text-muted);">Subject to ₹${document.getElementById("cfgFreeThreshold").value} threshold</small>
+            </td>
+            <td style="text-align:right;">
+                <button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove(); updateCalcPreview();">🗑️</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function addNewZoneRow() {
+    const tbody = document.getElementById("zoneTableBody");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+        <td>
+            <input type="text" class="form-control zone-name-input" placeholder="e.g. Sholinganallur" style="font-weight:700; color:var(--thulirva-forest);">
+        </td>
+        <td>
+            <div class="rate-input-group" style="max-width:140px;">
+                <span class="rate-prefix">₹</span>
+                <input type="number" class="form-control rate-input zone-fee-input" value="35" min="0" step="1" oninput="updateCalcPreview()">
+            </div>
+        </td>
+        <td>
+            <small style="color:var(--thulirva-text-muted);">Subject to free threshold</small>
+        </td>
+        <td style="text-align:right;">
+            <button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove(); updateCalcPreview();">🗑️</button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+}
+
+function collectZoneCharges() {
+    const zones = {};
+    const rows = document.querySelectorAll("#zoneTableBody tr");
+    rows.forEach(row => {
+        const nameInput = row.querySelector(".zone-name-input");
+        const feeInput = row.querySelector(".zone-fee-input");
+        if (nameInput && feeInput) {
+            const zName = nameInput.value.trim();
+            const zFee = Number(feeInput.value) || 0;
+            if (zName) zones[zName] = zFee;
+        }
+    });
+    return zones;
+}
+
+function updateCalcPreview() {
+    const deliveryEnabled = document.getElementById("cfgDeliveryChargesEnabled").checked;
+    const fixedCharge = Number(document.getElementById("cfgFixedCharge").value) || 30;
+    const threshold = Number(document.getElementById("cfgFreeThreshold").value) || 299;
+    const distanceEnabled = document.getElementById("cfgDistanceEnabled").checked;
+    const distanceBaseKm = Number(document.getElementById("cfgDistanceBaseKm").value) || 5;
+    const distanceRate = Number(document.getElementById("cfgDistanceRatePerKm").value) || 8;
+    const partnerBase = Number(document.getElementById("cfgPartnerBasePayout").value) || 35;
+    const partnerBonus = Number(document.getElementById("cfgPartnerDistanceBonus").value) || 6;
+
+    const zones = collectZoneCharges();
+
+    const subtotal = Number(document.getElementById("simSubtotal").value) || 0;
+    const simZone = document.getElementById("simZone").value;
+    const simDist = Number(document.getElementById("simDistance").value) || 1;
+    const simType = document.getElementById("simOrderType").value;
+
+    const feeEl = document.getElementById("simResultFee");
+    const badgeWrap = document.getElementById("simResultBadgeWrap");
+    const reasonEl = document.getElementById("simResultReason");
+    const partnerEl = document.getElementById("simPartnerPayout");
+
+    if (simType === "pickup") {
+        feeEl.textContent = "₹0.00";
+        badgeWrap.innerHTML = `<span class="badge" style="background:#E8F5E9; color:var(--thulirva-forest); font-weight:700;">STORE PICKUP FREE</span>`;
+        reasonEl.textContent = "Farm store self-pickup is always 100% free.";
+        partnerEl.textContent = "₹0.00 (Self Pickup)";
+        return;
+    }
+
+    if (!deliveryEnabled) {
+        feeEl.textContent = "₹0.00";
+        badgeWrap.innerHTML = `<span class="badge" style="background:#E8F5E9; color:var(--thulirva-forest); font-weight:700;">CHARGES WAIVED</span>`;
+        reasonEl.textContent = "Delivery fees are currently disabled store-wide.";
+        partnerEl.textContent = `₹${partnerBase.toFixed(2)}`;
+        return;
+    }
+
+    if (subtotal >= threshold) {
+        feeEl.textContent = "₹0.00";
+        badgeWrap.innerHTML = `<span class="badge" style="background:#E8F5E9; color:var(--thulirva-forest); font-weight:700;">🎉 FREE DELIVERY UNLOCKED</span>`;
+        reasonEl.textContent = `Cart subtotal ₹${subtotal} exceeds the ₹${threshold} free delivery threshold.`;
+    } else {
+        let base = fixedCharge;
+        if (simZone && zones[simZone] !== undefined) {
+            base = Number(zones[simZone]);
+        }
+
+        let distCharge = 0;
+        if (distanceEnabled && simDist > distanceBaseKm) {
+            distCharge = (simDist - distanceBaseKm) * distanceRate;
+        }
+
+        const totalFee = base + distCharge;
+        const shortfall = threshold - subtotal;
+
+        feeEl.textContent = `₹${totalFee.toFixed(2)}`;
+        badgeWrap.innerHTML = `<span class="badge" style="background:#FEF3C7; color:#B45309;">Standard Rate Applied</span>`;
+        reasonEl.textContent = `Add ₹${shortfall.toFixed(0)} more items for FREE delivery! (Base: ₹${base}${distCharge ? ` + Dist: ₹${distCharge.toFixed(0)}` : ''})`;
+    }
+
+    // Partner Payout Calculation
+    let extraPartnerDist = 0;
+    if (simDist > distanceBaseKm) {
+        extraPartnerDist = (simDist - distanceBaseKm) * partnerBonus;
+    }
+    const partnerTotal = partnerBase + extraPartnerDist;
+    partnerEl.textContent = `₹${partnerTotal.toFixed(2)} (Base ₹${partnerBase} + Dist ₹${extraPartnerDist.toFixed(0)})`;
+}
+
+async function saveAllSettings() {
+    const payload = {
+        delivery_charges_enabled: document.getElementById("cfgDeliveryChargesEnabled").checked,
+        fixed_delivery_charge: Number(document.getElementById("cfgFixedCharge").value),
+        free_delivery_threshold: Number(document.getElementById("cfgFreeThreshold").value),
+        min_order_value_for_delivery: Number(document.getElementById("cfgMinOrderValue").value),
+        distance_charges_enabled: document.getElementById("cfgDistanceEnabled").checked,
+        distance_base_km: Number(document.getElementById("cfgDistanceBaseKm").value),
+        distance_rate_per_km: Number(document.getElementById("cfgDistanceRatePerKm").value),
+        partner_base_payout: Number(document.getElementById("cfgPartnerBasePayout").value),
+        partner_distance_bonus_per_km: Number(document.getElementById("cfgPartnerDistanceBonus").value),
+        zone_charges: collectZoneCharges()
+    };
+
+    try {
+        const res = await fetch("/api/admin/config/delivery", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            showToast("Delivery charges & partner rates saved successfully!");
+            loadDeliveryConfig();
+        } else {
+            showToast(data.message || "Failed to save configuration", "error");
+        }
+    } catch (e) {
+        showToast("Error saving: " + e.message, "error");
+    }
+}
+
+loadDeliveryConfig();
+</script>
+</body>
+</html>
