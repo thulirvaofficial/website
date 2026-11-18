@@ -94,18 +94,66 @@ async function loadProductDetail() {
                 <div class="product-tab-headers">
                     <div class="tab-header active" onclick="switchTab('description', this)">Description</div>
                     <div class="tab-header" onclick="switchTab('nutrition', this)">Nutritional Info</div>
+                    <div class="tab-header" onclick="switchTab('policy', this)">Refund &amp; Guarantee</div>
                     <div class="tab-header" onclick="switchTab('delivery', this)">Delivery Info</div>
                     <div class="tab-header" onclick="switchTab('reviews', this)" id="reviewsTabHeader">Customer Reviews (<span id="reviewCountBadge">0</span>)</div>
                 </div>
                 <div class="tab-content active" id="tab-description">
                     <div style="font-size:14.5px; line-height:1.7; color:var(--text-mid);">
                         <p>${product.description || 'Ethically sourced and freshly produced at THULIRVA farms in Kanchipuram. We maintain the highest standards of hygiene and animal welfare to ensure pure, wholesome nourishment for your family.'}</p>
-                        <p style="margin-top:10px; font-weight:500;">Best enjoyed fresh. Store refrigerated and consume within recommended shelf life.</p>
+                        ${Array.isArray(product.highlights) && product.highlights.length > 0 ? `
+                        <div style="margin-top:14px; background:var(--light-cream); padding:14px 18px; border-radius:10px; border:1px solid var(--border);">
+                            <strong style="color:var(--forest-green); font-size:13.5px; display:block; margin-bottom:8px;">🌿 Key Highlights:</strong>
+                            <ul style="margin:0; padding-left:20px; font-size:13px; color:var(--text-dark);">
+                                ${product.highlights.map(h => `<li style="margin-bottom:4px;">${h}</li>`).join('')}
+                            </ul>
+                        </div>
+                        ` : ''}
+                        ${Array.isArray(product.ingredients) && product.ingredients.length > 0 ? `
+                        <p style="margin-top:12px; font-size:13px;"><strong>🥛 Ingredients:</strong> ${product.ingredients.join(', ')}</p>
+                        ` : ''}
+                        ${product.storage_instructions ? `
+                        <p style="margin-top:6px; font-size:13px;"><strong>❄️ Storage:</strong> ${product.storage_instructions}</p>
+                        ` : ''}
+                        ${product.usage_instructions ? `
+                        <p style="margin-top:6px; font-size:13px;"><strong>💡 Usage:</strong> ${product.usage_instructions}</p>
+                        ` : ''}
                     </div>
                 </div>
                 <div class="tab-content" id="tab-nutrition">
-                    <p><strong>Per 100g / 100ml serving (Approx):</strong></p>
-                    <p>Calories: 140–265 kcal | Protein: Rich | Essential Calcium &amp; Minerals | Zero Synthetic Chemicals</p>
+                    <div style="font-size:14px; line-height:1.7; color:var(--text-mid);">
+                        <p><strong>Per 100g / 100ml serving (Approx):</strong></p>
+                        ${product.nutritional_info ? `
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-top:12px;">
+                            ${Object.entries(product.nutritional_info).map(([k, v]) => `
+                                <div style="background:var(--cream); padding:10px 14px; border-radius:8px; border:1px solid var(--border);">
+                                    <div style="font-size:11px; text-transform:uppercase; color:var(--text-muted); font-weight:700;">${k.replace(/_/g, ' ')}</div>
+                                    <div style="font-size:14px; font-weight:700; color:var(--forest-green); margin-top:2px;">${v}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ` : `
+                        <p>Calories: 140–265 kcal | Protein: Rich | Essential Calcium &amp; Minerals | Zero Synthetic Chemicals</p>
+                        `}
+                    </div>
+                </div>
+                <div class="tab-content" id="tab-policy">
+                    <div style="background:#F0FDF4; border:1.5px solid #86EFAC; border-radius:12px; padding:18px 22px;">
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                            <span style="font-size:22px;">🛡️</span>
+                            <h4 style="margin:0; font-size:16px; color:#166534; font-weight:700;">
+                                ${product.refund_policy?.type || 'THULIRVA 100% Quality &amp; Purity Guarantee'}
+                            </h4>
+                        </div>
+                        <p style="margin:0 0 10px 0; font-size:13.5px; color:#15803D; line-height:1.6;">
+                            ${product.refund_policy?.condition || 'If you are ever dissatisfied with the freshness, aroma, or seal integrity upon delivery, we will instantly replace it or credit 100% back to your wallet with zero hassle.'}
+                        </p>
+                        <div style="display:flex; gap:18px; flex-wrap:wrap; font-size:12.5px; color:#166534; font-weight:600; padding-top:8px; border-top:1px dashed #BBF7D0;">
+                            <span>⏱ Claim Window: within ${product.refund_policy?.window_hours || 4} hours</span>
+                            <span>🔄 Physical Return Required: ${product.refund_policy?.return_required ? 'Yes (inspection)' : 'No (instant replacement/credit)'}</span>
+                            <span>📜 Certification: ${product.certification || 'FSSAI Registered Pure Produce'}</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="tab-content" id="tab-delivery">
                     <p>✅ Fresh Morning Doorstep Delivery (6:00 AM – 7:30 AM)</p>
