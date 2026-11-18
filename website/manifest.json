@@ -1,0 +1,25 @@
+{
+  "name": "THULIRVA – Rooted in Nature",
+  "short_name": "THULIRVA",
+  "description": "Shop fresh cow milk, pure cow ghee, paneer, curd, cold-pressed oils and natural agro products from THULIRVA. Farm-fresh goodness delivered to your doorstep in Chennai and Kanchipuram.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FDFBF7",
+  "theme_color": "#1E3D2F",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/thulirva-favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/thulirva-favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

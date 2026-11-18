@@ -168,7 +168,7 @@ ul, ol { list-style: none; }
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    object-fit: cover;
+    object-fit: contain;
     display: block;
     border: 1.5px solid var(--gold);
     background: #fff;
@@ -3158,7 +3158,7 @@ body.mobile-nav-open {
         width: 34px;
         height: 34px;
         border-radius: 50%;
-        object-fit: cover;
+        object-fit: contain;
         flex-shrink: 0;
     }
     .brand-text {
@@ -4052,6 +4052,7 @@ body.mobile-nav-open {
     .brand-logo-img {
         width: 30px;
         height: 30px;
+        object-fit: contain;
     }
     .brand-name {
         font-size: 13.5px;

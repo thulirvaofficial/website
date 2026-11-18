@@ -33,6 +33,7 @@ async function loadProductDetail() {
     document.title = `${product.name} | THULIRVA`;
     const breadcrumb = document.getElementById("productBreadcrumb");
     if (breadcrumb) breadcrumb.textContent = product.name;
+    updateProductSeo(product);
 
     const emoji = { Milk:"🥛", Curd:"🫙", Paneer:"🧀", Ghee:"🧈", Oils:"🫗", Masalas:"🌶️", Vegan:"🌱" }[product.category] || "🛒";
 
@@ -189,6 +190,98 @@ async function loadProductDetail() {
 
     // Load related products
     loadRelated(product.category, product.id);
+}
+
+/**
+ * Dynamic Product SEO & Structured Data Generator
+ */
+function updateProductSeo(product) {
+    if (!product) return;
+    const pageTitle = `${product.name} | THULIRVA`;
+    document.title = pageTitle;
+
+    const pageUrl = `https://thulirva.com/pages/product.html?id=${product.id}`;
+    const cleanDesc = product.description 
+        ? product.description.replace(/\s+/g, ' ').trim() 
+        : `Buy fresh, pure ${product.name} from THULIRVA. Direct from our sustainable farm in Kanchipuram with doorstep delivery.`;
+
+    let imgUrl = product.image || "";
+    if (imgUrl && !imgUrl.startsWith("http")) {
+        imgUrl = "https://thulirva.com/" + imgUrl.replace(/^\/+/, "");
+    }
+    if (!imgUrl) imgUrl = "https://thulirva.com/assets/images/og-image.jpg";
+
+    function setMeta(nameOrProp, val, isProp = false) {
+        let el = document.querySelector(isProp ? `meta[property="${nameOrProp}"]` : `meta[name="${nameOrProp}"]`);
+        if (!el) {
+            el = document.createElement("meta");
+            if (isProp) el.setAttribute("property", nameOrProp);
+            else el.setAttribute("name", nameOrProp);
+            document.head.appendChild(el);
+        }
+        el.setAttribute("content", val);
+    }
+
+    setMeta("description", cleanDesc);
+    setMeta("og:title", pageTitle, true);
+    setMeta("og:description", cleanDesc, true);
+    setMeta("og:url", pageUrl, true);
+    setMeta("og:image", imgUrl, true);
+    setMeta("og:type", "product", true);
+    setMeta("product:price:amount", String(product.price), true);
+    setMeta("product:price:currency", "INR", true);
+    setMeta("twitter:title", pageTitle);
+    setMeta("twitter:description", cleanDesc);
+    setMeta("twitter:image", imgUrl);
+
+    let canon = document.querySelector("link[rel='canonical']");
+    if (!canon) {
+        canon = document.createElement("link");
+        canon.setAttribute("rel", "canonical");
+        document.head.appendChild(canon);
+    }
+    canon.setAttribute("href", pageUrl);
+
+    // Dynamic JSON-LD injection
+    let ldScript = document.getElementById("productStructuredData");
+    if (!ldScript) {
+        ldScript = document.createElement("script");
+        ldScript.id = "productStructuredData";
+        ldScript.type = "application/ld+json";
+        document.head.appendChild(ldScript);
+    }
+
+    const isAvailable = product.in_stock !== false && product.stock !== 0;
+
+    const productSchema = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": product.name,
+        "image": [imgUrl],
+        "description": cleanDesc,
+        "sku": `THU-PROD-${product.id}`,
+        "category": product.category || "Dairy",
+        "brand": {
+            "@type": "Brand",
+            "name": "THULIRVA"
+        },
+        "offers": {
+            "@type": "Offer",
+            "url": pageUrl,
+            "priceCurrency": "INR",
+            "price": String(product.price),
+            "priceValidUntil": "2027-12-31",
+            "itemCondition": "https://schema.org/NewCondition",
+            "availability": isAvailable ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+            "seller": {
+                "@type": "Organization",
+                "name": "THULIRVA",
+                "url": "https://thulirva.com/"
+            }
+        }
+    };
+
+    ldScript.textContent = JSON.stringify(productSchema, null, 2);
 }
 
 function switchTab(name, el) {
