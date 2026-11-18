@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THULIRVA Admin — Customer Care &amp; Support Tickets</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <style>
+        .ticket-id-pill {
+            font-family: monospace;
+            font-weight: 700;
+            font-size: 12px;
+            background: #E8EDE6;
+            color: #1B4332;
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .user-type-badge {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+        .user-type-customer { background: #E0F2FE; color: #0369A1; }
+        .user-type-partner { background: #FEF3C7; color: #92400E; }
+        
+        /* Drawer Styles */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(2px);
+            z-index: 1000;
+            display: none;
+            justify-content: flex-end;
+            transition: opacity 0.25s ease;
+        }
+        .drawer-overlay.active {
+            display: flex;
+        }
+        .drawer-content {
+            width: 100%;
+            max-width: 680px;
+            height: 100%;
+            background: #FFFFFF;
+            box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            animation: slideInRight 0.25s ease-out;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        .chat-stream {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background: #F9FAF8;
+        }
+        .chat-bubble {
+            max-width: 82%;
+            padding: 12px 16px;
+            border-radius: 14px;
+            font-size: 13.5px;
+            line-height: 1.45;
+            position: relative;
+        }
+        .chat-bubble.user-msg {
+            align-self: flex-start;
+            background: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            color: #1F2937;
+            border-bottom-left-radius: 2px;
+        }
+        .chat-bubble.admin-msg {
+            align-self: flex-end;
+            background: #1B4332;
+            color: #FFFFFF;
+            border-bottom-right-radius: 2px;
+        }
+        .chat-bubble.note-msg {
+            align-self: center;
+            width: 100%;
+            max-width: 95%;
+            background: #FFFBEB;
+            border: 1px dashed #F59E0B;
+            color: #92400E;
+            font-size: 12.5px;
+        }
+        .bubble-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 4px;
+            font-size: 11px;
+            opacity: 0.85;
+        }
+        
+        .tab-btn {
+            padding: 10px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            border-bottom: 2px solid transparent;
+            color: #6B7280;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            color: #1B4332;
+            border-bottom-color: #1B4332;
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-layout">
+    <aside class="sidebar" id="adminSidebar"></aside>
+
+    <div class="admin-container">
+        <header class="topbar" id="adminTopbar"></header>
+
+        <main class="admin-main">
+            <!-- Header -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Customer Care &amp; Support Tickets</h1>
+                    <p class="page-subtitle">Omnichannel resolution desk for customer orders, partner deliveries, payments, quality claims, and escalations.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="exportTicketsCSV()">
+                        📥 Export Tickets CSV
+                    </button>
+                    <button class="btn btn-primary" onclick="loadTickets(true)">
+                        🔄 Refresh Tickets
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summary Metrics Cards -->
+            <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin-bottom: 20px;">
+                <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('ALL')">
+                    <div class="stat-label">Total Tickets</div>
+                    <div class="stat-value" id="statTotalTickets">—</div>
+                    <div class="stat-sub">All submissions</div>
+                </div>
+                <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('NEW')">
+                    <div class="stat-label">New / Unread</div>
+                    <div class="stat-value text-gold" id="statNewTickets">—</div>
+                    <div class="stat-sub">Needs response</div>
+                </div>
+                <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('OPEN')">
+                    <div class="stat-label">Open / In Progress</div>
+                    <div class="stat-value text-info" id="statOpenTickets">—</div>
+                    <div class="stat-sub">Under investigation</div>
+                </div>
+                <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('WAITING_FOR_CUSTOMER')">
+                    <div class="stat-label">Waiting for User</div>
+                    <div class="stat-value text-muted" id="statWaitingTickets">—</div>
+                    <div class="stat-sub">Reply sent</div>
+                </div>
+                <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('RESOLVED')">
+                    <div class="stat-label">Resolved</div>
+                    <div class="stat-value text-success" id="statResolvedTickets">—</div>
+                    <div class="stat-sub">Resolution provided</div>
+                </div>
+                <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('CLOSED')">
+                    <div class="stat-label">Closed</div>
+                    <div class="stat-value" id="statClosedTickets">—</div>
+                    <div class="stat-sub">Archived</div>
+                </div>
+                <div class="stat-card" style="cursor: pointer;" onclick="setFilterPriority('URGENT')">
+                    <div class="stat-label">Urgent Priority</div>
+                    <div class="stat-value text-danger" id="statUrgentTickets">—</div>
+                    <div class="stat-sub">Critical SLA</div>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="filter-card mb-4" style="background:#FFFFFF; padding:16px 20px; border-radius:12px; border:1px solid var(--thulirva-border); box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                <div class="row g-3" style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+                    <div style="flex: 2; min-width: 220px;">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by Ticket ID, Customer, Phone, Subject..." oninput="applyFilters()" style="width:100%; padding:9px 14px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px;">
+                    </div>
+                    <div style="flex: 1; min-width: 140px;">
+                        <select id="filterStatus" class="form-select" onchange="applyFilters()" style="width:100%; padding:9px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px;">
+                            <option value="ALL">All Statuses</option>
+                            <option value="NEW">New</option>
+                            <option value="OPEN">Open</option>
+                            <option value="IN_PROGRESS">In Progress</option>
+                            <option value="WAITING_FOR_CUSTOMER">Waiting on Customer</option>
+                            <option value="WAITING_FOR_PARTNER">Waiting on Partner</option>
+                            <option value="RESOLVED">Resolved</option>
+                            <option value="CLOSED">Closed</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 130px;">
+                        <select id="filterPriority" class="form-select" onchange="applyFilters()" style="width:100%; padding:9px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px;">
+                            <option value="ALL">All Priorities</option>
+                            <option value="URGENT">🔴 Urgent</option>
+                            <option value="HIGH">🟠 High</option>
+                            <option value="NORMAL">🟡 Normal</option>
+                            <option value="LOW">🟢 Low</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 130px;">
+                        <select id="filterUserType" class="form-select" onchange="applyFilters()" style="width:100%; padding:9px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px;">
+                            <option value="ALL">All Requesters</option>
+                            <option value="CUSTOMER">Customers Only</option>
+                            <option value="DELIVERY_PARTNER">Delivery Partners</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 140px;">
+                        <select id="filterCategory" class="form-select" onchange="applyFilters()" style="width:100%; padding:9px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px;">
+                            <option value="ALL">All Categories</option>
+                            <option value="ORDER_DELAY">Order Delay</option>
+                            <option value="QUALITY_ISSUE">Quality Issue</option>
+                            <option value="PAYMENT_REFUND">Payment / Refund</option>
+                            <option value="DAMAGED_ITEMS">Damaged Items</option>
+                            <option value="SUBSCRIPTION_QUERY">Subscription</option>
+                            <option value="PARTNER_PAYOUT">Partner Payout</option>
+                            <option value="COD_REMITTANCE">COD Remittance</option>
+                            <option value="APP_ISSUE">App Issue</option>
+                            <option value="OTHER">Other Query</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tickets Table -->
+            <div class="card" style="background:#FFFFFF; border-radius:12px; border:1px solid var(--thulirva-border); overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                <div class="table-responsive">
+                    <table class="table" style="width:100%; border-collapse:collapse;">
+                        <thead style="background:#F8FAF8; border-bottom:1px solid #E5E7EB;">
+                            <tr>
+                                <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Ticket ID</th>
+                                <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Requester</th>
+                                <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Subject &amp; Category</th>
+                                <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Order / Ref</th>
+                                <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Status</th>
+                                <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Priority</th>
+                                <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Assigned To</th>
+                                <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Activity</th>
+                                <th style="padding:12px 16px; text-align:right; font-size:12px; font-weight:700; color:#4B5563;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticketsTableBody">
+                            <tr>
+                                <td colspan="9" class="text-center py-5" style="text-align:center; padding:40px 0;">
+                                    <div class="spinner"></div>
+                                    <div class="mt-2 text-muted" style="font-size:13px; font-weight:500;">Loading customer &amp; partner tickets...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="card-footer flex-between p-3 border-top" style="display:flex; justify-content:space-between; align-items:center; padding:12px 20px; border-top:1px solid #E5E7EB; background:#FDFDFD;">
+                    <div class="text-xs text-muted" id="ticketsPageInfo" style="font-size:12px; color:#6B7280;">Showing tickets...</div>
+                    <div class="flex-center gap-2" style="display:flex; gap:8px; align-items:center;">
+                        <button class="btn btn-secondary btn-sm" id="btnPrevPage" onclick="changePage(-1)">‹ Prev</button>
+                        <span class="text-xs font-bold text-dark px-2" id="currentPageNum" style="font-size:12px; font-weight:700;">Page 1 of 1</span>
+                        <button class="btn btn-secondary btn-sm" id="btnNextPage" onclick="changePage(1)">Next ›</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- TICKET DETAIL DRAWER -->
+<div class="drawer-overlay" id="ticketDrawerOverlay" onclick="closeDrawerOnOutside(event)">
+    <div class="drawer-content" id="ticketDrawerContent">
+        <!-- Drawer Header -->
+        <div style="padding:16px 20px; border-bottom:1px solid #E5E7EB; display:flex; justify-content:space-between; align-items:flex-start; background:#FFFFFF;">
+            <div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="ticket-id-pill" id="drawerTicketId">THU-TKT-...</span>
+                    <span id="drawerUserBadge" class="user-type-badge user-type-customer">Customer</span>
+                </div>
+                <h3 id="drawerSubject" style="margin:6px 0 2px 0; font-size:16px; font-weight:700; color:#111827;">Subject</h3>
+                <div id="drawerCreatorInfo" style="font-size:12px; color:#6B7280;">by Customer Name &bull; phone</div>
+            </div>
+            <button onclick="closeTicketDrawer()" style="background:none; border:none; font-size:20px; cursor:pointer; color:#9CA3AF; line-height:1;">&times;</button>
+        </div>
+
+        <!-- Meta Controls Toolbar -->
+        <div style="padding:10px 20px; background:#F9FAF8; border-bottom:1px solid #E5E7EB; display:flex; flex-wrap:wrap; gap:12px; align-items:center; font-size:12px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+                <label style="font-weight:600; color:#4B5563;">Status:</label>
+                <select id="drawerStatusSelect" onchange="updateDrawerStatus(this.value)" style="padding:4px 8px; border-radius:6px; border:1px solid #D1D5DB; font-size:12px; font-weight:600;">
+                    <option value="NEW">New</option>
+                    <option value="OPEN">Open</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="WAITING_FOR_CUSTOMER">Waiting on Customer</option>
+                    <option value="WAITING_FOR_PARTNER">Waiting on Partner</option>
+                    <option value="RESOLVED">Resolved</option>
+                    <option value="CLOSED">Closed</option>
+                </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+                <label style="font-weight:600; color:#4B5563;">Priority:</label>
+                <select id="drawerPrioritySelect" onchange="updateDrawerPriority(this.value)" style="padding:4px 8px; border-radius:6px; border:1px solid #D1D5DB; font-size:12px; font-weight:600;">
+                    <option value="LOW">Low</option>
+                    <option value="NORMAL">Normal</option>
+                    <option value="HIGH">High</option>
+                    <option value="URGENT">Urgent</option>
+                </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+                <label style="font-weight:600; color:#4B5563;">Assignee:</label>
+                <input type="text" id="drawerAssigneeInput" placeholder="Agent Name..." style="padding:4px 8px; border-radius:6px; border:1px solid #D1D5DB; font-size:12px; width:120px;" onblur="updateDrawerAssignee(this.value)">
+            </div>
+            <div id="drawerOrderLink" style="margin-left:auto; font-size:12px;">
+                <!-- Order link if present -->
+            </div>
+        </div>
+
+        <!-- Tabs: Chat Thread vs Internal Staff Notes -->
+        <div style="display:flex; border-bottom:1px solid #E5E7EB; background:#FFFFFF;">
+            <button class="tab-btn active" id="tabBtnThread" onclick="switchDrawerTab('thread')">
+                💬 Conversation (<span id="drawerMsgCount">0</span>)
+            </button>
+            <button class="tab-btn" id="tabBtnNotes" onclick="switchDrawerTab('notes')">
+                🔒 Private Internal Notes (<span id="drawerNotesCount">0</span>)
+            </button>
+        </div>
+
+        <!-- Chat Stream (Conversation Tab) -->
+        <div class="chat-stream" id="drawerChatStream">
+            <div style="text-align:center; padding:20px; color:#9CA3AF; font-size:12px;">Loading messages...</div>
+        </div>
+
+        <!-- Internal Notes Stream (Notes Tab) -->
+        <div class="chat-stream" id="drawerNotesStream" style="display:none; background:#FFFDF7;">
+            <div style="text-align:center; padding:20px; color:#9CA3AF; font-size:12px;">No internal notes added yet.</div>
+        </div>
+
+        <!-- Action / Reply Footer -->
+        <div style="padding:14px 20px; border-top:1px solid #E5E7EB; background:#FFFFFF;">
+            <!-- Thread Reply Box -->
+            <div id="drawerReplyBox">
+                <div style="display:flex; gap:8px; margin-bottom:8px;">
+                    <select id="quickCannedResponses" onchange="insertCannedResponse(this.value)" style="font-size:11.5px; padding:4px 8px; border-radius:6px; border:1px solid #D1D5DB; color:#4B5563;">
+                        <option value="">⚡ Quick Response Template...</option>
+                        <option value="Hello! We are currently investigating your request and contacting our hub supervisor.">Investigating with Hub</option>
+                        <option value="Good news! Your refund has been initiated and should reflect in your source account within 24-48 hours.">Refund Processed</option>
+                        <option value="A fresh replacement batch has been dispatched for tomorrow morning doorstep delivery.">Replacement Scheduled</option>
+                        <option value="We have verified your delivery partner remittance, and your wallet ledger is now fully reconciled.">Partner Remittance Verified</option>
+                    </select>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <textarea id="replyMessageText" placeholder="Type a response to the user (visible in their mobile app / portal)..." rows="2" style="flex:1; padding:10px; border-radius:8px; border:1px solid #D1D5DB; font-size:13px; resize:none;"></textarea>
+                    <button class="btn btn-primary" id="btnSendReply" onclick="sendTicketReply()" style="align-self:flex-end; padding:10px 16px; font-weight:600;">
+                        Send Reply &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <!-- Internal Note Box (when on notes tab) -->
+            <div id="drawerNoteBox" style="display:none;">
+                <div style="display:flex; gap:8px;">
+                    <textarea id="noteMessageText" placeholder="Add a private internal note (visible ONLY to admin team)..." rows="2" style="flex:1; padding:10px; border-radius:8px; border:1px solid #F59E0B; font-size:13px; resize:none; background:#FFFBEB;"></textarea>
+                    <button class="btn btn-secondary" id="btnAddNote" onclick="addInternalNote()" style="align-self:flex-end; padding:10px 16px; font-weight:600; background:#F59E0B; color:#FFFFFF; border:none;">
+                        Save Private Note
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/api-client.js?v=20261118b"></script>
+<script src="js/admin-shell.js?v=20261118b"></script>
+<script>
+let allTickets = [];
+let displayedTickets = [];
+let currentPage = 1;
+const pageSize = 12;
+const token = localStorage.getItem("thulirva_admin_token") || "";
+let activeTicket = null;
+let currentTab = "thread";
+
+function initSupportPage() {
+    initAdminShell({
+        activePage: "support",
+        breadcrumbs: [
+            { label: "Overview", url: "dashboard.html" },
+            { label: "Support & Care", url: "support.html" },
+            { label: "Customer Care & Tickets", url: "support.html" }
+        ]
+    });
+
+    loadTickets(true);
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initSupportPage);
+} else {
+    initSupportPage();
+}
+
+/**
+ * Load all support tickets from the centralized backend
+ */
+async function loadTickets(showLoading = false) {
+    const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
+    const tbody = document.getElementById("ticketsTableBody");
+    
+    if (showLoading && allTickets.length === 0 && tbody) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center py-5" style="text-align:center; padding:40px 0;">
+                    <div class="spinner"></div>
+                    <div class="mt-2 text-muted" style="font-size:13px; font-weight:500;">Loading customer &amp; partner tickets...</div>
+                </td>
+            </tr>
+        `;
+    }
+
+    try {
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        // 1. Try canonical Admin Support API
+        let res = await fetch(apiBase + "/api/admin/support/tickets", { headers });
+        if (!res.ok) {
+            // 2. Failover to general support API
+            res = await fetch(apiBase + "/api/support/tickets", { headers });
+        }
+        
+        if (res.ok) {
+            const data = await res.json();
+            allTickets = Array.isArray(data.tickets) ? data.tickets : [];
+            renderMetrics();
+            applyFilters();
+            return;
+        }
+    } catch (err) {
+        console.warn("Tickets load error:", err);
+    }
+
+    if (allTickets.length > 0) {
+        renderMetrics();
+        applyFilters();
+    } else if (tbody) {
+        tbody.innerHTML = `
+            <tr><td colspan="9" class="text-center py-5 text-danger" style="text-align:center; padding:40px 0; color:#DC2626;">
+                <div style="font-weight:600; font-size:15px; margin-bottom:6px;">Unable to load support tickets</div>
+                <div class="text-muted text-xs mb-3" style="color:#6B7280; font-size:12px; margin-bottom:12px;">Could not connect to central support API.</div>
+                <button class="btn btn-secondary btn-sm" onclick="loadTickets(true)">Retry Load</button>
+            </td></tr>
+        `;
+    }
+}
+
+function renderMetrics() {
+    const total = allTickets.length;
+    const newT = allTickets.filter(t => t.status === "NEW").length;
+    const openT = allTickets.filter(t => t.status === "OPEN" || t.status === "IN_PROGRESS").length;
+    const waitT = allTickets.filter(t => t.status === "WAITING_FOR_CUSTOMER" || t.status === "WAITING_FOR_PARTNER").length;
+    const resT = allTickets.filter(t => t.status === "RESOLVED").length;
+    const closedT = allTickets.filter(t => t.status === "CLOSED").length;
+    const urgentT = allTickets.filter(t => t.priority === "URGENT").length;
+
+    const elTotal = document.getElementById("statTotalTickets");
+    if (elTotal) elTotal.textContent = total;
+    const elNew = document.getElementById("statNewTickets");
+    if (elNew) elNew.textContent = newT;
+    const elOpen = document.getElementById("statOpenTickets");
+    if (elOpen) elOpen.textContent = openT;
+    const elWait = document.getElementById("statWaitingTickets");
+    if (elWait) elWait.textContent = waitT;
+    const elRes = document.getElementById("statResolvedTickets");
+    if (elRes) elRes.textContent = resT;
+    const elClosed = document.getElementById("statClosedTickets");
+    if (elClosed) elClosed.textContent = closedT;
+    const elUrgent = document.getElementById("statUrgentTickets");
+    if (elUrgent) elUrgent.textContent = urgentT;
+}
+
+function setFilterStatus(status) {
+    const el = document.getElementById("filterStatus");
+    if (el) el.value = status;
+    applyFilters();
+}
+
+function setFilterPriority(priority) {
+    const el = document.getElementById("filterPriority");
+    if (el) el.value = priority;
+    applyFilters();
+}
+
+function applyFilters() {
+    const q = (document.getElementById("searchInput")?.value || "").toLowerCase().trim();
+    const status = document.getElementById("filterStatus")?.value || "ALL";
+    const priority = document.getElementById("filterPriority")?.value || "ALL";
+    const userType = document.getElementById("filterUserType")?.value || "ALL";
+    const category = document.getElementById("filterCategory")?.value || "ALL";
+
+    displayedTickets = allTickets.filter(t => {
+        const matchesQ = !q ||
+            (t.ticket_id || "").toLowerCase().includes(q) ||
+            (t.subject || "").toLowerCase().includes(q) ||
+            (t.user_name || "").toLowerCase().includes(q) ||
+            (t.user_phone || "").includes(q) ||
+            (t.user_email || "").toLowerCase().includes(q) ||
+            (t.order_id || "").toLowerCase().includes(q);
+
+        const matchesStatus = status === "ALL" || t.status === status;
+        const matchesPriority = priority === "ALL" || t.priority === priority;
+        const matchesUserType = userType === "ALL" || (t.user_type || "CUSTOMER") === userType;
+        const matchesCategory = category === "ALL" || t.category === category;
+
+        return matchesQ && matchesStatus && matchesPriority && matchesUserType && matchesCategory;
+    });
+
+    // Default sorting: New and Urgent first, then by latest update
+    displayedTickets.sort((a, b) => {
+        if (a.priority === "URGENT" && b.priority !== "URGENT") return -1;
+        if (b.priority === "URGENT" && a.priority !== "URGENT") return 1;
+        if (a.status === "NEW" && b.status !== "NEW") return -1;
+        if (b.status === "NEW" && a.status !== "NEW") return 1;
+        return new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at);
+    });
+
+    currentPage = 1;
+    renderCurrentPage();
+}
+
+function renderCurrentPage() {
+    const total = displayedTickets.length;
+    const totalPages = Math.ceil(total / pageSize) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    const startIdx = (currentPage - 1) * pageSize;
+    const pageItems = displayedTickets.slice(startIdx, startIdx + pageSize);
+
+    const info = document.getElementById("ticketsPageInfo");
+    if (info) {
+        if (total === 0) {
+            info.textContent = "Showing 0 tickets";
+        } else {
+            const endIdx = Math.min(startIdx + pageSize, total);
+            info.textContent = `Showing ${startIdx + 1} to ${endIdx} of ${total} tickets`;
+        }
+    }
+    const pageNum = document.getElementById("currentPageNum");
+    if (pageNum) pageNum.textContent = `Page ${currentPage} of ${totalPages}`;
+
+    const prevBtn = document.getElementById("btnPrevPage");
+    if (prevBtn) prevBtn.disabled = currentPage <= 1;
+    const nextBtn = document.getElementById("btnNextPage");
+    if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+
+    renderTable(pageItems);
+}
+
+function changePage(delta) {
+    currentPage += delta;
+    renderCurrentPage();
+}
+
+function renderTable(list) {
+    const tbody = document.getElementById("ticketsTableBody");
+    if (!tbody) return;
+
+    if (!list.length) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center py-5 text-muted" style="text-align:center; padding:40px 0; color:#6B7280;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>
+                    <div>No tickets match your filter criteria.</div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = list.map(t => {
+        const isPartner = t.user_type === "DELIVERY_PARTNER";
+        const userBadge = isPartner
+            ? `<span class="user-type-badge user-type-partner">Delivery Partner</span>`
+            : `<span class="user-type-badge user-type-customer">Customer</span>`;
+
+        let statusBadge = `<span class="badge badge-neutral" style="background:#E5E7EB; color:#374151;">${t.status}</span>`;
+        if (t.status === "NEW") statusBadge = `<span class="badge" style="background:#FEF3C7; color:#92400E; font-weight:700;">🟡 New</span>`;
+        else if (t.status === "OPEN") statusBadge = `<span class="badge" style="background:#DBEAFE; color:#1E40AF; font-weight:700;">🔵 Open</span>`;
+        else if (t.status === "IN_PROGRESS") statusBadge = `<span class="badge" style="background:#E0E7FF; color:#3730A3; font-weight:700;">🟣 In Progress</span>`;
+        else if (t.status === "WAITING_FOR_CUSTOMER" || t.status === "WAITING_FOR_PARTNER") statusBadge = `<span class="badge" style="background:#F3E8FF; color:#6B21A8; font-weight:700;">⏳ Waiting User</span>`;
+        else if (t.status === "RESOLVED") statusBadge = `<span class="badge" style="background:#DCFCE7; color:#166534; font-weight:700;">🟢 Resolved</span>`;
+        else if (t.status === "CLOSED") statusBadge = `<span class="badge" style="background:#F3F4F6; color:#6B7280; font-weight:700;">⚫ Closed</span>`;
+
+        let priorityBadge = `<span class="badge" style="background:#F3F4F6; color:#4B5563;">Normal</span>`;
+        if (t.priority === "URGENT") priorityBadge = `<span class="badge" style="background:#FEE2E2; color:#991B1B; font-weight:700;">🔴 Urgent</span>`;
+        else if (t.priority === "HIGH") priorityBadge = `<span class="badge" style="background:#FFEDD5; color:#9A3412; font-weight:700;">🟠 High</span>`;
+        else if (t.priority === "LOW") priorityBadge = `<span class="badge" style="background:#F3F4F6; color:#6B7280;">Low</span>`;
+
+        const timeStr = formatTimeAgo(t.updated_at || t.created_at);
+
+        return `
+            <tr style="border-bottom:1px solid #E5E7EB; transition:background 0.15s;" onmouseover="this.style.background='#F9FAF8'" onmouseout="this.style.background='transparent'">
+                <td style="padding:14px 16px;">
+                    <span class="ticket-id-pill">${t.ticket_id}</span>
+                </td>
+                <td style="padding:14px 16px;">
+                    <div style="font-weight:700; color:#111827; font-size:13.5px;">${t.user_name || "User"}</div>
+                    <div style="font-size:11.5px; color:#6B7280; margin-top:2px;">${t.user_phone || t.user_email || "—"}</div>
+                    <div style="margin-top:3px;">${userBadge}</div>
+                </td>
+                <td style="padding:14px 16px; max-width:260px;">
+                    <div style="font-weight:600; color:#1B4332; font-size:13px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="${t.subject}">${t.subject || "No Subject"}</div>
+                    <div style="font-size:11.5px; color:#6B7280; margin-top:2px;">📂 ${(t.category || "General").replace(/_/g, " ")}</div>
+                </td>
+                <td style="padding:14px 16px; font-size:12px;">
+                    ${t.order_id ? `<span style="font-family:monospace; background:#F3F4F6; padding:2px 6px; border-radius:4px; font-weight:600;">${t.order_id}</span>` : `<span style="color:#9CA3AF;">—</span>`}
+                </td>
+                <td style="padding:14px 16px;">${statusBadge}</td>
+                <td style="padding:14px 16px;">${priorityBadge}</td>
+                <td style="padding:14px 16px; font-size:12.5px; color:#374151;">
+                    ${t.assigned_agent ? `<strong>${t.assigned_agent}</strong>` : `<span style="color:#9CA3AF; font-style:italic;">Unassigned</span>`}
+                </td>
+                <td style="padding:14px 16px; font-size:11.5px; color:#6B7280;" title="${new Date(t.updated_at || t.created_at).toLocaleString()}">
+                    ${timeStr}
+                </td>
+                <td style="padding:14px 16px; text-align:right;">
+                    <button class="btn btn-secondary btn-sm" onclick="openTicketDrawer('${t.ticket_id}')" style="padding:6px 12px; font-weight:600; font-size:12px;">
+                        Inspect &amp; Reply &rarr;
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+function formatTimeAgo(isoString) {
+    if (!isoString) return "just now";
+    const date = new Date(isoString);
+    const sec = Math.floor((new Date() - date) / 1000);
+    if (sec < 60) return "just now";
+    const min = Math.floor(sec / 60);
+    if (min < 60) return `${min}m ago`;
+    const hrs = Math.floor(min / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `${days}d ago`;
+    return date.toLocaleDateString();
+}
+
+/**
+ * Open Ticket Detail Drawer
+ */
+async function openTicketDrawer(ticketId) {
+    const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
+    const overlay = document.getElementById("ticketDrawerOverlay");
+    if (overlay) overlay.classList.add("active");
+
+    // Clear fields
+    document.getElementById("drawerTicketId").textContent = ticketId;
+    document.getElementById("drawerSubject").textContent = "Loading...";
+    document.getElementById("drawerCreatorInfo").textContent = "...";
+    document.getElementById("drawerChatStream").innerHTML = `<div style="text-align:center; padding:30px; color:#9CA3AF;"><div class="spinner"></div><div style="margin-top:8px;">Fetching ticket thread...</div></div>`;
+    document.getElementById("drawerNotesStream").innerHTML = `<div style="text-align:center; padding:30px; color:#9CA3AF;"><div class="spinner"></div><div style="margin-top:8px;">Fetching notes...</div></div>`;
+
+    try {
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        let res = await fetch(`${apiBase}/api/admin/support/tickets/${ticketId}`, { headers });
+        if (!res.ok) {
+            res = await fetch(`${apiBase}/api/support/tickets/${ticketId}`, { headers });
+        }
+
+        if (res.ok) {
+            const data = await res.json();
+            activeTicket = data.ticket;
+            renderDrawerTicket(data.ticket);
+            return;
+        }
+    } catch (err) {
+        console.error("Failed to load ticket details:", err);
+    }
+    showToast("Failed to load ticket details", "danger");
+}
+
+function renderDrawerTicket(ticket) {
+    if (!ticket) return;
+
+    document.getElementById("drawerTicketId").textContent = ticket.ticket_id;
+    document.getElementById("drawerSubject").textContent = ticket.subject;
+    document.getElementById("drawerCreatorInfo").textContent = `by ${ticket.user_name || "User"} &bull; ${ticket.user_phone || ticket.user_email || "No contact"} &bull; ${new Date(ticket.created_at).toLocaleString()}`;
+
+    const userBadge = document.getElementById("drawerUserBadge");
+    if (userBadge) {
+        if (ticket.user_type === "DELIVERY_PARTNER") {
+            userBadge.className = "user-type-badge user-type-partner";
+            userBadge.textContent = "Delivery Partner";
+        } else {
+            userBadge.className = "user-type-badge user-type-customer";
+            userBadge.textContent = "Customer";
+        }
+    }
+
+    const statusSel = document.getElementById("drawerStatusSelect");
+    if (statusSel) statusSel.value = ticket.status;
+
+    const prioSel = document.getElementById("drawerPrioritySelect");
+    if (prioSel) prioSel.value = ticket.priority;
+
+    const assignInput = document.getElementById("drawerAssigneeInput");
+    if (assignInput) assignInput.value = ticket.assigned_agent || "";
+
+    const orderLink = document.getElementById("drawerOrderLink");
+    if (orderLink) {
+        if (ticket.order_id) {
+            orderLink.innerHTML = `<a href="orders.html?search=${ticket.order_id}" target="_blank" style="color:#1B4332; font-weight:700; text-decoration:underline;">📦 View Order ${ticket.order_id}</a>`;
+        } else {
+            orderLink.innerHTML = "";
+        }
+    }
+
+    // Render Conversation Thread
+    const stream = document.getElementById("drawerChatStream");
+    const msgs = ticket.messages || [];
+    document.getElementById("drawerMsgCount").textContent = msgs.length;
+
+    if (!msgs.length) {
+        stream.innerHTML = `<div style="text-align:center; padding:20px; color:#9CA3AF; font-size:12px;">No messages in this ticket thread yet.</div>`;
+    } else {
+        stream.innerHTML = msgs.map(m => {
+            const isAdmin = m.sender_role === "admin" || m.sender_role === "support_agent";
+            const roleClass = isAdmin ? "admin-msg" : "user-msg";
+            const roleBadge = isAdmin ? "Operations Support" : (ticket.user_type === "DELIVERY_PARTNER" ? "Delivery Partner" : "Customer");
+
+            let attachmentHtml = "";
+            if (m.attachment_url) {
+                attachmentHtml = `
+                    <div style="margin-top:8px;">
+                        <a href="${m.attachment_url}" target="_blank">
+                            <img src="${m.attachment_url}" alt="Attachment" style="max-width:180px; max-height:120px; border-radius:6px; object-fit:cover; border:1px solid #E5E7EB;">
+                        </a>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="chat-bubble ${roleClass}">
+                    <div class="bubble-header">
+                        <strong style="font-weight:700;">${m.sender_name || (isAdmin ? "Support Agent" : "User")}</strong>
+                        <span>${formatTimeAgo(m.created_at)}</span>
+                    </div>
+                    <div style="white-space:pre-wrap; word-break:break-word;">${escapeHtml(m.message)}</div>
+                    ${attachmentHtml}
+                </div>
+            `;
+        }).join("");
+        stream.scrollTop = stream.scrollHeight;
+    }
+
+    // Render Internal Notes
+    const notesStream = document.getElementById("drawerNotesStream");
+    const notes = ticket.internal_notes || [];
+    document.getElementById("drawerNotesCount").textContent = notes.length;
+
+    if (!notes.length) {
+        notesStream.innerHTML = `<div style="text-align:center; padding:20px; color:#9CA3AF; font-size:12px;">No private internal notes recorded yet.</div>`;
+    } else {
+        notesStream.innerHTML = notes.map(n => `
+            <div class="chat-bubble note-msg">
+                <div class="bubble-header" style="color:#B45309;">
+                    <strong>🔒 Staff Note by ${n.admin_name || "Admin"}</strong>
+                    <span>${formatTimeAgo(n.created_at)}</span>
+                </div>
+                <div style="white-space:pre-wrap; word-break:break-word;">${escapeHtml(n.note)}</div>
+            </div>
+        `).join("");
+        notesStream.scrollTop = notesStream.scrollHeight;
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return "";
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function switchDrawerTab(tab) {
+    currentTab = tab;
+    const threadStream = document.getElementById("drawerChatStream");
+    const notesStream = document.getElementById("drawerNotesStream");
+    const replyBox = document.getElementById("drawerReplyBox");
+    const noteBox = document.getElementById("drawerNoteBox");
+
+    const btnThread = document.getElementById("tabBtnThread");
+    const btnNotes = document.getElementById("tabBtnNotes");
+
+    if (tab === "notes") {
+        btnThread.classList.remove("active");
+        btnNotes.classList.add("active");
+        threadStream.style.display = "none";
+        notesStream.style.display = "flex";
+        replyBox.style.display = "none";
+        noteBox.style.display = "block";
+    } else {
+        btnNotes.classList.remove("active");
+        btnThread.classList.add("active");
+        notesStream.style.display = "none";
+        threadStream.style.display = "flex";
+        noteBox.style.display = "none";
+        replyBox.style.display = "block";
+    }
+}
+
+function closeTicketDrawer() {
+    const overlay = document.getElementById("ticketDrawerOverlay");
+    if (overlay) overlay.classList.remove("active");
+    activeTicket = null;
+}
+
+function closeDrawerOnOutside(e) {
+    if (e.target.id === "ticketDrawerOverlay") {
+        closeTicketDrawer();
+    }
+}
+
+function insertCannedResponse(val) {
+    if (!val) return;
+    const txt = document.getElementById("replyMessageText");
+    if (txt) {
+        txt.value = val;
+        txt.focus();
+    }
+}
+
+/**
+ * Send Admin Reply to Customer/Partner
+ */
+async function sendTicketReply() {
+    if (!activeTicket) return;
+    const txt = document.getElementById("replyMessageText");
+    const message = (txt?.value || "").trim();
+    if (!message) {
+        showToast("Please enter a response message", "warning");
+        return;
+    }
+
+    const btn = document.getElementById("btnSendReply");
+    btn.disabled = true;
+    btn.textContent = "Sending...";
+
+    const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
+    try {
+        const res = await fetch(`${apiBase}/api/admin/support/tickets/${activeTicket.ticket_id}/reply`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ message })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Reply delivered successfully!", "success");
+            txt.value = "";
+            // Re-fetch ticket to update chat stream
+            await openTicketDrawer(activeTicket.ticket_id);
+            loadTickets(false);
+        } else {
+            showToast(data.message || "Failed to deliver reply", "danger");
+        }
+    } catch (err) {
+        showToast("Error sending reply: " + err.message, "danger");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Send Reply →";
+    }
+}
+
+/**
+ * Add Private Staff Note
+ */
+async function addInternalNote() {
+    if (!activeTicket) return;
+    const txt = document.getElementById("noteMessageText");
+    const note = (txt?.value || "").trim();
+    if (!note) {
+        showToast("Please enter an internal note", "warning");
+        return;
+    }
+
+    const btn = document.getElementById("btnAddNote");
+    btn.disabled = true;
+    btn.textContent = "Saving...";
+
+    const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
+    try {
+        const res = await fetch(`${apiBase}/api/admin/support/tickets/${activeTicket.ticket_id}/internal-notes`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ note })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Private note saved", "success");
+            txt.value = "";
+            await openTicketDrawer(activeTicket.ticket_id);
+        } else {
+            showToast(data.message || "Failed to save note", "danger");
+        }
+    } catch (err) {
+        showToast("Error saving note: " + err.message, "danger");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Save Private Note";
+    }
+}
+
+/**
+ * Update Status
+ */
+async function updateDrawerStatus(newStatus) {
+    if (!activeTicket) return;
+    const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
+    try {
+        const res = await fetch(`${apiBase}/api/admin/support/tickets/${activeTicket.ticket_id}/status`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Status updated to ${newStatus}`, "success");
+            loadTickets(false);
+        } else {
+            showToast(data.message || "Update failed", "danger");
+        }
+    } catch (err) {
+        showToast("Error: " + err.message, "danger");
+    }
+}
+
+/**
+ * Update Priority
+ */
+async function updateDrawerPriority(newPriority) {
+    if (!activeTicket) return;
+    const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
+    try {
+        const res = await fetch(`${apiBase}/api/admin/support/tickets/${activeTicket.ticket_id}/priority`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ priority: newPriority })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Priority set to ${newPriority}`, "success");
+            loadTickets(false);
+        } else {
+            showToast(data.message || "Update failed", "danger");
+        }
+    } catch (err) {
+        showToast("Error: " + err.message, "danger");
+    }
+}
+
+/**
+ * Update Assignee
+ */
+async function updateDrawerAssignee(assignedAgent) {
+    if (!activeTicket) return;
+    const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
+    try {
+        const res = await fetch(`${apiBase}/api/admin/support/tickets/${activeTicket.ticket_id}/assign`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ assigned_agent: assignedAgent })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Ticket assigned to ${assignedAgent || "Unassigned"}`, "success");
+            loadTickets(false);
+        }
+    } catch (err) {
+        console.warn("Assign error:", err);
+    }
+}
+
+function exportTicketsCSV() {
+    if (!allTickets.length) {
+        showToast("No tickets available to export", "warning");
+        return;
+    }
+
+    const headers = ["Ticket ID", "User Type", "Requester", "Phone", "Email", "Subject", "Category", "Order ID", "Status", "Priority", "Assigned Agent", "Created At", "Last Updated"];
+    const rows = allTickets.map(t => [
+        t.ticket_id,
+        t.user_type,
+        `"${(t.user_name || '').replace(/"/g, '""')}"`,
+        t.user_phone || "",
+        t.user_email || "",
+        `"${(t.subject || '').replace(/"/g, '""')}"`,
+        t.category || "",
+        t.order_id || "",
+        t.status,
+        t.priority,
+        t.assigned_agent || "",
+        t.created_at,
+        t.updated_at || ""
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Thulirva_Support_Tickets_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+</script>
+
+</body>
+</html>
