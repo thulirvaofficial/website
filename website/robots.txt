@@ -24,3 +24,4 @@ Disallow: /auth/
 
 # Dynamic & Static Sitemap
 Sitemap: https://thulirva.com/sitemap.xml
+
