@@ -11,7 +11,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
-    <script src="/socket.io/socket.io.js" defer></script>
     <style>
         .partner-avatar {
             width: 42px;
@@ -199,7 +198,7 @@
                                 <tr>
                                     <td colspan="9" class="text-center py-5">
                                         <div class="spinner"></div>
-                                        <div class="mt-2 text-muted">Retrieving delivery fleet roster from production database...</div>
+                                        <div class="mt-2 text-muted" style="font-size:13px; font-weight:500;">Loading delivery fleet...</div>
                                     </td>
                                 </tr>
                             </tbody>
@@ -511,8 +510,8 @@
     </div>
 </div>
 
-<script src="js/api-client.js?v=20261118a"></script>
-<script src="js/admin-shell.js?v=20261118a"></script>
+<script src="js/api-client.js?v=20261118b"></script>
+<script src="js/admin-shell.js?v=20261118b"></script>
 <script>
 let allPartners = [];
 let displayedPartners = [];
@@ -559,6 +558,9 @@ function loadCachedFleet() {
     return false;
 }
 
+// 0ms Instant Hydration on initial script execution
+const _immediateHydrated = loadCachedFleet();
+
 function initPartnersPage() {
     initAdminShell({
         activePage: "partners",
@@ -569,10 +571,7 @@ function initPartnersPage() {
         ]
     });
 
-    // 1. Instant 0ms render from warm cache
-    const hadCache = loadCachedFleet();
-
-    // 2. Ultra-fast background live sync
+    const hadCache = allPartners.length > 0 || loadCachedFleet();
     loadPartners(!hadCache);
 }
 
@@ -583,7 +582,8 @@ if (document.readyState === "loading") {
 }
 
 /**
- * High-performance concurrent live fleet loader with instant failover
+ * Ultra-Fast High-Performance Concurrent Live Fleet Loader
+ * Races canonical endpoints with Promise.any and strict 3.5s timeout
  */
 async function loadPartners(showLoadingState = true) {
     const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
@@ -598,73 +598,64 @@ async function loadPartners(showLoadingState = true) {
             <tr>
                 <td colspan="9" class="text-center py-5">
                     <div class="spinner"></div>
-                    <div class="mt-2 text-muted" style="font-weight: 500;">Retrieving delivery fleet roster from production database...</div>
+                    <div class="mt-2 text-muted" style="font-weight: 500;">Loading delivery fleet roster...</div>
                 </td>
             </tr>
         `;
     }
 
-    // Fast parallel fetch helper with strict 4.5s timeout
-    async function fetchFromUrl(url, reqHeaders) {
+    async function fetchCandidate(url, reqHeaders) {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4500);
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
         try {
             const res = await fetch(url, { headers: reqHeaders, signal: controller.signal });
             clearTimeout(timeoutId);
             if (res.ok) {
                 const data = await res.json();
-                if (data && Array.isArray(data.partners)) {
-                    return data.partners;
-                }
+                const list = Array.isArray(data.partners) ? data.partners :
+                             (Array.isArray(data) ? data :
+                             (Array.isArray(data.data) ? data.data : null));
+                if (list && list.length > 0) return list;
             }
         } catch (_) {}
-        return null;
+        throw new Error("Candidate failed: " + url);
     }
 
-    // Concurrent parallel attempt across candidate endpoints
-    const p1 = fetchFromUrl(apiBase + "/api/v1/partners", headers);
-    const p2 = fetchFromUrl(apiBase + "/api/admin/delivery/partners", headers);
+    const candidates = [
+        fetchCandidate(apiBase + "/api/admin/delivery/partners", headers),
+        fetchCandidate(apiBase + "/api/v1/partners", headers),
+        fetchCandidate(apiBase + "/api/partners", {})
+    ];
 
-    let livePartners = await Promise.race([
-        p1.then(res => res ? res : Promise.reject()),
-        p2.then(res => res ? res : Promise.reject())
-    ]).catch(() => null);
+    try {
+        const livePartners = await Promise.any(candidates);
+        if (Array.isArray(livePartners) && livePartners.length > 0) {
+            allPartners = livePartners;
+            try {
+                sessionStorage.setItem(FLEET_CACHE_KEY, JSON.stringify(livePartners));
+                localStorage.setItem(FLEET_CACHE_KEY, JSON.stringify(livePartners));
+            } catch (_) {}
+            renderMetrics();
+            filterPartners();
+            return;
+        }
+    } catch (_) {}
 
-    if (!livePartners) {
-        livePartners = await p1 || await p2;
-    }
-
-    // If still null, try unauthenticated /api/v1/partners and /api/partners in case token had issue
-    if (!livePartners) {
-        livePartners = await fetchFromUrl(apiBase + "/api/v1/partners", {}) ||
-                           await fetchFromUrl(apiBase + "/api/partners", {});
-    }
-
-    if (livePartners && Array.isArray(livePartners)) {
-        allPartners = livePartners;
-        try {
-            sessionStorage.setItem(FLEET_CACHE_KEY, JSON.stringify(livePartners));
-            localStorage.setItem(FLEET_CACHE_KEY, JSON.stringify(livePartners));
-        } catch (_) {}
+    // Fallback handling
+    if (allPartners.length > 0) {
         renderMetrics();
         filterPartners();
     } else {
-        // If we already had cached data displayed, inform gently without blanking screen
-        if (allPartners.length > 0) {
-            renderMetrics();
-            filterPartners();
-        } else {
-            renderMetrics();
-            filterPartners();
-            if (tbody) {
-                tbody.innerHTML = `
-                    <tr><td colspan="9" class="text-center py-5 text-danger">
-                        <div style="font-weight: 600; font-size: 15px; margin-bottom: 6px;">Unable to retrieve live delivery fleet roster</div>
-                        <div class="text-muted text-xs mb-3">The production database response timed out or could not be reached.</div>
-                        <button class="btn btn-secondary btn-sm" onclick="loadPartners(true)">Retry Fleet Load</button>
-                    </td></tr>
-                `;
-            }
+        renderMetrics();
+        filterPartners();
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr><td colspan="9" class="text-center py-5 text-danger">
+                    <div style="font-weight: 600; font-size: 15px; margin-bottom: 6px;">Unable to retrieve live delivery fleet roster</div>
+                    <div class="text-muted text-xs mb-3">Connection timed out or fleet roster is currently empty.</div>
+                    <button class="btn btn-secondary btn-sm" onclick="loadPartners(true)">Retry Fleet Load</button>
+                </td></tr>
+            `;
         }
     }
 }

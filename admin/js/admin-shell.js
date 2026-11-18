@@ -62,6 +62,12 @@ const NAV_GROUPS = [
         ]
     },
     {
+        title: "Support & Care",
+        items: [
+            { key: "support", label: "Customer Care & Tickets", url: "support.html", icon: "life-buoy", badgeId: "badge-support" }
+        ]
+    },
+    {
         title: "System",
         items: [
             { key: "settings", label: "Store Settings", url: "settings.html", icon: "sliders" },
@@ -98,7 +104,8 @@ const SVG_ICONS = {
     "search": '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>',
     "chevron-left": '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
     "chevron-right": '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
-    "log-out": '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>'
+    "log-out": '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>',
+    "life-buoy": '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>'
 };
 
 function getIcon(name) {
@@ -171,7 +178,10 @@ window.getAdminName = function() {
 window.AdminProfile = {
     get: window.getSafeAdmin,
     getName: window.getAdminName,
-    sync: async function() {
+    sync: async function(force = false) {
+        if (!force && window._adminVerifiedJustNow) {
+            return window.getSafeAdmin();
+        }
         const token = localStorage.getItem("thulirva_admin_token");
         if (!token) return window.getSafeAdmin();
         try {
@@ -319,6 +329,7 @@ async function initAdminShell({ activePage = "dashboard", breadcrumbs = [] } = {
                     localStorage.setItem("thulirva_admin_user", JSON.stringify(verifiedAdmin));
                     localStorage.setItem("admin", JSON.stringify(verifiedAdmin));
                     window.admin = verifiedAdmin;
+                    window._adminVerifiedJustNow = true;
                 }
             }
         } catch (netErr) {
@@ -864,40 +875,35 @@ async function loadShellBadges() {
     if (!token) return;
 
     try {
-        // 1. Pending Orders
-        const ordRes = await fetch("/api/v1/orders?status=pending", {
-            headers: { Authorization: `Bearer ${token}` }
-        }).catch(() => null);
-        if (ordRes && ordRes.ok) {
-            const data = await ordRes.json();
+        const headers = { Authorization: `Bearer ${token}` };
+        const [ordRes, kycRes, wdrRes] = await Promise.allSettled([
+            fetch("/api/v1/orders?status=pending", { headers }),
+            fetch("/api/v1/kyc/admin/pending", { headers }),
+            fetch("/api/v1/withdrawals/admin/all?status=pending", { headers })
+        ]);
+
+        if (ordRes.status === "fulfilled" && ordRes.value && ordRes.value.ok) {
+            const data = await ordRes.value.json().catch(() => null);
             const badge = document.getElementById("badge-orders");
-            if (badge && data.total > 0) {
+            if (badge && data && data.total > 0) {
                 badge.textContent = data.total;
                 badge.style.display = "inline-block";
             }
         }
 
-        // 2. Pending KYC
-        const kycRes = await fetch("/api/v1/kyc/admin/pending", {
-            headers: { Authorization: `Bearer ${token}` }
-        }).catch(() => null);
-        if (kycRes && kycRes.ok) {
-            const data = await kycRes.json();
+        if (kycRes.status === "fulfilled" && kycRes.value && kycRes.value.ok) {
+            const data = await kycRes.value.json().catch(() => null);
             const badge = document.getElementById("badge-kyc");
-            if (badge && data.count > 0) {
+            if (badge && data && data.count > 0) {
                 badge.textContent = data.count;
                 badge.style.display = "inline-block";
             }
         }
 
-        // 3. Pending Withdrawals
-        const wdrRes = await fetch("/api/v1/withdrawals/admin/all?status=pending", {
-            headers: { Authorization: `Bearer ${token}` }
-        }).catch(() => null);
-        if (wdrRes && wdrRes.ok) {
-            const data = await wdrRes.json();
+        if (wdrRes.status === "fulfilled" && wdrRes.value && wdrRes.value.ok) {
+            const data = await wdrRes.value.json().catch(() => null);
             const badge = document.getElementById("badge-withdrawals");
-            if (badge && data.total > 0) {
+            if (badge && data && data.total > 0) {
                 badge.textContent = data.total;
                 badge.style.display = "inline-block";
             }
