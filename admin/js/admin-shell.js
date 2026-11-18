@@ -222,13 +222,27 @@ window.AdminProfile = {
         const sideAvatar = document.querySelector(".sidebar-admin-avatar");
         const sideName = document.querySelector(".sidebar-admin-name");
         const sideRole = document.querySelector(".sidebar-admin-role");
-        if (sideAvatar) sideAvatar.textContent = initials[0] || "A";
+        if (sideAvatar) {
+            if (admin.profile_photo && admin.profile_photo.trim()) {
+                const photoSrc = admin.profile_photo.includes("?") ? admin.profile_photo : `${admin.profile_photo}?v=${Date.now()}`;
+                sideAvatar.innerHTML = `<img src="${photoSrc}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="${safeName}" onerror="this.onerror=null; this.parentElement.textContent='${initials[0] || 'A'}';">`;
+            } else {
+                sideAvatar.textContent = initials[0] || "A";
+            }
+        }
         if (sideName) sideName.textContent = safeName;
         if (sideRole) sideRole.textContent = admin.role || "Super Admin";
 
         const topAvatar = document.querySelector(".topbar-user-avatar");
         const topName = document.querySelector(".topbar-user-name");
-        if (topAvatar) topAvatar.textContent = initials;
+        if (topAvatar) {
+            if (admin.profile_photo && admin.profile_photo.trim()) {
+                const photoSrc = admin.profile_photo.includes("?") ? admin.profile_photo : `${admin.profile_photo}?v=${Date.now()}`;
+                topAvatar.innerHTML = `<img src="${photoSrc}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="${safeName}" onerror="this.onerror=null; this.parentElement.textContent='${initials}';">`;
+            } else {
+                topAvatar.textContent = initials;
+            }
+        }
         if (topName) topName.textContent = safeName;
 
         const userDropdown = document.getElementById("userDropdownMenu");

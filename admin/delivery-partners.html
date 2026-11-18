@@ -560,45 +560,67 @@ if (document.readyState === "loading") {
 
 async function loadPartners() {
     const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
-    try {
-        const headers = {};
-        if (token && token.trim()) {
-            headers["Authorization"] = `Bearer ${token.trim()}`;
+    const headers = {};
+    if (token && token.trim()) {
+        headers["Authorization"] = `Bearer ${token.trim()}`;
+    }
+
+    // List of candidate endpoints in failover order
+    const endpoints = [
+        apiBase + "/api/v1/partners",
+        apiBase + "/api/admin/delivery/partners",
+        apiBase + "/api/partners"
+    ];
+
+    let loaded = false;
+    for (const url of endpoints) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 6000);
+            const res = await fetch(url, {
+                headers: headers,
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data && Array.isArray(data.partners)) {
+                    allPartners = data.partners;
+                    renderMetrics();
+                    filterPartners();
+                    loaded = true;
+                    break;
+                }
+            }
+        } catch (fetchErr) {
+            console.warn(`[FLEET ROSTER FAILOVER] Failed ${url}:`, fetchErr.message);
         }
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
-        const res = await fetch(apiBase + "/api/v1/partners", {
-            headers: headers,
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
+    }
 
-        const data = await res.json();
-        allPartners = Array.isArray(data.partners) ? data.partners : [];
-
-        renderMetrics();
-        filterPartners();
-    } catch (err) {
-        console.warn("Delivery fleet fetch warning:", err);
-        // Fallback: try without auth header if initial fetch had issue
-        if (token) {
-            try {
-                const retryRes = await fetch(apiBase + "/api/v1/partners");
-                const retryData = await retryRes.json();
-                if (retryData && Array.isArray(retryData.partners)) {
-                    allPartners = retryData.partners;
+    if (!loaded) {
+        // Fallback without headers
+        try {
+            const res = await fetch(apiBase + "/api/v1/partners");
+            if (res.ok) {
+                const data = await res.json();
+                if (data && Array.isArray(data.partners)) {
+                    allPartners = data.partners;
                     renderMetrics();
                     filterPartners();
                     return;
                 }
-            } catch (_) {}
-        }
-        showToast("Failed to load delivery partners: " + err.message, "danger");
+            }
+        } catch (_) {}
+
+        renderMetrics();
+        filterPartners();
+        showToast("Unable to reach live fleet database. Please check your connection.", "danger");
         const tbody = document.getElementById("partnersTableBody");
         if (tbody) {
             tbody.innerHTML = `
                 <tr><td colspan="9" class="text-center py-4 text-danger">
-                    <div>Error retrieving delivery fleet: ${err.message || "Request timed out"}</div>
+                    <div>Unable to retrieve live delivery fleet roster.</div>
                     <button class="btn btn-secondary btn-sm mt-2" onclick="loadPartners()">Retry Roster Load</button>
                 </td></tr>
             `;

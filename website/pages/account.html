@@ -161,7 +161,7 @@
             <!-- Sidebar Navigation -->
             <div style="background:white; border-radius:var(--radius-lg); border:1px solid var(--border); padding:20px; box-shadow:var(--shadow-sm);">
                 <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border-light);">
-                    <img src="../assets/images/logo/logo.jpg" alt="User" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid var(--gold);">
+                    <img id="userSidebarAvatar" src="../assets/images/logo/logo.jpg" alt="User" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid var(--gold);" onerror="this.src='../assets/images/logo/logo.jpg';">
                     <div>
                         <div id="userNameDisplay" style="font-weight:700; color:var(--forest-green); font-size:15px;">Customer</div>
                         <div id="userContactDisplay" style="font-size:12px; color:var(--text-muted);">Farm Member</div>
@@ -233,6 +233,24 @@
                 <div id="tabProfile" class="account-tab-content" style="display:none;">
                     <h2 style="font-family:'Playfair Display',serif; font-size:24px; color:var(--forest-green); margin-bottom:20px;">Profile Information</h2>
                     <div class="contact-form-card" style="box-shadow:none; border:1px solid var(--border); border-radius:var(--radius-lg); background:white; padding:30px;">
+                        
+                        <!-- Profile Photo Upload -->
+                        <div style="display:flex; align-items:center; gap:20px; margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--border-light);">
+                            <div style="position:relative; width:84px; height:84px;">
+                                <img id="tabProfileAvatar" src="../assets/images/logo/logo.jpg" alt="Profile Photo" style="width:84px; height:84px; border-radius:50%; object-fit:cover; border:3px solid var(--gold); box-shadow:0 4px 12px rgba(27,67,50,0.15);" onerror="this.src='../assets/images/logo/logo.jpg';">
+                                <label for="userPhotoInput" style="position:absolute; bottom:0; right:0; width:28px; height:28px; background:var(--forest-green); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.2);" title="Change Profile Photo">
+                                    📷
+                                </label>
+                                <input type="file" id="userPhotoInput" accept="image/*" style="display:none;" onchange="uploadUserPhoto(this)">
+                            </div>
+                            <div>
+                                <h4 style="margin:0 0 4px 0; font-size:16px; color:var(--forest-green); font-weight:700;">Profile Photo</h4>
+                                <p style="margin:0 0 8px 0; font-size:12px; color:var(--text-muted);">Upload a clear photo to personalize your account across Thulirva.</p>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('userPhotoInput').click()" style="padding:4px 12px; font-size:12px;">Choose Image</button>
+                                <span id="photoUploadStatus" style="margin-left:10px; font-size:12px; color:var(--forest-green); font-weight:600;"></span>
+                            </div>
+                        </div>
+
                         <form onsubmit="handleProfileUpdate(event)">
                             <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
                                 <div class="form-field">
@@ -638,6 +656,15 @@ async function initAccount() {
     document.getElementById("userContactDisplay").textContent = currentUser.phone || currentUser.email || "Farm Member";
     if (document.getElementById("userIdDisplay")) {
         document.getElementById("userIdDisplay").textContent = `User ID: #${userId}`;
+    }
+
+    // Synchronize Profile Photo
+    if (currentUser.profile_photo && currentUser.profile_photo.trim()) {
+        const pUrl = currentUser.profile_photo.includes("?") ? currentUser.profile_photo : `${currentUser.profile_photo}?v=${Date.now()}`;
+        const sAvatar = document.getElementById("userSidebarAvatar");
+        if (sAvatar) sAvatar.src = pUrl;
+        const tAvatar = document.getElementById("tabProfileAvatar");
+        if (tAvatar) tAvatar.src = pUrl;
     }
 
     // Profile inputs
@@ -1635,6 +1662,55 @@ async function handleProfileUpdate(e) {
         btn.innerHTML = "💾 Save Changes";
     }
     showToast("✓ Profile information updated and synchronized! 🌿", "success");
+}
+
+async function uploadUserPhoto(inputEl) {
+    if (!inputEl || !inputEl.files || !inputEl.files[0]) return;
+    const file = inputEl.files[0];
+    const statusEl = document.getElementById("photoUploadStatus");
+    if (statusEl) statusEl.textContent = "Uploading photo...";
+
+    try {
+        const formData = new FormData();
+        formData.append("photo", file);
+        if (currentUser.id) formData.append("userId", currentUser.id);
+
+        const token = localStorage.getItem("thulirva_token") || localStorage.getItem("token") || "";
+        const headers = {};
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        const res = await fetch("/api/auth/profile/photo", {
+            method: "POST",
+            headers,
+            body: formData
+        });
+
+        const data = await res.json();
+        if (data.success && (data.profile_photo || data.photoUrl)) {
+            const rawUrl = data.profile_photo || data.photoUrl;
+            const versionedUrl = rawUrl.includes("?") ? rawUrl : `${rawUrl}?v=${Date.now()}`;
+            currentUser.profile_photo = versionedUrl;
+            localStorage.setItem("thulirva_user", JSON.stringify(currentUser));
+
+            const sAvatar = document.getElementById("userSidebarAvatar");
+            if (sAvatar) sAvatar.src = versionedUrl;
+            const tAvatar = document.getElementById("tabProfileAvatar");
+            if (tAvatar) tAvatar.src = versionedUrl;
+
+            if (statusEl) statusEl.textContent = "✓ Photo updated!";
+            setTimeout(() => { if (statusEl) statusEl.textContent = ""; }, 3000);
+            showToast("✓ Profile photo updated successfully!", "success");
+        } else {
+            if (statusEl) statusEl.textContent = "Upload failed.";
+            showToast(data.message || "Failed to upload photo", "error");
+        }
+    } catch (err) {
+        console.error("Photo upload error:", err);
+        if (statusEl) statusEl.textContent = "Upload error.";
+        showToast("Error uploading photo: " + err.message, "error");
+    } finally {
+        inputEl.value = "";
+    }
 }
 
 function userLogout() {

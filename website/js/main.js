@@ -690,10 +690,13 @@ async function loadActiveAnnouncements() {
             }
         }
 
-        // 2. Homepage Hero Banner
-        const heroAnn = list.find(a => (a.position === "homepage_hero" || a.position === "all") && (a.is_active === true || a.is_active === "true"));
+        // 2. Homepage Hero Banner / Multi-Announcement Carousel
+        const heroList = list.filter(a => (a.position === "homepage_hero" || a.position === "all") && (a.is_active === true || a.is_active === "true"));
         if (heroContainer) {
-            if (heroAnn) {
+            if (!heroList.length) {
+                heroContainer.innerHTML = "";
+            } else if (heroList.length === 1) {
+                const heroAnn = heroList[0];
                 heroContainer.innerHTML = `
                     <div class="container" style="margin-top:16px; margin-bottom:16px;">
                         <div style="background:${heroAnn.bg_color || '#1B4332'}; color:${heroAnn.text_color || '#fff'}; border-radius:16px; padding:22px 28px; box-shadow:0 8px 24px rgba(27,67,50,0.2); display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; border:1.5px solid rgba(229,201,122,0.4); position:relative; overflow:hidden;">
@@ -717,7 +720,47 @@ async function loadActiveAnnouncements() {
                     </div>
                 `;
             } else {
-                heroContainer.innerHTML = "";
+                // Multi-announcement horizontal rotation
+                window._activeHeroIndex = window._activeHeroIndex || 0;
+                if (window._activeHeroIndex >= heroList.length) window._activeHeroIndex = 0;
+                const heroAnn = heroList[window._activeHeroIndex];
+                
+                const dotsHtml = heroList.map((_, i) => `
+                    <span style="display:inline-block; width:${i === window._activeHeroIndex ? '20px' : '6px'}; height:6px; border-radius:3px; background:${i === window._activeHeroIndex ? (heroAnn.accent_color || '#E5C97A') : 'rgba(255,255,255,0.4)'}; margin:0 3px; transition:all 0.3s ease; cursor:pointer;" onclick="window._activeHeroIndex=${i}; loadActiveAnnouncements();"></span>
+                `).join("");
+
+                heroContainer.innerHTML = `
+                    <div class="container" style="margin-top:16px; margin-bottom:16px;">
+                        <div style="background:${heroAnn.bg_color || '#1B4332'}; color:${heroAnn.text_color || '#fff'}; border-radius:16px; padding:22px 28px; box-shadow:0 8px 24px rgba(27,67,50,0.2); display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; border:1.5px solid rgba(229,201,122,0.4); position:relative; overflow:hidden; transition:background 0.4s ease;">
+                            <div style="flex:1; min-width:280px; z-index:2;">
+                                ${heroAnn.badge_text ? `<span style="background:rgba(229,201,122,0.25); color:${heroAnn.accent_color || '#E5C97A'}; border:1px solid rgba(229,201,122,0.6); padding:4px 12px; border-radius:20px; font-size:11px; font-weight:800; letter-spacing:0.5px; display:inline-block; margin-bottom:10px;">${heroAnn.badge_text}</span>` : ''}
+                                <h2 style="font-family:'Playfair Display', serif; font-size:24px; font-weight:800; color:${heroAnn.text_color || '#fff'}; margin-bottom:6px; line-height:1.2;">
+                                    ${heroAnn.title}
+                                </h2>
+                                <p style="font-size:14px; opacity:0.92; line-height:1.5; max-width:620px; color:${heroAnn.text_color || '#fff'};">
+                                    ${heroAnn.description}
+                                </p>
+                                <div style="display:flex; align-items:center; margin-top:12px;">
+                                    ${dotsHtml}
+                                </div>
+                            </div>
+                            ${heroAnn.cta_text ? `
+                                <div style="z-index:2;">
+                                    <a href="${heroAnn.cta_url || 'pages/shop.html'}" style="background:${heroAnn.accent_color || '#E5C97A'}; color:${heroAnn.bg_color || '#1B4332'}; font-weight:800; font-size:14px; padding:12px 24px; border-radius:10px; text-decoration:none; display:inline-block; box-shadow:0 4px 12px rgba(0,0,0,0.15); transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='none'">
+                                        ${heroAnn.cta_text} &rarr;
+                                    </a>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+
+                if (!window._heroRotateTimer) {
+                    window._heroRotateTimer = setInterval(() => {
+                        window._activeHeroIndex = (window._activeHeroIndex + 1) % heroList.length;
+                        loadActiveAnnouncements();
+                    }, 5000);
+                }
             }
         }
     } catch (_) {
