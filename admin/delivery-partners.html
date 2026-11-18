@@ -615,7 +615,7 @@ async function loadPartners(showLoadingState = true) {
                 const list = Array.isArray(data.partners) ? data.partners :
                              (Array.isArray(data) ? data :
                              (Array.isArray(data.data) ? data.data : null));
-                if (list && list.length > 0) return list;
+                if (Array.isArray(list)) return list;
             }
         } catch (_) {}
         throw new Error("Candidate failed: " + url);
@@ -629,7 +629,7 @@ async function loadPartners(showLoadingState = true) {
 
     try {
         const livePartners = await Promise.any(candidates);
-        if (Array.isArray(livePartners) && livePartners.length > 0) {
+        if (Array.isArray(livePartners)) {
             allPartners = livePartners;
             try {
                 sessionStorage.setItem(FLEET_CACHE_KEY, JSON.stringify(livePartners));
