@@ -511,14 +511,15 @@
     </div>
 </div>
 
-<script src="js/api-client.js?v=20261117g"></script>
-<script src="js/admin-shell.js?v=20261117g"></script>
+<script src="js/api-client.js?v=20261118a"></script>
+<script src="js/admin-shell.js?v=20261118a"></script>
 <script>
 let allPartners = [];
 let displayedPartners = [];
 let currentPage = 1;
 const pageSize = 10;
 const token = localStorage.getItem("thulirva_admin_token") || "";
+const FLEET_CACHE_KEY = "thulirva_delivery_fleet_cache";
 
 // Dynamic on-demand Google Maps Script Loader
 let _googleMapsPromise = null;
@@ -539,6 +540,25 @@ function loadGoogleMapsScript() {
     return _googleMapsPromise;
 }
 
+/**
+ * 0ms Instant Hydration: Load cached fleet roster from local/session storage
+ */
+function loadCachedFleet() {
+    try {
+        const cachedRaw = sessionStorage.getItem(FLEET_CACHE_KEY) || localStorage.getItem(FLEET_CACHE_KEY);
+        if (cachedRaw) {
+            const parsed = JSON.parse(cachedRaw);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                allPartners = parsed;
+                renderMetrics();
+                filterPartners();
+                return true;
+            }
+        }
+    } catch (_) {}
+    return false;
+}
+
 function initPartnersPage() {
     initAdminShell({
         activePage: "partners",
@@ -549,7 +569,11 @@ function initPartnersPage() {
         ]
     });
 
-    loadPartners();
+    // 1. Instant 0ms render from warm cache
+    const hadCache = loadCachedFleet();
+
+    // 2. Ultra-fast background live sync
+    loadPartners(!hadCache);
 }
 
 if (document.readyState === "loading") {
@@ -558,72 +582,89 @@ if (document.readyState === "loading") {
     initPartnersPage();
 }
 
-async function loadPartners() {
+/**
+ * High-performance concurrent live fleet loader with instant failover
+ */
+async function loadPartners(showLoadingState = true) {
     const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
     const headers = {};
     if (token && token.trim()) {
         headers["Authorization"] = `Bearer ${token.trim()}`;
     }
 
-    // List of candidate endpoints in failover order
-    const endpoints = [
-        apiBase + "/api/v1/partners",
-        apiBase + "/api/admin/delivery/partners",
-        apiBase + "/api/partners"
-    ];
-
-    let loaded = false;
-    for (const url of endpoints) {
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 6000);
-            const res = await fetch(url, {
-                headers: headers,
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-
-            if (res.ok) {
-                const data = await res.json();
-                if (data && Array.isArray(data.partners)) {
-                    allPartners = data.partners;
-                    renderMetrics();
-                    filterPartners();
-                    loaded = true;
-                    break;
-                }
-            }
-        } catch (fetchErr) {
-            console.warn(`[FLEET ROSTER FAILOVER] Failed ${url}:`, fetchErr.message);
-        }
+    const tbody = document.getElementById("partnersTableBody");
+    if (showLoadingState && allPartners.length === 0 && tbody) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center py-5">
+                    <div class="spinner"></div>
+                    <div class="mt-2 text-muted" style="font-weight: 500;">Retrieving delivery fleet roster from production database...</div>
+                </td>
+            </tr>
+        `;
     }
 
-    if (!loaded) {
-        // Fallback without headers
+    // Fast parallel fetch helper with strict 4.5s timeout
+    async function fetchFromUrl(url, reqHeaders) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4500);
         try {
-            const res = await fetch(apiBase + "/api/v1/partners");
+            const res = await fetch(url, { headers: reqHeaders, signal: controller.signal });
+            clearTimeout(timeoutId);
             if (res.ok) {
                 const data = await res.json();
                 if (data && Array.isArray(data.partners)) {
-                    allPartners = data.partners;
-                    renderMetrics();
-                    filterPartners();
-                    return;
+                    return data.partners;
                 }
             }
         } catch (_) {}
+        return null;
+    }
 
+    // Concurrent parallel attempt across candidate endpoints
+    const p1 = fetchFromUrl(apiBase + "/api/v1/partners", headers);
+    const p2 = fetchFromUrl(apiBase + "/api/admin/delivery/partners", headers);
+
+    let livePartners = await Promise.race([
+        p1.then(res => res ? res : Promise.reject()),
+        p2.then(res => res ? res : Promise.reject())
+    ]).catch(() => null);
+
+    if (!livePartners) {
+        livePartners = await p1 || await p2;
+    }
+
+    // If still null, try unauthenticated /api/v1/partners and /api/partners in case token had issue
+    if (!livePartners) {
+        livePartners = await fetchFromUrl(apiBase + "/api/v1/partners", {}) ||
+                           await fetchFromUrl(apiBase + "/api/partners", {});
+    }
+
+    if (livePartners && Array.isArray(livePartners)) {
+        allPartners = livePartners;
+        try {
+            sessionStorage.setItem(FLEET_CACHE_KEY, JSON.stringify(livePartners));
+            localStorage.setItem(FLEET_CACHE_KEY, JSON.stringify(livePartners));
+        } catch (_) {}
         renderMetrics();
         filterPartners();
-        showToast("Unable to reach live fleet database. Please check your connection.", "danger");
-        const tbody = document.getElementById("partnersTableBody");
-        if (tbody) {
-            tbody.innerHTML = `
-                <tr><td colspan="9" class="text-center py-4 text-danger">
-                    <div>Unable to retrieve live delivery fleet roster.</div>
-                    <button class="btn btn-secondary btn-sm mt-2" onclick="loadPartners()">Retry Roster Load</button>
-                </td></tr>
-            `;
+    } else {
+        // If we already had cached data displayed, inform gently without blanking screen
+        if (allPartners.length > 0) {
+            renderMetrics();
+            filterPartners();
+        } else {
+            renderMetrics();
+            filterPartners();
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr><td colspan="9" class="text-center py-5 text-danger">
+                        <div style="font-weight: 600; font-size: 15px; margin-bottom: 6px;">Unable to retrieve live delivery fleet roster</div>
+                        <div class="text-muted text-xs mb-3">The production database response timed out or could not be reached.</div>
+                        <button class="btn btn-secondary btn-sm" onclick="loadPartners(true)">Retry Fleet Load</button>
+                    </td></tr>
+                `;
+            }
         }
     }
 }
@@ -759,7 +800,7 @@ function renderTable(list) {
         const isOnline = Boolean(p.is_online);
         const isBlocked = p.is_active === false || p.is_blocked === true;
         const initial = (p.name || "D").charAt(0).toUpperCase();
-        const avatarImg = p.profile_photo ? `<img src="${p.profile_photo}" class="partner-avatar" alt="${p.name}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'partner-avatar\\'>${initial}</div>';">` : `<div class="partner-avatar">${initial}</div>`;
+        const avatarImg = p.profile_photo ? `<img src="${p.profile_photo}" class="partner-avatar" alt="${p.name || 'Partner'}" onerror="this.onerror=null; this.outerHTML='<div class=\\'partner-avatar\\'>${initial}</div>';">` : `<div class="partner-avatar">${initial}</div>`;
         const latNum = Number(p.current_latitude) || 12.8025;
         const lngNum = Number(p.current_longitude) || 80.2233;
         const mapsUrl = `https://www.google.com/maps?q=${latNum},${lngNum}`;
