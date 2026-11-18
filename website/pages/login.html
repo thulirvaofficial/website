@@ -9,6 +9,124 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .fp-step { display: none; }
+        .fp-step.active { display: block; animation: fadeIn 0.25s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .otp-inputs-wrap {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin: 20px 0 10px;
+        }
+        .otp-digit {
+            width: 46px;
+            height: 52px;
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            border: 2px solid #EADBBE;
+            border-radius: 10px;
+            background: #FAF7EE;
+            color: #0B3515;
+            outline: none;
+            transition: all 0.2s ease;
+            font-family: monospace;
+        }
+        .otp-digit:focus {
+            border-color: #145A24;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(20, 90, 36, 0.15);
+        }
+        .method-choice-card {
+            border: 1.5px solid #EADBBE;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.2s ease;
+        }
+        .method-choice-card:hover {
+            border-color: #145A24;
+            background: #FDFBF6;
+        }
+        .method-choice-card.selected {
+            border-color: #145A24;
+            background: #F4F8F3;
+            box-shadow: 0 2px 10px rgba(20, 90, 36, 0.08);
+        }
+        .method-radio-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #CBD5E1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .method-choice-card.selected .method-radio-circle {
+            border-color: #145A24;
+        }
+        .method-radio-circle::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #145A24;
+            display: none;
+        }
+        .method-choice-card.selected .method-radio-circle::after {
+            display: block;
+        }
+        .method-card-icon {
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        .method-card-content {
+            flex: 1;
+        }
+        .method-card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0B3515;
+        }
+        .method-card-desc {
+            font-size: 12px;
+            color: #64748B;
+            margin-top: 2px;
+        }
+        .fp-notice-pill {
+            background: #FEF3C7;
+            border: 1px solid #FDE68A;
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #B45309;
+            font-size: 12.5px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .fp-success-badge {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #DCFCE7;
+            border: 3px solid #16A34A;
+            color: #16A34A;
+            font-size: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 18px;
+        }
+    </style>
 </head>
 <body>
 
@@ -102,7 +220,7 @@
                             <input type="checkbox" checked>
                             <span>Remember this device</span>
                         </label>
-                        <a href="#" class="auth-forgot" onclick="event.preventDefault(); alert('Password reset link has been dispatched to your registered phone / email!');">Forgot Password?</a>
+                        <a href="javascript:void(0)" class="auth-forgot" onclick="openForgotPasswordFlow()">Forgot Password?</a>
                     </div>
                     <button type="submit" class="btn btn-primary btn-block btn-lg">Sign In &rarr;</button>
                 </form>
@@ -159,6 +277,99 @@
 
                 <div style="text-align: center;">
                     <button class="btn btn-outline btn-block" onclick="switchAuthTab('login')">Sign In with Existing Account</button>
+                </div>
+            </div>
+
+            <!-- Forgot Password Flow Container -->
+            <div class="auth-body" id="forgotFormContainer" style="display: none;">
+                <!-- Step 1: Identifier -->
+                <div class="fp-step active" id="fpStep1">
+                    <div class="auth-form-header">
+                        <h2>Reset Password</h2>
+                        <p>Enter your registered email address or mobile number to locate your account</p>
+                    </div>
+                    <form class="auth-form" onsubmit="handleFpStep1(event)">
+                        <div class="form-group">
+                            <label class="form-label">Registered Email or Mobile Number</label>
+                            <input type="text" class="form-input" id="fpIdentifierInput" placeholder="e.g. 9876543210 or name@example.com" required autofocus>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block btn-lg" id="fpBtnStep1">Find Account &rarr;</button>
+                    </form>
+                    <div class="auth-divider"><span>Remembered your password?</span></div>
+                    <div style="text-align: center;">
+                        <button class="btn btn-outline btn-block" onclick="switchAuthTab('login')">&larr; Back to Sign In</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Choose Method -->
+                <div class="fp-step" id="fpStep2">
+                    <div class="auth-form-header">
+                        <h2>Verification Method</h2>
+                        <p>Select how you want to receive your 6-digit security verification code</p>
+                    </div>
+                    <div id="fpMethodChoices"></div>
+                    <button type="button" class="btn btn-primary btn-block btn-lg" id="fpBtnStep2" onclick="handleFpStep2()">Send Verification Code &rarr;</button>
+                    <div style="text-align: center; margin-top: 16px;">
+                        <a href="javascript:void(0)" onclick="goToFpStep(1)" style="font-size: 13px; color: var(--forest-green); font-weight: 600;">&larr; Use a different account</a>
+                    </div>
+                </div>
+
+                <!-- Step 3: Enter 6-digit OTP -->
+                <div class="fp-step" id="fpStep3">
+                    <div class="auth-form-header">
+                        <h2>Enter Verification Code</h2>
+                        <p>We've sent a 6-digit code to <strong id="fpOtpDestinationText" style="color:var(--forest-green);"></strong></p>
+                    </div>
+                    <div class="fp-notice-pill">
+                        ⏱️ Code expires in <strong>5 minutes</strong>. Do not share it with anyone.
+                    </div>
+                    <div class="otp-inputs-wrap" id="fpOtpWrap">
+                        <input type="text" maxlength="1" class="otp-digit" id="otpDigit0" inputmode="numeric" pattern="[0-9]*" autofocus>
+                        <input type="text" maxlength="1" class="otp-digit" id="otpDigit1" inputmode="numeric" pattern="[0-9]*">
+                        <input type="text" maxlength="1" class="otp-digit" id="otpDigit2" inputmode="numeric" pattern="[0-9]*">
+                        <input type="text" maxlength="1" class="otp-digit" id="otpDigit3" inputmode="numeric" pattern="[0-9]*">
+                        <input type="text" maxlength="1" class="otp-digit" id="otpDigit4" inputmode="numeric" pattern="[0-9]*">
+                        <input type="text" maxlength="1" class="otp-digit" id="otpDigit5" inputmode="numeric" pattern="[0-9]*">
+                    </div>
+                    <div style="text-align: center; margin: 12px 0 18px; font-size: 13px;">
+                        <span id="fpTimerText" style="color: #64748B;">Resend code in <strong id="fpCountdownNum">60</strong>s</span>
+                        <a href="javascript:void(0)" id="fpResendBtn" onclick="handleFpResend()" style="display:none; color: var(--forest-green); font-weight: 700; text-decoration: underline;">Resend Code</a>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-block btn-lg" id="fpBtnStep3" onclick="handleFpStep3()">Verify Code &rarr;</button>
+                    <div style="text-align: center; margin-top: 16px;">
+                        <a href="javascript:void(0)" onclick="goToFpStep(2)" style="font-size: 13px; color: var(--forest-green); font-weight: 600;">&larr; Choose different verification method</a>
+                    </div>
+                </div>
+
+                <!-- Step 4: Create New Password -->
+                <div class="fp-step" id="fpStep4">
+                    <div class="auth-form-header">
+                        <h2>Set New Password</h2>
+                        <p>Create a strong password for your THULIRVA account</p>
+                    </div>
+                    <form class="auth-form" onsubmit="handleFpStep4(event)">
+                        <div class="form-group">
+                            <label class="form-label">New Password (Min 6 characters)</label>
+                            <input type="password" class="form-input" id="fpNewPassword" placeholder="Enter new password" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-input" id="fpConfirmPassword" placeholder="Confirm new password" required minlength="6">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block btn-lg" id="fpBtnStep4">Update Password &rarr;</button>
+                    </form>
+                </div>
+
+                <!-- Step 5: Success -->
+                <div class="fp-step" id="fpStep5">
+                    <div style="text-align: center; padding: 20px 0;">
+                        <div class="fp-success-badge">✓</div>
+                        <h2 style="color: #0B3515; font-size: 22px; font-weight: 700; margin-bottom: 8px;">Password Updated!</h2>
+                        <p style="color: #64748B; font-size: 14px; line-height: 1.5; margin-bottom: 24px;">
+                            Your password has been reset successfully. You can now log in using your new credentials.
+                        </p>
+                        <button type="button" class="btn btn-primary btn-block btn-lg" onclick="switchAuthTab('login')">Sign In with New Password &rarr;</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -239,24 +450,387 @@
 <script src="../js/main.js"></script>
 <script src="../js/validators.js"></script>
 <script>
+// --- State Management for Authentication & Forgot Password (Module 26) ---
+let fpState = {
+    identifier: '',
+    user_id: null,
+    masked_email: '',
+    masked_phone: '',
+    methods: [],
+    selectedMethod: 'email',
+    reset_token: null,
+    timerId: null,
+    countdown: 60
+};
+
 function switchAuthTab(tab) {
     const tabSignIn = document.getElementById('tabSignIn');
     const tabSignUp = document.getElementById('tabSignUp');
     const loginForm = document.getElementById('loginFormContainer');
     const regForm = document.getElementById('registerFormContainer');
+    const forgotForm = document.getElementById('forgotFormContainer');
     
+    if (fpState.timerId) { clearInterval(fpState.timerId); fpState.timerId = null; }
+
     if (tab === 'login') {
         tabSignIn.classList.add('active');
         tabSignUp.classList.remove('active');
         loginForm.style.display = 'block';
         regForm.style.display = 'none';
-    } else {
+        if (forgotForm) forgotForm.style.display = 'none';
+    } else if (tab === 'register') {
         tabSignUp.classList.add('active');
         tabSignIn.classList.remove('active');
         loginForm.style.display = 'none';
         regForm.style.display = 'block';
+        if (forgotForm) forgotForm.style.display = 'none';
+    } else if (tab === 'forgot') {
+        tabSignIn.classList.remove('active');
+        tabSignUp.classList.remove('active');
+        loginForm.style.display = 'none';
+        regForm.style.display = 'none';
+        if (forgotForm) forgotForm.style.display = 'block';
+        goToFpStep(1);
     }
 }
+
+function openForgotPasswordFlow() {
+    switchAuthTab('forgot');
+}
+
+function goToFpStep(stepNum) {
+    document.querySelectorAll('.fp-step').forEach(el => el.classList.remove('active'));
+    const target = document.getElementById(`fpStep${stepNum}`);
+    if (target) target.classList.add('active');
+
+    // Auto-focus first input in the step
+    setTimeout(() => {
+        const inp = target.querySelector('input');
+        if (inp) inp.focus();
+    }, 100);
+}
+
+// Stage 1: Find Account
+async function handleFpStep1(e) {
+    e.preventDefault();
+    const input = document.getElementById('fpIdentifierInput');
+    const identifier = input ? input.value.trim() : '';
+    if (!identifier) return;
+
+    const btn = document.getElementById('fpBtnStep1');
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = 'Verifying Account... 🌾';
+
+    try {
+        const res = await fetch('/api/auth/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identifier: identifier })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            fpState.identifier = identifier;
+            fpState.user_id = data.user_id;
+            fpState.masked_email = data.masked_email || '';
+            fpState.masked_phone = data.masked_phone || '';
+            fpState.methods = Array.isArray(data.methods) && data.methods.length > 0 ? data.methods : ['email'];
+            fpState.selectedMethod = fpState.methods[0];
+
+            renderFpMethodChoices();
+            goToFpStep(2);
+        } else {
+            showToast(data.message || 'No account found matching this email or mobile number.', 'error');
+        }
+    } catch (err) {
+        showToast('Network error while looking up account. Please check your connection.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+    }
+}
+
+// Stage 2: Render Method Choices
+function renderFpMethodChoices() {
+    const wrap = document.getElementById('fpMethodChoices');
+    if (!wrap) return;
+
+    let html = '';
+    if (fpState.methods.includes('email') && fpState.masked_email) {
+        const sel = fpState.selectedMethod === 'email' ? 'selected' : '';
+        html += `
+            <div class="method-choice-card ${sel}" onclick="selectFpMethod('email')">
+                <div class="method-radio-circle"></div>
+                <div class="method-card-icon">✉️</div>
+                <div class="method-card-content">
+                    <div class="method-card-title">Send Code via Email</div>
+                    <div class="method-card-desc">${fpState.masked_email}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    if (fpState.methods.includes('sms') && fpState.masked_phone) {
+        const sel = fpState.selectedMethod === 'sms' ? 'selected' : '';
+        html += `
+            <div class="method-choice-card ${sel}" onclick="selectFpMethod('sms')">
+                <div class="method-radio-circle"></div>
+                <div class="method-card-icon">📱</div>
+                <div class="method-card-content">
+                    <div class="method-card-title">Send Code via SMS</div>
+                    <div class="method-card-desc">${fpState.masked_phone}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    wrap.innerHTML = html;
+}
+
+function selectFpMethod(method) {
+    fpState.selectedMethod = method;
+    renderFpMethodChoices();
+}
+
+// Stage 2 Submit: Send OTP
+async function handleFpStep2() {
+    const btn = document.getElementById('fpBtnStep2');
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = 'Sending Code... ⏱️';
+
+    try {
+        const res = await fetch('/api/auth/send-reset-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                identifier: fpState.identifier,
+                method: fpState.selectedMethod
+            })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            const destEl = document.getElementById('fpOtpDestinationText');
+            if (destEl) destEl.textContent = data.destination || (fpState.selectedMethod === 'email' ? fpState.masked_email : fpState.masked_phone);
+
+            initFpOtpInputs();
+            startFpCountdown(data.cooldownSeconds || 60);
+            goToFpStep(3);
+            showToast(data.message || 'Verification code sent!', 'success');
+        } else {
+            showToast(data.message || 'Failed to dispatch verification code.', 'error');
+        }
+    } catch (err) {
+        showToast('Network error while dispatching code. Please try again.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+    }
+}
+
+// Segmented OTP Input Handling with Auto-Advance, Backspace & Paste
+function initFpOtpInputs() {
+    const inputs = document.querySelectorAll('#fpOtpWrap .otp-digit');
+    inputs.forEach((input, idx) => {
+        input.value = '';
+        input.oninput = (e) => {
+            const val = input.value.replace(/\D/g, '');
+            input.value = val ? val[0] : '';
+            if (val && idx < inputs.length - 1) {
+                inputs[idx + 1].focus();
+            }
+        };
+        input.onkeydown = (e) => {
+            if (e.key === 'Backspace' && !input.value && idx > 0) {
+                inputs[idx - 1].focus();
+            }
+        };
+        input.onpaste = (e) => {
+            e.preventDefault();
+            const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+            if (paste) {
+                paste.split('').forEach((ch, i) => {
+                    if (inputs[i]) inputs[i].value = ch;
+                });
+                const nextIdx = Math.min(paste.length, inputs.length - 1);
+                inputs[nextIdx].focus();
+            }
+        };
+    });
+}
+
+function getEnteredOtp() {
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+        const el = document.getElementById(`otpDigit${i}`);
+        if (el) code += el.value.trim();
+    }
+    return code;
+}
+
+// Countdown Timer for Resend
+function startFpCountdown(seconds) {
+    if (fpState.timerId) clearInterval(fpState.timerId);
+    fpState.countdown = seconds || 60;
+
+    const timerText = document.getElementById('fpTimerText');
+    const countdownNum = document.getElementById('fpCountdownNum');
+    const resendBtn = document.getElementById('fpResendBtn');
+
+    if (timerText) timerText.style.display = 'inline';
+    if (resendBtn) resendBtn.style.display = 'none';
+    if (countdownNum) countdownNum.textContent = fpState.countdown;
+
+    fpState.timerId = setInterval(() => {
+        fpState.countdown -= 1;
+        if (countdownNum) countdownNum.textContent = fpState.countdown;
+        if (fpState.countdown <= 0) {
+            clearInterval(fpState.timerId);
+            fpState.timerId = null;
+            if (timerText) timerText.style.display = 'none';
+            if (resendBtn) resendBtn.style.display = 'inline';
+        }
+    }, 1000);
+}
+
+// Resend OTP
+async function handleFpResend() {
+    const resendBtn = document.getElementById('fpResendBtn');
+    if (resendBtn) resendBtn.style.display = 'none';
+
+    try {
+        const res = await fetch('/api/auth/resend-reset-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                identifier: fpState.identifier,
+                method: fpState.selectedMethod
+            })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            initFpOtpInputs();
+            startFpCountdown(data.cooldownSeconds || 60);
+            showToast('A new 6-digit verification code has been dispatched.', 'success');
+        } else {
+            showToast(data.message || 'Could not resend code. Please try again.', 'error');
+            if (resendBtn) resendBtn.style.display = 'inline';
+        }
+    } catch (_) {
+        showToast('Network error while resending code.', 'error');
+        if (resendBtn) resendBtn.style.display = 'inline';
+    }
+}
+
+// Stage 3 Submit: Verify Code
+async function handleFpStep3() {
+    const otp = getEnteredOtp();
+    if (otp.length !== 6) {
+        showToast('Please enter all 6 digits of your verification code.', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('fpBtnStep3');
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = 'Verifying Code... 🔒';
+
+    try {
+        const res = await fetch('/api/auth/verify-reset-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                identifier: fpState.identifier,
+                otp: otp
+            })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success && data.reset_token) {
+            fpState.reset_token = data.reset_token;
+            goToFpStep(4);
+            showToast('Code verified! Please create your new password.', 'success');
+        } else {
+            showToast(data.message || 'Invalid or expired code. Please check and retry.', 'error');
+        }
+    } catch (err) {
+        showToast('Network error while verifying code. Please try again.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+    }
+}
+
+// Stage 4 Submit: Reset Password
+async function handleFpStep4(e) {
+    e.preventDefault();
+    const p1 = document.getElementById('fpNewPassword').value;
+    const p2 = document.getElementById('fpConfirmPassword').value;
+
+    if (!p1 || !p2) {
+        showToast('Please fill in both password fields.', 'error');
+        return;
+    }
+    if (p1 !== p2) {
+        showToast('Passwords do not match. Please verify.', 'error');
+        return;
+    }
+    if (p1.length < 6) {
+        showToast('Password must be at least 6 characters in length.', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('fpBtnStep4');
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = 'Updating Password... 🌾';
+
+    try {
+        const res = await fetch('/api/auth/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                reset_token: fpState.reset_token,
+                new_password: p1,
+                confirm_password: p2
+            })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            // Clear inputs
+            document.getElementById('fpNewPassword').value = '';
+            document.getElementById('fpConfirmPassword').value = '';
+            goToFpStep(5);
+            showToast('Password updated successfully!', 'success');
+        } else {
+            showToast(data.message || 'Failed to update password. Please try again.', 'error');
+        }
+    } catch (err) {
+        showToast('Network error while resetting password.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+    }
+}
+
+function showToast(msg, type = 'info') {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.textContent = msg;
+    if (type === 'error') {
+        toast.style.background = '#C0392B';
+    } else if (type === 'success') {
+        toast.style.background = '#145A24';
+    } else {
+        toast.style.background = '#333333';
+    }
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3800);
+}
+
 
 async function handleAuthSubmit(e, type) {
     e.preventDefault();
