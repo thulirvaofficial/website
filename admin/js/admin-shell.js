@@ -44,6 +44,7 @@ const NAV_GROUPS = [
         title: "Logistics & Fleet",
         items: [
             { key: "partners", label: "Delivery Partners", url: "delivery-partners.html", icon: "truck" },
+            { key: "partner-profile-config", label: "Partner Profile Fields", url: "partner-profile-config.html", icon: "user-cog" },
             { key: "fleet-tracking", label: "Live Fleet 3D Map", url: "fleet-tracking.html", icon: "navigation" },
             { key: "attendance", label: "Partner Attendance", url: "partner-attendance.html", icon: "clipboard-check" },
             { key: "kyc", label: "Partner KYC", url: "partner-kyc.html", icon: "shield-check", badgeId: "badge-kyc" },

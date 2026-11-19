@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+    <meta name="robots" content="noindex, nofollow">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THULIRVA Enterprise — Delivery Partner Profile Field Controls</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <style>
+        .field-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border-light, #E5E7EB);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 14px;
+            transition: all 0.2s ease;
+        }
+        .field-card:hover {
+            border-color: #1B4332;
+            box-shadow: 0 4px 12px rgba(27, 67, 50, 0.05);
+        }
+        .field-card.disabled-field {
+            background: #F9FAFB;
+            opacity: 0.75;
+        }
+        .toggle-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            user-select: none;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 38px;
+            height: 22px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #D1D5DB;
+            transition: .25s;
+            border-radius: 22px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .25s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #1B4332;
+        }
+        input:checked + .slider:before {
+            transform: translateX(16px);
+        }
+        .preview-phone-mock {
+            background: #FAF7F0;
+            border: 2px solid #E5E7EB;
+            border-radius: 20px;
+            padding: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+            max-width: 360px;
+            margin: 0 auto;
+        }
+        .preview-input-box {
+            background: #FFFFFF;
+            border: 1px solid #D1D5DB;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 13px;
+            margin-top: 4px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .preview-input-box.locked {
+            background: #F3F4F6;
+            color: #6B7280;
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-layout">
+    <aside class="sidebar" id="adminSidebar"></aside>
+
+    <main class="main-content">
+        <header class="topbar" id="adminTopbar"></header>
+
+        <div class="page-container">
+            <!-- Header -->
+            <div class="page-header flex-between">
+                <div>
+                    <h1 class="page-title">Delivery Partner Profile Field Controls</h1>
+                    <p class="page-subtitle">Dynamically configure field visibility, editable permissions, required rules, and placeholders in the Partner Mobile App.</p>
+                </div>
+                <div class="flex-center gap-3">
+                    <a href="delivery-partners.html" class="btn btn-secondary">
+                        &larr; Back to Fleet
+                    </a>
+                    <button class="btn btn-secondary" onclick="resetToDefaults()">
+                        🔄 Reset Defaults
+                    </button>
+                    <button class="btn btn-primary" onclick="saveAllFieldConfig()" id="btnSaveConfig">
+                        💾 Save Changes
+                    </button>
+                </div>
+            </div>
+
+            <!-- Banner notice -->
+            <div class="card mb-4" style="background: #E8F5E9; border: 1px solid #A5D6A7;">
+                <div class="card-body p-3" style="display: flex; align-items: flex-start; gap: 12px;">
+                    <div style="font-size: 24px;">⚡</div>
+                    <div>
+                        <div style="font-weight: 800; color: #1B4332; font-size: 14.5px;">Live Synchronization Active</div>
+                        <div style="font-size: 12.5px; color: #2E7D32; line-height: 1.5;">
+                            Changes saved here reflect in the <strong>Delivery Partner Flutter App immediately</strong> without requiring an APK update. Permissions are strictly enforced by the backend on <code>/api/delivery/profile</code>. Read-only fields cannot be bypassed via direct API calls.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+                <!-- Left: Field Configuration List -->
+                <div style="flex: 1 1 640px; min-width: 320px;">
+                    <div class="card">
+                        <div class="card-header flex-between">
+                            <div>
+                                <h3 class="card-title">Manage 9 Profile Fields</h3>
+                                <p class="card-subtitle">Set permissions, validation, and visual hints per field</p>
+                            </div>
+                            <span class="badge badge-success" id="fieldsCountBadge">9 Fields Configured</span>
+                        </div>
+                        <div class="card-body p-4" id="fieldsContainer">
+                            <div class="text-center p-4" style="color: #6B7280;">Loading field configuration...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Live App Preview -->
+                <div style="flex: 0 0 380px; min-width: 320px;">
+                    <div class="card sticky-top" style="top: 20px;">
+                        <div class="card-header">
+                            <h3 class="card-title">📱 Live Partner App Preview</h3>
+                            <p class="card-subtitle">Simulated layout in Edit Profile modal</p>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="preview-phone-mock">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #E5E7EB; padding-bottom:8px;">
+                                    <div style="font-weight:700; color:#1B4332; font-size:14px; display:flex; align-items:center; gap:6px;">
+                                        <span>📝</span> Edit Profile Details
+                                    </div>
+                                    <span style="font-size:16px; color:#9CA3AF;">✕</span>
+                                </div>
+                                <div id="previewFormFields" style="max-height: 480px; overflow-y: auto; padding-right: 4px;">
+                                    <!-- Rendered dynamically -->
+                                </div>
+                                <div style="margin-top: 14px;">
+                                    <div style="background: #1B4332; color: #FFFFFF; font-weight: 700; font-size: 13px; text-align: center; padding: 12px; border-radius: 12px; box-shadow: 0 4px 10px rgba(27,67,50,0.2);">
+                                        SAVE PROFILE CHANGES
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Scripts -->
+<script src="js/admin-shell.js"></script>
+<script>
+let currentFields = [];
+
+const DEFAULT_DEFAULTS = [
+    { field_key: "name", label: "Full Name", placeholder: "Enter your full name", is_active: true, is_visible: true, is_editable: true, is_required: true, validation_rule: "name", order: 1 },
+    { field_key: "phone", label: "Mobile Number", placeholder: "10-digit mobile number", is_active: true, is_visible: true, is_editable: false, is_required: true, validation_rule: "phone", order: 2 },
+    { field_key: "email", label: "Email Address", placeholder: "Enter your email address", is_active: true, is_visible: true, is_editable: true, is_required: false, validation_rule: "email", order: 3 },
+    { field_key: "vehicle_type", label: "Vehicle Type", placeholder: "Select vehicle type", is_active: true, is_visible: true, is_editable: true, is_required: true, validation_rule: "vehicle_type", options: ["Electric Scooter", "Scooter", "Motorcycle", "Van", "Bicycle"], order: 4 },
+    { field_key: "vehicle_number", label: "Vehicle Registration Number", placeholder: "TN 07 KK 1412", is_active: true, is_visible: true, is_editable: true, is_required: true, validation_rule: "vehicle_number", order: 5 },
+    { field_key: "address", label: "Residential Address", placeholder: "Street address / Door No.", is_active: true, is_visible: true, is_editable: true, is_required: false, validation_rule: "text", order: 6 },
+    { field_key: "city", label: "City", placeholder: "e.g. Chennai", is_active: true, is_visible: true, is_editable: true, is_required: false, validation_rule: "text", order: 7 },
+    { field_key: "pincode", label: "PIN Code", placeholder: "6-digit PIN code", is_active: true, is_visible: true, is_editable: true, is_required: false, validation_rule: "pincode", order: 8 },
+    { field_key: "emergency_contact", label: "Emergency Contact", placeholder: "Emergency phone number", is_active: true, is_visible: true, is_editable: true, is_required: false, validation_rule: "phone", order: 9 }
+];
+
+async function loadFieldConfig() {
+    const container = document.getElementById("fieldsContainer");
+    try {
+        const token = localStorage.getItem("thulirva_admin_token") || localStorage.getItem("token") || "";
+        const res = await fetch("/api/admin/delivery/profile-fields-config", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.fields) && data.fields.length > 0) {
+            currentFields = data.fields;
+        } else {
+            currentFields = JSON.parse(JSON.stringify(DEFAULT_DEFAULTS));
+        }
+        renderFieldsEditor();
+        updatePreview();
+    } catch (err) {
+        console.error("Failed to load field config:", err);
+        currentFields = JSON.parse(JSON.stringify(DEFAULT_DEFAULTS));
+        renderFieldsEditor();
+        updatePreview();
+    }
+}
+
+function renderFieldsEditor() {
+    const container = document.getElementById("fieldsContainer");
+    if (!container) return;
+
+    let html = "";
+    currentFields.forEach((field, index) => {
+        const isNumField = field.field_key === "vehicle_number";
+        const isPhoneField = field.field_key === "phone";
+
+        html += `
+            <div class="field-card ${!field.is_active ? 'disabled-field' : ''}" id="card_${field.field_key}">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #F3F4F6; padding-bottom:8px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-weight:800; font-size:14.5px; color:#1B4332;">#${index + 1}. ${escapeHtml(field.label)}</span>
+                        <code style="background:#F3F4F6; padding:2px 6px; border-radius:4px; font-size:11px; color:#4B5563;">key: ${field.field_key}</code>
+                        ${isPhoneField ? '<span class="badge" style="background:#FEF3C7; color:#92400E; font-size:10.5px;">Auth Primary</span>' : ''}
+                        ${isNumField ? '<span class="badge badge-success" style="font-size:10.5px;">TN 07 Hint</span>' : ''}
+                    </div>
+                    <div>
+                        <span class="badge ${field.is_active ? 'badge-success' : 'badge-danger'}" id="status_badge_${field.field_key}">
+                            ${field.is_active ? 'Active' : 'Disabled'}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row" style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
+                    <div style="flex:1 1 240px;">
+                        <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:4px;">Field Label in App</label>
+                        <input type="text" class="form-control" style="font-size:13px;" value="${escapeHtml(field.label)}" 
+                               oninput="updateFieldProp('${field.field_key}', 'label', this.value)">
+                    </div>
+                    <div style="flex:1 1 240px;">
+                        <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:4px;">
+                            Placeholder (Hint Text)
+                            ${isNumField ? '<span style="color:#1B4332; font-weight:800;">(e.g. TN 07 KK 1412)</span>' : ''}
+                        </label>
+                        <input type="text" class="form-control" style="font-size:13px;" value="${escapeHtml(field.placeholder || '')}" 
+                               oninput="updateFieldProp('${field.field_key}', 'placeholder', this.value)">
+                    </div>
+                    <div style="flex:1 1 180px;">
+                        <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:4px;">Validation Rule</label>
+                        <select class="form-control" style="font-size:13px;" onchange="updateFieldProp('${field.field_key}', 'validation_rule', this.value)">
+                            <option value="text" ${field.validation_rule === 'text' ? 'selected' : ''}>Plain Text</option>
+                            <option value="name" ${field.validation_rule === 'name' ? 'selected' : ''}>Name Format</option>
+                            <option value="phone" ${field.validation_rule === 'phone' ? 'selected' : ''}>Phone (10 Digits)</option>
+                            <option value="email" ${field.validation_rule === 'email' ? 'selected' : ''}>Email Address</option>
+                            <option value="vehicle_number" ${field.validation_rule === 'vehicle_number' ? 'selected' : ''}>Indian Vehicle Number</option>
+                            <option value="vehicle_type" ${field.validation_rule === 'vehicle_type' ? 'selected' : ''}>Vehicle Type Dropdown</option>
+                            <option value="pincode" ${field.validation_rule === 'pincode' ? 'selected' : ''}>PIN Code (6 Digits)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Toggles Grid -->
+                <div style="display:flex; gap:20px; align-items:center; background:#F9FAFB; padding:10px 14px; border-radius:8px; flex-wrap:wrap;">
+                    <!-- Active / Enable -->
+                    <label class="toggle-label" title="Enable or disable this field entirely">
+                        <span class="toggle-switch">
+                            <input type="checkbox" ${field.is_active ? 'checked' : ''} 
+                                   onchange="updateFieldProp('${field.field_key}', 'is_active', this.checked)">
+                            <span class="slider"></span>
+                        </span>
+                        <span>Field Active</span>
+                    </label>
+
+                    <!-- Visible -->
+                    <label class="toggle-label" title="Show or hide field in partner app">
+                        <span class="toggle-switch">
+                            <input type="checkbox" ${field.is_visible ? 'checked' : ''} 
+                                   onchange="updateFieldProp('${field.field_key}', 'is_visible', this.checked)">
+                            <span class="slider"></span>
+                        </span>
+                        <span>Show in App</span>
+                    </label>
+
+                    <!-- Editable / Read-Only -->
+                    <label class="toggle-label" title="Allow partner to edit or lock as read-only">
+                        <span class="toggle-switch">
+                            <input type="checkbox" ${field.is_editable ? 'checked' : ''} 
+                                   onchange="updateFieldProp('${field.field_key}', 'is_editable', this.checked)">
+                            <span class="slider"></span>
+                        </span>
+                        <span>${field.is_editable ? 'Editable' : '🔒 Read-Only'}</span>
+                    </label>
+
+                    <!-- Required -->
+                    <label class="toggle-label" title="Mandatory for partner to submit">
+                        <span class="toggle-switch">
+                            <input type="checkbox" ${field.is_required ? 'checked' : ''} 
+                                   onchange="updateFieldProp('${field.field_key}', 'is_required', this.checked)">
+                            <span class="slider"></span>
+                        </span>
+                        <span>Required *</span>
+                    </label>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function updateFieldProp(fieldKey, prop, val) {
+    const f = currentFields.find(x => x.field_key === fieldKey);
+    if (!f) return;
+    f[prop] = val;
+
+    if (prop === "is_active") {
+        const card = document.getElementById(`card_${fieldKey}`);
+        const badge = document.getElementById(`status_badge_${fieldKey}`);
+        if (card) {
+            if (val) card.classList.remove("disabled-field");
+            else card.classList.add("disabled-field");
+        }
+        if (badge) {
+            badge.className = val ? "badge badge-success" : "badge badge-danger";
+            badge.textContent = val ? "Active" : "Disabled";
+        }
+    }
+
+    updatePreview();
+}
+
+function updatePreview() {
+    const previewContainer = document.getElementById("previewFormFields");
+    if (!previewContainer) return;
+
+    let html = "";
+    currentFields.forEach(f => {
+        if (!f.is_active || !f.is_visible) return;
+
+        const reqMarker = f.is_required ? '<span style="color:#DC2626;"> *</span>' : '';
+        const isLocked = !f.is_editable;
+        const placeholder = f.placeholder || (f.field_key === 'vehicle_number' ? 'TN 07 KK 1412' : '');
+
+        html += `
+            <div style="margin-bottom:10px;">
+                <div style="font-size:11.5px; font-weight:700; color:#374151; display:flex; justify-content:space-between;">
+                    <span>${escapeHtml(f.label)}${reqMarker}</span>
+                    ${isLocked ? '<span style="font-size:10px; color:#6B7280; font-weight:500;">🔒 Locked</span>' : ''}
+                </div>
+                <div class="preview-input-box ${isLocked ? 'locked' : ''}">
+                    <span style="color:${isLocked ? '#6B7280' : '#9CA3AF'}; font-size:12px;">
+                        ${isLocked ? '(Value set by Admin)' : (escapeHtml(placeholder) || 'Tap to enter')}
+                    </span>
+                    ${f.field_key === 'vehicle_type' ? '<span style="font-size:10px; color:#9CA3AF;">▼</span>' : ''}
+                </div>
+            </div>
+        `;
+    });
+
+    if (!html) {
+        html = `<div style="text-align:center; color:#9CA3AF; padding:20px; font-size:12px;">No fields currently visible.</div>`;
+    }
+
+    previewContainer.innerHTML = html;
+}
+
+async function saveAllFieldConfig() {
+    const btn = document.getElementById("btnSaveConfig");
+    const origText = btn.innerHTML;
+    btn.innerHTML = "⏳ Saving...";
+    btn.disabled = true;
+
+    try {
+        const token = localStorage.getItem("thulirva_admin_token") || localStorage.getItem("token") || "";
+        const res = await fetch("/api/admin/delivery/profile-fields-config", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ fields: currentFields })
+        });
+        const data = await res.json();
+        if (data.success) {
+            btn.innerHTML = "✓ Saved Successfully!";
+            btn.style.backgroundColor = "#2E7D32";
+            setTimeout(() => {
+                btn.innerHTML = origText;
+                btn.style.backgroundColor = "";
+                btn.disabled = false;
+            }, 2500);
+            if (Array.isArray(data.fields)) {
+                currentFields = data.fields;
+                renderFieldsEditor();
+                updatePreview();
+            }
+        } else {
+            alert(data.message || "Failed to save configuration.");
+            btn.innerHTML = origText;
+            btn.disabled = false;
+        }
+    } catch (err) {
+        alert("Network error: " + err.message);
+        btn.innerHTML = origText;
+        btn.disabled = false;
+    }
+}
+
+function resetToDefaults() {
+    if (!confirm("Are you sure you want to reset all 9 partner profile field configurations to defaults?")) return;
+    currentFields = JSON.parse(JSON.stringify(DEFAULT_DEFAULTS));
+    renderFieldsEditor();
+    updatePreview();
+    saveAllFieldConfig();
+}
+
+function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadFieldConfig();
+});
+</script>
+</body>
+</html>
