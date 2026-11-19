@@ -91,7 +91,9 @@
         .sub-plan-img {
             width: 100%;
             height: 220px;
-            object-fit: cover;
+            object-fit: contain;
+            background: #FAF8EF;
+            padding: 10px;
             border-bottom: 1px solid var(--border);
         }
         .sub-plan-body {
@@ -582,19 +584,36 @@ let subPageDiscount = 0;
 let appliedSubPagePromo = null;
 
 async function loadPlans() {
-    try {
-        const res = await fetch("/api/subscriptions/plans");
-        const data = await res.json();
-        availablePlans = data.plans || [];
-    } catch {
-        availablePlans = [
-            { id: 1, product_name: "Fresh Cow Milk (500ml)", product_image: "/assets/images/products/fresh_cow_milk.jpg", time_period: "Daily Morning (30 Days)", frequency: "Daily", price: 1320, original_price: 1500, badge: "Most Popular", description: "Pure farm fresh cow milk delivered to your doorstep every morning before 7:00 AM." },
-            { id: 2, product_name: "Fresh Cow Milk (1 Litre)", product_image: "/assets/images/products/fresh_cow_milk.jpg", time_period: "Daily Morning (30 Days)", frequency: "Daily", price: 2460, original_price: 2700, badge: "Family Pack", description: "1 Litre family pack chilled cow milk delivered every single morning." },
-            { id: 3, product_name: "Fresh Artisanal Paneer (200g)", product_image: "/assets/images/products/fresh_paneer.jpg", time_period: "Twice a Week (8 Deliveries)", frequency: "Twice Weekly", price: 656, original_price: 760, badge: "Fresh Batch", description: "Ultra-soft chemical-free cottage cheese delivered fresh twice a week." },
-            { id: 4, product_name: "Pure Bilona Cow Ghee (500ml)", product_image: "/assets/images/products/pure_cow_ghee.jpg", time_period: "Monthly Delivery (1 Jar/Month)", frequency: "Monthly", price: 499, original_price: 600, badge: "Pure Bilona", description: "A fresh 500ml jar of fragrant Bilona churned golden ghee dispatched once a month." }
-        ];
+    const grid = document.getElementById("subscriptionPlansGrid");
+    if (grid) {
+        grid.innerHTML = `
+            <div style="grid-column:1/-1; text-align:center; padding:48px 20px;">
+                <div class="loading" style="margin:0 auto 16px;"></div>
+                <div style="font-size:14px; color:var(--text-muted); font-weight:600;">Fetching curated farm subscription plans...</div>
+            </div>
+        `;
     }
-    renderPlansGrid(availablePlans.filter(p => p.status !== 'inactive' && !p.is_archived));
+
+    try {
+        const res = await fetch(`/api/subscriptions/plans?_t=${Date.now()}`, {
+            cache: "no-store",
+            headers: { "Cache-Control": "no-cache, no-store, must-revalidate" }
+        });
+        if (!res.ok) throw new Error("API status " + res.status);
+        const data = await res.json();
+        availablePlans = (data.success && Array.isArray(data.plans)) ? data.plans : (Array.isArray(data) ? data : []);
+    } catch (err) {
+        console.warn("Failed to load subscription plans from API, falling back:", err.message);
+        availablePlans = [];
+    }
+
+    const activePlans = (availablePlans || []).filter(p => {
+        const isActive = (p.status === 'active' || p.is_active === true) && p.status !== 'inactive';
+        const notArchived = !p.is_archived;
+        return isActive && notArchived;
+    });
+
+    renderPlansGrid(activePlans);
 }
 
 function renderPlansGrid(plans) {
@@ -602,8 +621,19 @@ function renderPlansGrid(plans) {
     if (!grid) return;
     grid.innerHTML = "";
 
-    if (!plans.length) {
-        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px;">Plans loading...</div>`;
+    if (!plans || !plans.length) {
+        grid.innerHTML = `
+            <div style="grid-column:1/-1; text-align:center; padding:50px 20px; background:white; border-radius:16px; border:1px dashed var(--border); margin:20px 0;">
+                <div style="font-size:42px; margin-bottom:12px;">🥛</div>
+                <h3 style="font-family:'Playfair Display',serif; font-size:22px; color:var(--forest-green); margin-bottom:8px;">No Subscription Plans Available Right Now</h3>
+                <p style="font-size:13.5px; color:var(--text-muted); max-width:480px; margin:0 auto 18px;">
+                    Our farm subscription plans are being refreshed. Please try again or check back shortly.
+                </p>
+                <button class="btn btn-secondary" onclick="loadPlans()" style="padding:10px 24px; font-weight:700;">
+                    🔄 Retry Loading Plans
+                </button>
+            </div>
+        `;
         return;
     }
 
@@ -613,7 +643,7 @@ function renderPlansGrid(plans) {
         const img = p.product_image || "/assets/images/products/fresh_cow_milk.jpg";
         card.innerHTML = `
             ${p.badge ? `<span class="sub-plan-badge">${p.badge}</span>` : ""}
-            <img src="${img}" alt="${p.product_name}" class="sub-plan-img">
+            <img src="${img}" alt="${p.product_name}" class="sub-plan-img" onerror="this.onerror=null;this.src='/assets/images/products/fresh_cow_milk.jpg'">
             <div class="sub-plan-body">
                 <div style="font-size:12px; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">
                     ${p.frequency || 'Daily Morning Plan'}
@@ -860,7 +890,6 @@ async function applySubPagePromo() {
         subPageDiscount = 0;
         appliedSubPagePromo = null;
     }
-}
 }
 
 function closeBuySubModal() {
@@ -1173,10 +1202,16 @@ function closeInvoiceModal() {
     document.getElementById("invoiceModal").classList.remove("active");
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+function initSubscriptionPage() {
     loadPlans();
     loadSubLocations();
-});
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initSubscriptionPage);
+} else {
+    initSubscriptionPage();
+}
 </script>
 </body>
 </html>

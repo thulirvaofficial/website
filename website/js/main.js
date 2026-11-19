@@ -27,10 +27,13 @@ function initMobileNavigationDrawer() {
     mobileNav.innerHTML = `
         <div class="mobile-nav-drawer-header">
             <div class="mobile-nav-drawer-brand">
-                <img src="${rootPrefix}assets/images/logo/logo.jpg" alt="THULIRVA" class="mobile-nav-drawer-logo">
+                <div class="mobile-nav-drawer-logo-wrap">
+                    <img src="${rootPrefix}assets/images/thulirva-favicon-512.png" alt="THULIRVA" class="mobile-nav-drawer-logo" onerror="this.onerror=null;this.src='${rootPrefix}assets/images/logo_circle_emblem.png';">
+                </div>
                 <div class="mobile-nav-drawer-brand-text">
                     <span class="mobile-nav-drawer-title">THULIRVA</span>
                     <span class="mobile-nav-drawer-subtitle">ROOTED IN NATURE</span>
+                    <span class="mobile-nav-drawer-tagline">AGRO &amp; DAIRY PRODUCTS</span>
                 </div>
             </div>
             <button class="mobile-nav-drawer-close" id="mobileNavCloseBtn" aria-label="Close navigation menu" title="Close menu">✕</button>
@@ -825,11 +828,50 @@ async function loadDynamicHomepageCategories() {
 }
 
 /* =========================================================
+   CONTINUOUS ANIMATED MARQUEE SYSTEM
+========================================================= */
+function initContinuousMarquee() {
+    const bars = document.querySelectorAll(".announcement-bar");
+    if (!bars.length) return;
+
+    const items = [
+        "🌿 Pure by Nature, Made for You!",
+        "🌾 Farm Fresh",
+        "✨ Quality Products",
+        "🌱 Natural Goodness",
+        "✕ No Preservatives",
+        "🚚 Morning Doorstep Delivery",
+        "📞 Support: 93606 71533"
+    ];
+
+    const groupHtml = items.map(it => `
+        <span class="announcement-marquee-item">${it}</span>
+        <span class="announcement-marquee-sep">•</span>
+    `).join("");
+
+    bars.forEach(bar => {
+        if (bar.querySelector(".announcement-marquee-track")) return;
+        bar.innerHTML = `
+            <div class="announcement-marquee-track">
+                <div class="announcement-marquee-group">
+                    ${groupHtml}
+                </div>
+                <div class="announcement-marquee-group" aria-hidden="true">
+                    ${groupHtml}
+                </div>
+            </div>
+        `;
+    });
+}
+
+/* =========================================================
    INIT & EVENT LISTENERS
 ========================================================= */
 updateCartCount();
 loadProducts();
+initContinuousMarquee();
 document.addEventListener("DOMContentLoaded", () => {
+    initContinuousMarquee();
     initOffersDrawer();
     loadActiveAnnouncements();
     loadDynamicHomepageCategories();
