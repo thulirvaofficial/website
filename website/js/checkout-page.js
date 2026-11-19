@@ -4,7 +4,7 @@
 
 let cart = [];
 let subtotal = 0;
-let deliveryCharge = 30;
+let deliveryCharge = 0;
 let grandTotal = 0;
 let checkoutDiscount = 0;
 let appliedCheckoutPromo = null;
@@ -14,11 +14,22 @@ let currentCheckoutStep = 1;
 let isSubmittingOrder = false;
 let isPickupMode = false;
 let storeSettings = null;
+let activeDeliveryConfig = null;
 let activePaymentQr = {
     upi_id: "7904880944@superyes",
     merchant_name: "THULIRVA A2 DAIRY",
     qr_image_url: "../assets/images/payment_qr.jpg"
 };
+
+async function loadActiveDeliveryConfig() {
+    try {
+        const res = await fetch("/api/config/delivery", { cache: "no-store" });
+        if (res.ok) {
+            const data = await res.json();
+            activeDeliveryConfig = data.config || data;
+        }
+    } catch (_) {}
+}
 
 async function loadActivePaymentQr() {
     try {
@@ -58,16 +69,22 @@ async function fetchAuthoritativeDeliveryCharge() {
         });
         if (res.ok) {
             const data = await res.json();
-            deliveryCharge = Number(data.delivery_charge !== undefined ? data.delivery_charge : data.delivery_fee) || 0;
+            deliveryCharge = Number(data.customer_delivery_fee !== undefined ? data.customer_delivery_fee : (data.delivery_charge !== undefined ? data.delivery_charge : data.delivery_fee)) || 0;
             updateCheckoutTotalsDisplay();
-        } else {
-            deliveryCharge = subtotal >= 299 ? 0 : 30;
-            updateCheckoutTotalsDisplay();
+            return;
         }
-    } catch (_) {
-        deliveryCharge = subtotal >= 299 ? 0 : 30;
-        updateCheckoutTotalsDisplay();
+    } catch (_) {}
+
+    // Fallback using activeDeliveryConfig if server calculation endpoint unreachable
+    if (activeDeliveryConfig) {
+        const threshold = Number(activeDeliveryConfig.free_delivery_threshold) || 500;
+        const baseFee = Number(activeDeliveryConfig.fixed_delivery_charge ?? activeDeliveryConfig.delivery_fee_distribution?.customer_delivery_fee ?? 40);
+        const enabled = activeDeliveryConfig.delivery_charges_enabled !== false;
+        deliveryCharge = (!enabled || subtotal >= threshold) ? 0 : baseFee;
+    } else {
+        deliveryCharge = 0;
     }
+    updateCheckoutTotalsDisplay();
 }
 
 const DEFAULT_LOCATIONS = [
@@ -86,6 +103,7 @@ const DEFAULT_LOCATIONS = [
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
+    loadActiveDeliveryConfig();
     loadCart();
     prefillUserData();
     loadCheckoutLocations();
@@ -196,7 +214,9 @@ function updateCheckoutTotalsDisplay() {
     const totalEl = document.getElementById("checkoutTotal");
     const qrTotalEl = document.getElementById("qrTotalDisplay");
 
-    deliveryCharge = isPickupMode ? 0 : (subtotal >= 299 ? 0 : 30);
+    if (isPickupMode) {
+        deliveryCharge = 0;
+    }
     grandTotal = Math.max(0, subtotal - checkoutDiscount + deliveryCharge);
 
     if (subtotalEl) subtotalEl.textContent = `₹${subtotal.toFixed(2)}`;

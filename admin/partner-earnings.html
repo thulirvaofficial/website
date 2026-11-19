@@ -103,6 +103,9 @@
                             <button class="btn btn-secondary btn-sm" id="tabBankAccountsBtn" onclick="switchTab('bank_accounts')">
                                 Partner Bank Accounts Verification
                             </button>
+                            <button class="btn btn-secondary btn-sm" id="tabLedgerBtn" onclick="switchTab('ledger')">
+                                📊 Delivery Revenue & Split Ledger
+                            </button>
                         </div>
                         <div class="flex-center gap-2 flex-grow-1 justify-end">
                             <div class="search-input-wrap" style="max-width: 280px; width: 100%;">
@@ -228,6 +231,43 @@
                             <tbody id="bankAccountsTableBody">
                                 <tr>
                                     <td colspan="8" class="text-center py-5 text-muted">Loading bank accounts...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View 4: Delivery Revenue & Financial Split Ledger -->
+            <div id="viewLedger" class="card" style="display: none;">
+                <div class="card-header flex-between p-3 border-bottom">
+                    <div>
+                        <h3 class="card-title font-bold text-sm">Delivery Financial Snapshots & Revenue Split</h3>
+                        <p class="text-xs text-muted">Immutable per-delivery records of customer fees, partner payouts, company share and funded subsidies</p>
+                    </div>
+                    <div class="flex-center gap-2" id="ledgerSummaryStats">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table" id="ledgerTable">
+                            <thead>
+                                <tr>
+                                    <th>Delivery Ref</th>
+                                    <th>Date & Time</th>
+                                    <th>Associate</th>
+                                    <th>Customer Fee</th>
+                                    <th>Partner Earning</th>
+                                    <th>THULIRVA Share</th>
+                                    <th>Company Expense</th>
+                                    <th>Zone & Config</th>
+                                    <th>Ledger Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ledgerTableBody">
+                                <tr>
+                                    <td colspan="9" class="text-center py-5 text-muted">Loading immutable financial ledger...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -694,14 +734,117 @@ function switchTab(tab) {
     document.getElementById("viewWallets").style.display = tab === "wallets" ? "block" : "none";
     document.getElementById("viewSettlements").style.display = tab === "settlements" ? "block" : "none";
     document.getElementById("viewBankAccounts").style.display = tab === "bank_accounts" ? "block" : "none";
+    const viewLedger = document.getElementById("viewLedger");
+    if (viewLedger) viewLedger.style.display = tab === "ledger" ? "block" : "none";
 
     document.getElementById("tabWalletsBtn").className = tab === "wallets" ? "btn btn-primary btn-sm" : "btn btn-secondary btn-sm";
     document.getElementById("tabSettlementsBtn").className = tab === "settlements" ? "btn btn-primary btn-sm" : "btn btn-secondary btn-sm";
     document.getElementById("tabBankAccountsBtn").className = tab === "bank_accounts" ? "btn btn-primary btn-sm" : "btn btn-secondary btn-sm";
+    const tabLedgerBtn = document.getElementById("tabLedgerBtn");
+    if (tabLedgerBtn) tabLedgerBtn.className = tab === "ledger" ? "btn btn-primary btn-sm" : "btn btn-secondary btn-sm";
 
     if (tab === "bank_accounts") {
         loadBankAccounts();
+    } else if (tab === "ledger") {
+        loadFinancialLedger();
     }
+}
+
+let financialLedgerEntries = [];
+
+async function loadFinancialLedger() {
+    const tbody = document.getElementById("ledgerTableBody");
+    tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2"></span> Loading delivery financial ledger...</td></tr>`;
+
+    try {
+        const token = localStorage.getItem("thulirva_admin_token") || localStorage.getItem("token") || "";
+        const res = await fetch("/api/admin/delivery/financial-ledger", {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        const data = await res.json();
+
+        if (data.success && Array.isArray(data.items)) {
+            financialLedgerEntries = data.items;
+            
+            // Render summary pill in header
+            const statsEl = document.getElementById("ledgerSummaryStats");
+            if (statsEl && data.summary) {
+                statsEl.innerHTML = `
+                    <span class="badge" style="background:#E8F5E9;color:#2E7D32;font-size:12px;padding:6px 10px;">
+                        Customer Fees: ₹${data.summary.total_customer_fees}
+                    </span>
+                    <span class="badge" style="background:#E3F2FD;color:#1565C0;font-size:12px;padding:6px 10px;">
+                        Partner Payouts: ₹${data.summary.total_partner_earnings}
+                    </span>
+                    <span class="badge" style="background:#FFF3E0;color:#E65100;font-size:12px;padding:6px 10px;">
+                        THULIRVA Share: ₹${data.summary.total_company_revenue}
+                    </span>
+                    <span class="badge" style="background:#FCE4EC;color:#C2185B;font-size:12px;padding:6px 10px;">
+                        Subsidies: ₹${data.summary.total_company_funded_expense}
+                    </span>
+                `;
+            }
+
+            renderFinancialLedgerTable();
+        } else {
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-muted">${data.message || 'No delivery ledger entries found.'}</td></tr>`;
+        }
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-danger">Failed to load financial ledger: ${err.message}</td></tr>`;
+    }
+}
+
+function renderFinancialLedgerTable() {
+    const tbody = document.getElementById("ledgerTableBody");
+    if (!financialLedgerEntries.length) {
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-muted">No completed delivery transactions logged yet.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = financialLedgerEntries.map(e => {
+        const snap = e.financial_snapshot || {};
+        const customerFee = Number(snap.customer_delivery_fee !== undefined ? snap.customer_delivery_fee : 0);
+        const partnerEarning = Number(e.amount_rupees || snap.partner_delivery_earning || 0);
+        const companyRev = Number(snap.company_delivery_revenue !== undefined ? snap.company_delivery_revenue : 0);
+        const companyExp = Number(snap.company_funded_delivery_expense !== undefined ? snap.company_funded_delivery_expense : 0);
+        const isFree = customerFee === 0;
+        const dateStr = e.created_at ? new Date(e.created_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+
+        return `
+            <tr>
+                <td>
+                    <span class="font-mono font-bold text-dark text-xs">${e.reference_id || e.id}</span>
+                    <div class="text-xs text-muted">${e.entry_type === 'delivery_subscription' ? 'Subscription' : 'Product Order'}</div>
+                </td>
+                <td class="text-xs text-muted">${dateStr}</td>
+                <td>
+                    <div class="font-bold text-dark">${e.partner_name || e.partner_id}</div>
+                    <div class="text-xs text-muted font-mono">${e.partner_id}</div>
+                </td>
+                <td>
+                    ${isFree ? '<span class="badge" style="background:#E8F5E9;color:#2E7D32;font-weight:700">FREE</span>' : `<span class="font-bold text-dark">₹${customerFee.toFixed(2)}</span>`}
+                </td>
+                <td>
+                    <span class="font-bold text-success">₹${partnerEarning.toFixed(2)}</span>
+                </td>
+                <td>
+                    <span class="font-bold" style="color:#1565C0">₹${companyRev.toFixed(2)}</span>
+                </td>
+                <td>
+                    ${companyExp > 0 ? `<span class="badge" style="background:#FCE4EC;color:#C2185B;font-weight:700">₹${companyExp.toFixed(2)}</span>` : `<span class="text-muted text-xs">₹0.00</span>`}
+                </td>
+                <td>
+                    <div class="text-xs font-bold text-dark">📍 ${snap.zone || 'Standard'}</div>
+                    <div class="text-xs text-muted font-mono">v${snap.pricing_version || '1'}</div>
+                </td>
+                <td>
+                    <span class="badge ${e.is_settled ? 'badge-success' : 'badge-neutral'}">
+                        ${e.is_settled ? 'Settled' : 'Credited'}
+                    </span>
+                </td>
+            </tr>
+        `;
+    }).join("");
 }
 
 let partnerBankAccounts = [];

@@ -6,21 +6,29 @@ let cartDiscount = 0;
 let appliedCartPromo = null;
 let cartDeliveryConfig = {
     delivery_charges_enabled: true,
-    fixed_delivery_charge: 30,
-    free_delivery_threshold: 299
+    fixed_delivery_charge: 40,
+    free_delivery_threshold: 500
 };
 
 async function loadCartDeliveryConfig() {
     try {
-        const res = await fetch("/api/config/delivery");
+        const res = await fetch("/api/config/delivery", { cache: "no-store" });
         if (res.ok) {
             const data = await res.json();
             if (data.config) {
                 cartDeliveryConfig = data.config;
+                updateHeaderDeliveryBanner();
                 renderCartPage();
             }
         }
     } catch (_) {}
+}
+
+function updateHeaderDeliveryBanner() {
+    const banner = document.getElementById("headerFreeDeliveryBanner");
+    if (banner && cartDeliveryConfig.free_delivery_threshold) {
+        banner.textContent = `🚚 Free Delivery on orders above ₹${cartDeliveryConfig.free_delivery_threshold}`;
+    }
 }
 
 function renderCartPage() {
@@ -29,8 +37,8 @@ function renderCartPage() {
 
     const cart = getCart();
     const subtotal = getCartSubtotal();
-    const threshold = Number(cartDeliveryConfig.free_delivery_threshold) || 299;
-    const baseFee = Number(cartDeliveryConfig.fixed_delivery_charge) || 30;
+    const threshold = Number(cartDeliveryConfig.free_delivery_threshold) || 500;
+    const baseFee = Number(cartDeliveryConfig.fixed_delivery_charge ?? cartDeliveryConfig.delivery_fee_distribution?.customer_delivery_fee ?? 40);
     const isFree = !cartDeliveryConfig.delivery_charges_enabled || subtotal >= threshold;
     const delivery = isFree ? 0 : baseFee;
     const shortfall = Math.max(0, threshold - subtotal);

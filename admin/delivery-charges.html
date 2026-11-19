@@ -9,7 +9,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THULIRVA Admin — Delivery Charge & Payout Management</title>
+    <title>THULIRVA Admin — Delivery Pricing & Financial Distribution</title>
     <link rel="stylesheet" href="css/admin.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -75,6 +75,42 @@
         input:checked + .slider-round:before {
             transform: translateX(20px);
         }
+        .split-bar-wrap {
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            background: #e2e8f0;
+            margin: 10px 0;
+        }
+        .split-bar-partner {
+            background: #2E7D32;
+            transition: width 0.3s;
+        }
+        .split-bar-company {
+            background: #B45309;
+            transition: width 0.3s;
+        }
+        .validation-alert {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .val-success {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border: 1px solid #A5D6A7;
+        }
+        .val-error {
+            background: #FFEBEE;
+            color: #C62828;
+            border: 1px solid #FFCDD2;
+        }
     </style>
 </head>
 <body>
@@ -83,19 +119,13 @@
     <aside class="sidebar" id="adminSidebar"></aside>
 
     <main class="main-content">
-        <header class="topbar" id="adminTopbar">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-
-    <meta name="robots" content="noindex, nofollow">
-</header>
+        <header class="topbar" id="adminTopbar"></header>
 
         <div class="page-container">
             <div class="page-header flex-between">
                 <div>
-                    <h1 class="page-title">Delivery Charge Management</h1>
-                    <p class="page-subtitle">Configure dynamic customer delivery fees, free delivery thresholds, area rate cards &amp; partner delivery payouts</p>
+                    <h1 class="page-title">Delivery Pricing & Financial Distribution</h1>
+                    <p class="page-subtitle">Configure customer delivery charges, free thresholds, partner earnings, company revenue split &amp; zone rate cards</p>
                 </div>
                 <div class="flex-center gap-3">
                     <button class="btn btn-secondary" onclick="loadDeliveryConfig()">
@@ -111,24 +141,24 @@
             <!-- Metrics Overview -->
             <div class="metrics-grid">
                 <div class="stat-card">
-                    <div class="stat-label">Default Delivery Charge</div>
-                    <div class="stat-value text-gold" id="statDefaultCharge">₹30</div>
+                    <div class="stat-label">Customer Delivery Fee</div>
+                    <div class="stat-value text-gold" id="statDefaultCharge">₹40</div>
                     <div class="stat-sub">Under free threshold</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Free Delivery Threshold</div>
-                    <div class="stat-value text-success" id="statThreshold">₹299</div>
+                    <div class="stat-value text-success" id="statThreshold">₹500</div>
                     <div class="stat-sub">Cart order minimum</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Active Zone Rules</div>
-                    <div class="stat-value" id="statZoneRulesCount">4 Zones</div>
-                    <div class="stat-sub">Padur, Navalur, etc.</div>
+                    <div class="stat-label">Partner Delivery Share</div>
+                    <div class="stat-value" id="statPartnerPayout" style="color:var(--thulirva-forest);">₹30</div>
+                    <div class="stat-sub">Paid fee split (75%)</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Partner Base Payout</div>
-                    <div class="stat-value" id="statPartnerPayout" style="color:var(--thulirva-forest);">₹35</div>
-                    <div class="stat-sub">Per completed delivery</div>
+                    <div class="stat-label">THULIRVA Company Share</div>
+                    <div class="stat-value" id="statCompanyShare" style="color:#B45309;">₹10</div>
+                    <div class="stat-sub">Paid fee split (25%)</div>
                 </div>
             </div>
 
@@ -140,30 +170,33 @@
                     <div class="card">
                         <div class="card-header flex-between" style="padding:14px 20px;">
                             <div style="font-weight:700; color:var(--thulirva-forest); font-size:14px;">
-                                📦 Standard Delivery Charge &amp; Free Threshold
+                                📦 Standard Customer Delivery Fee &amp; Free Threshold
                             </div>
-                            <label class="switch-toggle" title="Enable/Disable all delivery charges">
-                                <input type="checkbox" id="cfgDeliveryChargesEnabled" checked onchange="updateCalcPreview()">
-                                <span class="slider-round"></span>
-                            </label>
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <span style="font-size:12px; color:var(--thulirva-text-muted);">Enable Delivery Fees</span>
+                                <label class="switch-toggle" title="Enable/Disable all delivery charges">
+                                    <input type="checkbox" id="cfgDeliveryChargesEnabled" checked onchange="updateCalcPreview()">
+                                    <span class="slider-round"></span>
+                                </label>
+                            </div>
                         </div>
                         <div class="card-body p-4">
                             <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
                                 <div class="form-group">
-                                    <label class="form-label">Fixed Default Delivery Fee <span style="color:red;">*</span></label>
+                                    <label class="form-label">Default Customer Delivery Fee <span style="color:red;">*</span></label>
                                     <div class="rate-input-group">
                                         <span class="rate-prefix">₹</span>
-                                        <input type="number" id="cfgFixedCharge" class="form-control rate-input" value="30" min="0" step="1" oninput="updateCalcPreview()">
+                                        <input type="number" id="cfgFixedCharge" class="form-control rate-input" value="40" min="0" step="1" oninput="onCustomerFeeChanged(this.value)">
                                     </div>
-                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Standard charge applied to customer orders below threshold.</small>
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Standard charge applied to orders below free delivery threshold.</small>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Free Delivery Threshold Amount <span style="color:red;">*</span></label>
                                     <div class="rate-input-group">
                                         <span class="rate-prefix">₹</span>
-                                        <input type="number" id="cfgFreeThreshold" class="form-control rate-input" value="299" min="0" step="1" oninput="updateCalcPreview()">
+                                        <input type="number" id="cfgFreeThreshold" class="form-control rate-input" value="500" min="0" step="1" oninput="updateCalcPreview()">
                                     </div>
-                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Orders at or above this value get 100% FREE delivery.</small>
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Orders at or above this cart value unlock 100% FREE delivery.</small>
                                 </div>
                             </div>
 
@@ -177,22 +210,191 @@
                                     <small style="color:var(--thulirva-text-muted); font-size:11px;">Minimum cart total required to place doorstep delivery.</small>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Store Pickup Policy</label>
-                                    <input type="text" class="form-control" value="Always 100% Free (No delivery fee)" disabled style="background:#FAF8EF; color:var(--thulirva-forest); font-weight:600;">
+                                    <label class="form-label">Store Pickup Delivery Policy</label>
+                                    <input type="text" class="form-control" value="Always 100% Free (₹0 Delivery Fee)" disabled style="background:#FAF8EF; color:var(--thulirva-forest); font-weight:600;">
                                     <small style="color:var(--thulirva-text-muted); font-size:11px;">Self pickup from farm hub is never charged.</small>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 2. Area / Zone Delivery Charges Table -->
+                    <!-- 2. Delivery Fee Distribution (Partner vs Company Revenue Split) -->
+                    <div class="card" style="border: 2px solid #E5C97A;">
+                        <div class="card-header flex-between" style="padding:14px 20px; background:#FAF8EF;">
+                            <div>
+                                <div style="font-weight:800; color:var(--thulirva-forest); font-size:14.5px; display:flex; align-items:center; gap:8px;">
+                                    <span>⚖️ Delivery Fee Distribution (Company Revenue Split)</span>
+                                    <span class="badge" style="background:#FEF3C7; color:#B45309; font-weight:700;">CRITICAL FINANCIAL SPLIT</span>
+                                </div>
+                                <div style="font-size:11.5px; color:var(--thulirva-text-muted);">
+                                    When customer pays delivery fee: Partner Share + THULIRVA Share must equal Customer Fee.
+                                </div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <label style="font-size:12px; font-weight:600;">Mode:</label>
+                                <select id="cfgDistMode" class="form-select form-select-sm" style="width:130px;" onchange="onDistModeChanged()">
+                                    <option value="fixed" selected>Fixed Amount (₹)</option>
+                                    <option value="percentage">Percentage (%)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                                <div class="form-group">
+                                    <label class="form-label" id="lblPartnerShare">Delivery Partner Share (₹)</label>
+                                    <div class="rate-input-group">
+                                        <span class="rate-prefix" id="prefixPartnerShare">₹</span>
+                                        <input type="number" id="cfgPartnerShare" class="form-control rate-input" value="30" min="0" step="1" oninput="onPartnerShareChanged(this.value)">
+                                    </div>
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Payable to delivery partner from the collected delivery fee.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" id="lblCompanyShare">THULIRVA Company Share (₹)</label>
+                                    <div class="rate-input-group">
+                                        <span class="rate-prefix" id="prefixCompanyShare">₹</span>
+                                        <input type="number" id="cfgCompanyShare" class="form-control rate-input" value="10" min="0" step="1" oninput="onCompanyShareChanged(this.value)">
+                                    </div>
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Retained as THULIRVA delivery-fee company revenue.</small>
+                                </div>
+                            </div>
+
+                            <!-- Live Split Bar Preview -->
+                            <div style="margin-top:12px;">
+                                <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700;">
+                                    <span style="color:#2E7D32;" id="splitPartnerText">Partner: ₹30 (75%)</span>
+                                    <span style="color:#B45309;" id="splitCompanyText">THULIRVA: ₹10 (25%)</span>
+                                </div>
+                                <div class="split-bar-wrap">
+                                    <div id="splitBarPartner" class="split-bar-partner" style="width:75%;"></div>
+                                    <div id="splitBarCompany" class="split-bar-company" style="width:25%;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Validation Alert -->
+                            <div id="distValidationAlert" class="validation-alert val-success">
+                                <span>✓ Validation Passed: Partner (₹30) + Company (₹10) = Customer Fee (₹40)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Free Delivery Partner Funding Policy -->
                     <div class="card">
                         <div class="card-header flex-between" style="padding:14px 20px;">
                             <div>
                                 <div style="font-weight:700; color:var(--thulirva-forest); font-size:14px;">
-                                    📍 Area / Zone Specific Delivery Rates
+                                    🛡️ Free Delivery Partner Funding Policy
                                 </div>
-                                <div style="font-size:11.5px; color:var(--thulirva-text-muted);">Overrides the default ₹30 charge for specific delivery clusters</div>
+                                <div style="font-size:11.5px; color:var(--thulirva-text-muted);">
+                                    When customer gets FREE delivery (fee = ₹0), who funds partner earning?
+                                </div>
+                            </div>
+                            <span class="badge" style="background:#E8F5E9; color:#2E7D32; font-weight:700;">ACCOUNTING ISOLATED</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                                <div class="form-group">
+                                    <label class="form-label">Funding Policy</label>
+                                    <select id="cfgFundingPolicy" class="form-select" onchange="updateCalcPreview()">
+                                        <option value="company_funded" selected>THULIRVA Funds Full Partner Earning (Recommended)</option>
+                                        <option value="rate_override">Separately Configured Partner Earning Rate</option>
+                                        <option value="promotional_subsidy">Promotional Delivery Subsidy</option>
+                                    </select>
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Customer pays ₹0; THULIRVA absorbs partner delivery expense.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Partner Payout on Free Delivery (₹)</label>
+                                    <div class="rate-input-group">
+                                        <span class="rate-prefix">₹</span>
+                                        <input type="number" id="cfgFreeDeliveryPartnerPayout" class="form-control rate-input" value="30" min="0" step="1" oninput="updateCalcPreview()">
+                                    </div>
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Amount credited to partner wallet on free delivery orders.</small>
+                                </div>
+                            </div>
+
+                            <div style="background:#FAF8EF; border-left:4px solid var(--thulirva-forest); padding:10px 14px; border-radius:0 8px 8px 0; margin-top:10px; font-size:12px; color:var(--thulirva-forest);">
+                                <strong>Strict Accounting Rule:</strong> Customer Delivery Fee = ₹0. Company Delivery-Fee Revenue = ₹0. THULIRVA Company-Funded Delivery Expense = ₹30. Partner Earning = ₹30. No artificial revenue is ever recorded.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Delivery Partner Earnings & Incentives -->
+                    <div class="card">
+                        <div class="card-header flex-between" style="padding:14px 20px;">
+                            <div style="font-weight:700; color:var(--thulirva-forest); font-size:14px;">
+                                🛵 Partner Earnings Configuration &amp; Incentives
+                            </div>
+                            <span class="badge" style="background:#E8F5E9; color:var(--thulirva-forest); font-weight:700;">WALLET SETTLEMENTS</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                                <div class="form-group">
+                                    <label class="form-label">Regular Product Order Earning</label>
+                                    <div class="rate-input-group">
+                                        <span class="rate-prefix">₹</span>
+                                        <input type="number" id="cfgPartnerBasePayout" class="form-control rate-input" value="35" min="10" step="1" oninput="updateCalcPreview()">
+                                    </div>
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Credited to partner wallet per delivered product order.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Subscription Delivery Earning</label>
+                                    <div class="rate-input-group">
+                                        <span class="rate-prefix">₹</span>
+                                        <input type="number" id="cfgSubEarning" class="form-control rate-input" value="30" min="10" step="1" oninput="updateCalcPreview()">
+                                    </div>
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Credited to partner per morning milk subscription delivery.</small>
+                                </div>
+                            </div>
+
+                            <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:16px; margin-top:12px;">
+                                <div class="form-group">
+                                    <label class="form-label">Distance Bonus Enabled</label>
+                                    <select id="cfgDistanceBonusEnabled" class="form-select" onchange="updateCalcPreview()">
+                                        <option value="true" selected>Enabled</option>
+                                        <option value="false">Disabled</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Base Distance (KM)</label>
+                                    <input type="number" id="cfgDistanceBaseKm" class="form-control" value="5.0" min="1" step="0.5" oninput="updateCalcPreview()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Bonus Per Extra KM (₹)</label>
+                                    <div class="rate-input-group">
+                                        <span class="rate-prefix">₹</span>
+                                        <input type="number" id="cfgPartnerDistanceBonus" class="form-control rate-input" value="6" min="0" step="1" oninput="updateCalcPreview()">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:12px;">
+                                <div class="form-group">
+                                    <label class="form-label">Minimum Earning Per Delivery</label>
+                                    <div class="rate-input-group">
+                                        <span class="rate-prefix">₹</span>
+                                        <input type="number" id="cfgMinEarning" class="form-control rate-input" value="25" min="0" step="1" oninput="updateCalcPreview()">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Maximum Earning Per Delivery</label>
+                                    <div class="rate-input-group">
+                                        <span class="rate-prefix">₹</span>
+                                        <input type="number" id="cfgMaxEarning" class="form-control rate-input" value="150" min="50" step="5" oninput="updateCalcPreview()">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Area / Zone Specific Configuration -->
+                    <div class="card">
+                        <div class="card-header flex-between" style="padding:14px 20px;">
+                            <div>
+                                <div style="font-weight:700; color:var(--thulirva-forest); font-size:14px;">
+                                    📍 Delivery Zones &amp; Area Pricing Overrides
+                                </div>
+                                <div style="font-size:11.5px; color:var(--thulirva-text-muted);">
+                                    Zone-specific customer delivery fees, free thresholds, partner earnings &amp; splits
+                                </div>
                             </div>
                             <button class="btn btn-secondary btn-sm" onclick="addNewZoneRow()">＋ Add Zone</button>
                         </div>
@@ -200,9 +402,12 @@
                             <table class="admin-table">
                                 <thead>
                                     <tr>
-                                        <th>Delivery Zone / Cluster</th>
-                                        <th>Specific Delivery Fee (₹)</th>
-                                        <th>Threshold Rule</th>
+                                        <th>Zone / Cluster</th>
+                                        <th>Customer Fee (₹)</th>
+                                        <th>Free Threshold (₹)</th>
+                                        <th>Partner Share (₹)</th>
+                                        <th>Company Share (₹)</th>
+                                        <th>Regular Earning (₹)</th>
                                         <th style="text-align:right;">Remove</th>
                                     </tr>
                                 </thead>
@@ -213,70 +418,7 @@
                         </div>
                     </div>
 
-                    <!-- 3. Distance-Based Charge Rules -->
-                    <div class="card">
-                        <div class="card-header flex-between" style="padding:14px 20px;">
-                            <div style="font-weight:700; color:var(--thulirva-forest); font-size:14px;">
-                                📏 Distance-Based Billing (GPS Dynamic)
-                            </div>
-                            <label class="switch-toggle" title="Enable/Disable distance billing">
-                                <input type="checkbox" id="cfgDistanceEnabled" onchange="updateCalcPreview()">
-                                <span class="slider-round"></span>
-                            </label>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
-                                <div class="form-group">
-                                    <label class="form-label">Base Distance Included (KM)</label>
-                                    <div class="rate-input-group">
-                                        <input type="number" id="cfgDistanceBaseKm" class="form-control" value="5.0" min="1" step="0.5" oninput="updateCalcPreview()">
-                                        <span class="rate-prefix" style="border-radius:0 8px 8px 0; border-left:none; border-right:1px solid var(--thulirva-border);">km</span>
-                                    </div>
-                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Deliveries up to this distance pay only the base delivery fee.</small>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Per-KM Additional Rate Beyond Base</label>
-                                    <div class="rate-input-group">
-                                        <span class="rate-prefix">₹</span>
-                                        <input type="number" id="cfgDistanceRatePerKm" class="form-control rate-input" value="8.0" min="1" step="0.5" oninput="updateCalcPreview()">
-                                    </div>
-                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Added per extra kilometer beyond the base distance.</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 4. Delivery Partner Earnings & Incentives -->
-                    <div class="card">
-                        <div class="card-header flex-between" style="padding:14px 20px;">
-                            <div style="font-weight:700; color:var(--thulirva-forest); font-size:14px;">
-                                🛵 Delivery Partner Earning Rates (Payout Structure)
-                            </div>
-                            <span class="badge" style="background:#E8F5E9; color:var(--thulirva-forest); font-weight:700;">PROFIT PROTECTED</span>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
-                                <div class="form-group">
-                                    <label class="form-label">Base Partner Payout Per Delivery</label>
-                                    <div class="rate-input-group">
-                                        <span class="rate-prefix">₹</span>
-                                        <input type="number" id="cfgPartnerBasePayout" class="form-control rate-input" value="35" min="10" step="1" oninput="updateCalcPreview()">
-                                    </div>
-                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Credited to partner wallet upon successful doorstep delivery.</small>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Partner Distance Bonus Per KM</label>
-                                    <div class="rate-input-group">
-                                        <span class="rate-prefix">₹</span>
-                                        <input type="number" id="cfgPartnerDistanceBonus" class="form-control rate-input" value="6" min="0" step="1" oninput="updateCalcPreview()">
-                                    </div>
-                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Additional partner incentive for long-distance deliveries.</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 5. Cash on Delivery (COD) Master Switch & Capacity Controls (Modules 4 & 5) -->
+                    <!-- 6. COD Master Switch & Capacity Controls -->
                     <div class="card">
                         <div class="card-header flex-between" style="padding:14px 20px;">
                             <div>
@@ -284,7 +426,7 @@
                                     <span>💵 Cash on Delivery (COD) Master Switch</span>
                                     <span id="codStatusBadge" class="badge badge-active" style="font-size:11px;">ACTIVE</span>
                                 </div>
-                                <div style="font-size:11.5px; color:var(--thulirva-text-muted);">Enable/disable COD storewide for product orders and configure holding limit</div>
+                                <div style="font-size:11.5px; color:var(--thulirva-text-muted);">Enable/disable COD storewide and configure partner holding limit</div>
                             </div>
                             <label class="switch-toggle" title="Toggle COD Master Switch">
                                 <input type="checkbox" id="cfgCodMasterSwitch" checked onchange="toggleCodMasterSwitch(this)">
@@ -299,7 +441,7 @@
                                         <span class="rate-prefix">₹</span>
                                         <input type="number" id="cfgCodHoldingLimit" class="form-control rate-input" value="1000" min="0" step="100" onchange="updateCodHoldingLimit(this.value)">
                                     </div>
-                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Partners cannot accept additional COD orders once unremitted cash reaches ₹1,000.</small>
+                                    <small style="color:var(--thulirva-text-muted); font-size:11px;">Partners cannot accept additional COD orders once unremitted cash reaches limit.</small>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Subscription COD Policy</label>
@@ -311,32 +453,32 @@
                     </div>
                 </div>
 
-                <!-- Right Column: Interactive Live Calculator & Simulator -->
+                <!-- Right Column: Interactive Live Earnings & Revenue Simulator -->
                 <div style="position:sticky; top:84px;">
                     <div class="calc-preview-card">
                         <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
                             <span style="font-size:22px;">🧮</span>
                             <h3 style="font-family:'Playfair Display', serif; font-size:18px; font-weight:800; color:var(--thulirva-forest); margin:0;">
-                                Instant Delivery Fee Simulator
+                                Real-Time Earnings &amp; Revenue Simulator
                             </h3>
                         </div>
                         <p style="font-size:12.5px; color:var(--thulirva-text-muted); margin-bottom:18px; line-height:1.4;">
-                            Test cart combinations live to verify what customers will see and what delivery partners will earn.
+                            Test customer cart combinations live to simulate customer delivery fees, partner earnings, and company revenue split.
                         </p>
 
                         <div class="form-group">
                             <label class="form-label">Sample Customer Cart Subtotal</label>
                             <div class="rate-input-group">
                                 <span class="rate-prefix">₹</span>
-                                <input type="number" id="simSubtotal" class="form-control rate-input" value="250" min="0" step="10" oninput="updateCalcPreview()">
+                                <input type="number" id="simSubtotal" class="form-control rate-input" value="340" min="0" step="10" oninput="updateCalcPreview()">
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Selected Customer Delivery Zone</label>
+                            <label class="form-label">Selected Delivery Zone</label>
                             <select id="simZone" class="form-select" onchange="updateCalcPreview()">
                                 <option value="">Default Area (Unlisted)</option>
-                                <option value="Padur" selected>Padur Cluster</option>
+                                <option value="Padur">Padur Cluster</option>
                                 <option value="Navalur">Navalur Cluster</option>
                                 <option value="Siruseri">Siruseri SIPCOT</option>
                                 <option value="Kelambakkam">Kelambakkam Junction</option>
@@ -354,33 +496,45 @@
                         <div class="form-group">
                             <label class="form-label">Order Type</label>
                             <select id="simOrderType" class="form-select" onchange="updateCalcPreview()">
-                                <option value="delivery" selected>Doorstep Delivery</option>
+                                <option value="delivery" selected>Doorstep Product Delivery</option>
+                                <option value="subscription">Daily Milk Subscription Delivery</option>
                                 <option value="pickup">Farm Store Pickup</option>
                             </select>
                         </div>
 
                         <div class="divider" style="margin:18px 0;"></div>
 
-                        <!-- Computed Result Showcase -->
+                        <!-- Computed Financial Breakdown -->
                         <div style="background:#fff; border-radius:12px; padding:16px; border:1px solid var(--thulirva-border);">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                                 <span style="font-size:13px; font-weight:700; color:var(--thulirva-forest);">Customer Delivery Fee:</span>
-                                <span id="simResultFee" style="font-size:18px; font-weight:900; color:var(--thulirva-forest);">₹20.00</span>
+                                <span id="simResultFee" style="font-size:20px; font-weight:900; color:var(--thulirva-forest);">₹40.00</span>
                             </div>
                             <div id="simResultBadgeWrap" style="margin-bottom:10px;">
                                 <span id="simResultBadge" class="badge" style="background:#FEF3C7; color:#B45309;">Standard Fee Applied</span>
                             </div>
-                            <div id="simResultReason" style="font-size:11.5px; color:var(--thulirva-text-muted); line-height:1.4; margin-bottom:12px;">
-                                Standard delivery charge. Add ₹49 more for FREE delivery.
+                            <div id="simResultReason" style="font-size:11.5px; color:var(--thulirva-text-muted); line-height:1.4; margin-bottom:14px;">
+                                Standard delivery charge. Add ₹160 more for FREE delivery.
                             </div>
 
-                            <div style="background:#FAF8EF; padding:10px 12px; border-radius:8px; border:1px solid #E5C97A; font-size:12px;">
-                                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                                    <span>Partner Earning Payout:</span>
-                                    <strong id="simPartnerPayout" style="color:var(--thulirva-forest);">₹44.00</strong>
+                            <!-- Financial Breakdown Grid -->
+                            <div style="background:#FAF8EF; padding:12px; border-radius:8px; border:1px solid #E5C97A; font-size:12px; display:flex; flex-direction:column; gap:8px;">
+                                <div style="display:flex; justify-content:space-between;">
+                                    <span>Delivery Partner Earning:</span>
+                                    <strong id="simPartnerPayout" style="color:#2E7D32;">₹30.00</strong>
                                 </div>
-                                <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--thulirva-text-muted);">
-                                    <span>Base ₹35 + Distance Bonus ₹9</span>
+                                <div style="display:flex; justify-content:space-between;">
+                                    <span>THULIRVA Delivery Revenue:</span>
+                                    <strong id="simCompanyRevenue" style="color:#B45309;">₹10.00</strong>
+                                </div>
+                                <div style="display:flex; justify-content:space-between;">
+                                    <span>Company-Funded Delivery Expense:</span>
+                                    <strong id="simCompanyExpense" style="color:#1B4332;">₹0.00</strong>
+                                </div>
+                                <div class="divider" style="margin:4px 0;"></div>
+                                <div style="display:flex; justify-content:space-between; font-weight:800; font-size:13px;">
+                                    <span>Total Partner Payable:</span>
+                                    <span id="simTotalPayable" style="color:#2E7D32;">₹30.00</span>
                                 </div>
                             </div>
                         </div>
@@ -402,7 +556,7 @@
 <script>
 initAdminShell({
     activePage: "delivery-charges",
-    breadcrumbs: [{ label: "Commerce" }, { label: "Delivery Charges" }]
+    breadcrumbs: [{ label: "Commerce" }, { label: "Delivery Charges & Distribution" }]
 });
 
 const token = localStorage.getItem("thulirva_admin_token");
@@ -422,26 +576,167 @@ async function loadDeliveryConfig() {
 
 function populateForm(cfg) {
     document.getElementById("cfgDeliveryChargesEnabled").checked = cfg.delivery_charges_enabled !== false;
-    document.getElementById("cfgFixedCharge").value = cfg.fixed_delivery_charge !== undefined ? cfg.fixed_delivery_charge : 30;
-    document.getElementById("cfgFreeThreshold").value = cfg.free_delivery_threshold !== undefined ? cfg.free_delivery_threshold : 299;
+    document.getElementById("cfgFixedCharge").value = cfg.fixed_delivery_charge !== undefined ? cfg.fixed_delivery_charge : 40;
+    document.getElementById("cfgFreeThreshold").value = cfg.free_delivery_threshold !== undefined ? cfg.free_delivery_threshold : 500;
     document.getElementById("cfgMinOrderValue").value = cfg.min_order_value_for_delivery !== undefined ? cfg.min_order_value_for_delivery : 150;
-    document.getElementById("cfgDistanceEnabled").checked = Boolean(cfg.distance_charges_enabled);
-    document.getElementById("cfgDistanceBaseKm").value = cfg.distance_base_km !== undefined ? cfg.distance_base_km : 5.0;
-    document.getElementById("cfgDistanceRatePerKm").value = cfg.distance_rate_per_km !== undefined ? cfg.distance_rate_per_km : 8.0;
-    document.getElementById("cfgPartnerBasePayout").value = cfg.partner_base_payout !== undefined ? cfg.partner_base_payout : 35;
-    document.getElementById("cfgPartnerDistanceBonus").value = cfg.partner_distance_bonus_per_km !== undefined ? cfg.partner_distance_bonus_per_km : 6;
+
+    // Distribution
+    const dist = cfg.delivery_fee_distribution || {};
+    const mode = dist.distribution_mode || "fixed";
+    document.getElementById("cfgDistMode").value = mode;
+
+    if (mode === "percentage") {
+        document.getElementById("cfgPartnerShare").value = dist.partner_share_pct !== undefined ? dist.partner_share_pct : 75;
+        document.getElementById("cfgCompanyShare").value = dist.company_share_pct !== undefined ? dist.company_share_pct : 25;
+        document.getElementById("lblPartnerShare").textContent = "Delivery Partner Share (%)";
+        document.getElementById("lblCompanyShare").textContent = "THULIRVA Company Share (%)";
+        document.getElementById("prefixPartnerShare").textContent = "%";
+        document.getElementById("prefixCompanyShare").textContent = "%";
+    } else {
+        document.getElementById("cfgPartnerShare").value = dist.partner_share !== undefined ? dist.partner_share : 30;
+        document.getElementById("cfgCompanyShare").value = dist.company_share !== undefined ? dist.company_share : 10;
+        document.getElementById("lblPartnerShare").textContent = "Delivery Partner Share (₹)";
+        document.getElementById("lblCompanyShare").textContent = "THULIRVA Company Share (₹)";
+        document.getElementById("prefixPartnerShare").textContent = "₹";
+        document.getElementById("prefixCompanyShare").textContent = "₹";
+    }
+
+    // Free delivery funding policy
+    const policy = cfg.free_delivery_funding_policy || {};
+    document.getElementById("cfgFundingPolicy").value = policy.policy || "company_funded";
+    document.getElementById("cfgFreeDeliveryPartnerPayout").value = policy.partner_payout_on_free_delivery !== undefined ? policy.partner_payout_on_free_delivery : 30;
+
+    // Partner Earnings Config
+    const earnCfg = cfg.partner_earnings_config || {};
+    document.getElementById("cfgPartnerBasePayout").value = earnCfg.default_regular_order_earning !== undefined ? earnCfg.default_regular_order_earning : (cfg.partner_base_payout || 35);
+    document.getElementById("cfgSubEarning").value = earnCfg.default_subscription_earning !== undefined ? earnCfg.default_subscription_earning : 30;
+    document.getElementById("cfgDistanceBonusEnabled").value = earnCfg.distance_bonus_enabled !== false ? "true" : "false";
+    document.getElementById("cfgDistanceBaseKm").value = earnCfg.base_distance_km !== undefined ? earnCfg.base_distance_km : (cfg.distance_base_km || 5.0);
+    document.getElementById("cfgPartnerDistanceBonus").value = earnCfg.bonus_per_km !== undefined ? earnCfg.bonus_per_km : (cfg.partner_distance_bonus_per_km || 6);
+    document.getElementById("cfgMinEarning").value = earnCfg.min_earning_per_delivery !== undefined ? earnCfg.min_earning_per_delivery : 25;
+    document.getElementById("cfgMaxEarning").value = earnCfg.max_earning_per_delivery !== undefined ? earnCfg.max_earning_per_delivery : 150;
 
     // Stat Cards
-    document.getElementById("statDefaultCharge").textContent = `₹${cfg.fixed_delivery_charge || 30}`;
-    document.getElementById("statThreshold").textContent = `₹${cfg.free_delivery_threshold || 299}`;
-    document.getElementById("statPartnerPayout").textContent = `₹${cfg.partner_base_payout || 35}`;
+    document.getElementById("statDefaultCharge").textContent = `₹${cfg.fixed_delivery_charge || 40}`;
+    document.getElementById("statThreshold").textContent = `₹${cfg.free_delivery_threshold || 500}`;
+    document.getElementById("statPartnerPayout").textContent = `₹${dist.partner_share || 30}`;
+    document.getElementById("statCompanyShare").textContent = `₹${dist.company_share || 10}`;
 
-    renderZoneTable(cfg.zone_charges || {
-        "Padur": 20,
-        "Navalur": 30,
-        "Siruseri": 30,
-        "Kelambakkam": 40
+    renderZoneTable(cfg.zones || cfg.zone_charges || {
+        "Padur": { customer_delivery_fee: 20, free_delivery_threshold: 300, partner_share: 15, company_share: 5, partner_earning_regular: 30 },
+        "Navalur": { customer_delivery_fee: 30, free_delivery_threshold: 400, partner_share: 22, company_share: 8, partner_earning_regular: 35 },
+        "Siruseri": { customer_delivery_fee: 30, free_delivery_threshold: 400, partner_share: 22, company_share: 8, partner_earning_regular: 35 },
+        "Kelambakkam": { customer_delivery_fee: 40, free_delivery_threshold: 500, partner_share: 30, company_share: 10, partner_earning_regular: 40 }
     });
+
+    validateDistribution();
+}
+
+function onDistModeChanged() {
+    const mode = document.getElementById("cfgDistMode").value;
+    const fee = Number(document.getElementById("cfgFixedCharge").value) || 40;
+    if (mode === "percentage") {
+        document.getElementById("lblPartnerShare").textContent = "Delivery Partner Share (%)";
+        document.getElementById("lblCompanyShare").textContent = "THULIRVA Company Share (%)";
+        document.getElementById("prefixPartnerShare").textContent = "%";
+        document.getElementById("prefixCompanyShare").textContent = "%";
+        document.getElementById("cfgPartnerShare").value = 75;
+        document.getElementById("cfgCompanyShare").value = 25;
+    } else {
+        document.getElementById("lblPartnerShare").textContent = "Delivery Partner Share (₹)";
+        document.getElementById("lblCompanyShare").textContent = "THULIRVA Company Share (₹)";
+        document.getElementById("prefixPartnerShare").textContent = "₹";
+        document.getElementById("prefixCompanyShare").textContent = "₹";
+        document.getElementById("cfgPartnerShare").value = Math.round(fee * 0.75);
+        document.getElementById("cfgCompanyShare").value = Math.max(0, fee - Math.round(fee * 0.75));
+    }
+    validateDistribution();
+    updateCalcPreview();
+}
+
+function onCustomerFeeChanged(val) {
+    const fee = Number(val) || 0;
+    const mode = document.getElementById("cfgDistMode").value;
+    if (mode === "percentage") {
+        const pPct = Number(document.getElementById("cfgPartnerShare").value) || 75;
+        const cPct = Number(document.getElementById("cfgCompanyShare").value) || 25;
+    } else {
+        const partner = Number(document.getElementById("cfgPartnerShare").value) || 0;
+        document.getElementById("cfgCompanyShare").value = Math.max(0, fee - partner);
+    }
+    validateDistribution();
+    updateCalcPreview();
+}
+
+function onPartnerShareChanged(val) {
+    const pVal = Number(val) || 0;
+    const mode = document.getElementById("cfgDistMode").value;
+    if (mode === "percentage") {
+        document.getElementById("cfgCompanyShare").value = Math.max(0, 100 - pVal);
+    } else {
+        const fee = Number(document.getElementById("cfgFixedCharge").value) || 40;
+        document.getElementById("cfgCompanyShare").value = Math.max(0, fee - pVal);
+    }
+    validateDistribution();
+    updateCalcPreview();
+}
+
+function onCompanyShareChanged(val) {
+    const cVal = Number(val) || 0;
+    const mode = document.getElementById("cfgDistMode").value;
+    if (mode === "percentage") {
+        document.getElementById("cfgPartnerShare").value = Math.max(0, 100 - cVal);
+    } else {
+        const fee = Number(document.getElementById("cfgFixedCharge").value) || 40;
+        document.getElementById("cfgPartnerShare").value = Math.max(0, fee - cVal);
+    }
+    validateDistribution();
+    updateCalcPreview();
+}
+
+function validateDistribution() {
+    const fee = Number(document.getElementById("cfgFixedCharge").value) || 0;
+    const mode = document.getElementById("cfgDistMode").value;
+    const pShare = Number(document.getElementById("cfgPartnerShare").value) || 0;
+    const cShare = Number(document.getElementById("cfgCompanyShare").value) || 0;
+    const alertEl = document.getElementById("distValidationAlert");
+
+    let isValid = false;
+    let message = "";
+    let pDisplay = 0, cDisplay = 0, pPct = 0, cPct = 0;
+
+    if (mode === "percentage") {
+        isValid = Math.abs((pShare + cShare) - 100) < 0.01 && pShare >= 0 && cShare >= 0;
+        pPct = pShare;
+        cPct = cShare;
+        pDisplay = Math.round((fee * pShare) / 100 * 100) / 100;
+        cDisplay = Math.max(0, Math.round((fee - pDisplay) * 100) / 100);
+        message = isValid
+            ? `✓ Validation Passed: Partner ${pPct}% (₹${pDisplay}) + Company ${cPct}% (₹${cDisplay}) = 100% (₹${fee})`
+            : `⚠️ Sum Error: Partner (${pShare}%) + Company (${cShare}%) = ${pShare + cShare}%. Must equal 100%.`;
+    } else {
+        isValid = Math.abs((pShare + cShare) - fee) < 0.01 && pShare >= 0 && cShare >= 0;
+        pDisplay = pShare;
+        cDisplay = cShare;
+        pPct = fee > 0 ? Math.round((pShare / fee) * 100) : 0;
+        cPct = fee > 0 ? Math.round((cShare / fee) * 100) : 0;
+        message = isValid
+            ? `✓ Validation Passed: Partner (₹${pShare}) + Company (₹${cShare}) = Customer Fee (₹${fee})`
+            : `⚠️ Sum Error: Partner (₹${pShare}) + Company (₹${cShare}) = ₹${pShare + cShare}. Must equal Customer Fee (₹${fee}).`;
+    }
+
+    if (alertEl) {
+        alertEl.className = isValid ? "validation-alert val-success" : "validation-alert val-error";
+        alertEl.innerHTML = `<span>${message}</span>`;
+    }
+
+    // Update Split Bar
+    document.getElementById("splitPartnerText").textContent = `Partner: ₹${pDisplay} (${pPct}%)`;
+    document.getElementById("splitCompanyText").textContent = `THULIRVA: ₹${cDisplay} (${cPct}%)`;
+    document.getElementById("splitBarPartner").style.width = `${pPct}%`;
+    document.getElementById("splitBarCompany").style.width = `${cPct}%`;
+
+    return isValid;
 }
 
 function renderZoneTable(zones) {
@@ -449,27 +744,37 @@ function renderZoneTable(zones) {
     tbody.innerHTML = "";
 
     const entries = Object.entries(zones || {});
-    document.getElementById("statZoneRulesCount").textContent = `${entries.length} Zones`;
-
     if (!entries.length) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:18px; color:var(--thulirva-text-muted);">No custom area overrides. All areas use default rate.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:18px; color:var(--thulirva-text-muted);">No custom area overrides. All areas use default rate.</td></tr>`;
         return;
     }
 
-    entries.forEach(([zone, fee]) => {
+    entries.forEach(([zone, zData]) => {
+        const fee = typeof zData === "object" ? (zData.customer_delivery_fee ?? 30) : Number(zData);
+        const threshold = typeof zData === "object" ? (zData.free_delivery_threshold ?? 400) : 400;
+        const pShare = typeof zData === "object" ? (zData.partner_share ?? Math.round(fee * 0.75)) : Math.round(fee * 0.75);
+        const cShare = typeof zData === "object" ? (zData.company_share ?? (fee - pShare)) : (fee - pShare);
+        const regularEarning = typeof zData === "object" ? (zData.partner_earning_regular ?? 35) : 35;
+
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td>
                 <input type="text" class="form-control zone-name-input" value="${zone}" style="font-weight:700; color:var(--thulirva-forest);">
             </td>
             <td>
-                <div class="rate-input-group" style="max-width:140px;">
-                    <span class="rate-prefix">₹</span>
-                    <input type="number" class="form-control rate-input zone-fee-input" value="${fee}" min="0" step="1" oninput="updateCalcPreview()">
-                </div>
+                <input type="number" class="form-control zone-fee-input" value="${fee}" min="0" step="1" oninput="updateCalcPreview()">
             </td>
             <td>
-                <small style="color:var(--thulirva-text-muted);">Subject to ₹${document.getElementById("cfgFreeThreshold").value} threshold</small>
+                <input type="number" class="form-control zone-thresh-input" value="${threshold}" min="0" step="10" oninput="updateCalcPreview()">
+            </td>
+            <td>
+                <input type="number" class="form-control zone-pshare-input" value="${pShare}" min="0" step="1" oninput="updateCalcPreview()">
+            </td>
+            <td>
+                <input type="number" class="form-control zone-cshare-input" value="${cShare}" min="0" step="1" oninput="updateCalcPreview()">
+            </td>
+            <td>
+                <input type="number" class="form-control zone-pearn-input" value="${regularEarning}" min="0" step="1" oninput="updateCalcPreview()">
             </td>
             <td style="text-align:right;">
                 <button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove(); updateCalcPreview();">🗑️</button>
@@ -487,13 +792,19 @@ function addNewZoneRow() {
             <input type="text" class="form-control zone-name-input" placeholder="e.g. Sholinganallur" style="font-weight:700; color:var(--thulirva-forest);">
         </td>
         <td>
-            <div class="rate-input-group" style="max-width:140px;">
-                <span class="rate-prefix">₹</span>
-                <input type="number" class="form-control rate-input zone-fee-input" value="35" min="0" step="1" oninput="updateCalcPreview()">
-            </div>
+            <input type="number" class="form-control zone-fee-input" value="35" min="0" step="1" oninput="updateCalcPreview()">
         </td>
         <td>
-            <small style="color:var(--thulirva-text-muted);">Subject to free threshold</small>
+            <input type="number" class="form-control zone-thresh-input" value="450" min="0" step="10" oninput="updateCalcPreview()">
+        </td>
+        <td>
+            <input type="number" class="form-control zone-pshare-input" value="26" min="0" step="1" oninput="updateCalcPreview()">
+        </td>
+        <td>
+            <input type="number" class="form-control zone-cshare-input" value="9" min="0" step="1" oninput="updateCalcPreview()">
+        </td>
+        <td>
+            <input type="number" class="form-control zone-pearn-input" value="35" min="0" step="1" oninput="updateCalcPreview()">
         </td>
         <td style="text-align:right;">
             <button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove(); updateCalcPreview();">🗑️</button>
@@ -502,103 +813,118 @@ function addNewZoneRow() {
     tbody.appendChild(tr);
 }
 
-function collectZoneCharges() {
+function collectZonesObject() {
     const zones = {};
     const rows = document.querySelectorAll("#zoneTableBody tr");
     rows.forEach(row => {
         const nameInput = row.querySelector(".zone-name-input");
         const feeInput = row.querySelector(".zone-fee-input");
+        const threshInput = row.querySelector(".zone-thresh-input");
+        const pShareInput = row.querySelector(".zone-pshare-input");
+        const cShareInput = row.querySelector(".zone-cshare-input");
+        const pEarnInput = row.querySelector(".zone-pearn-input");
+
         if (nameInput && feeInput) {
             const zName = nameInput.value.trim();
-            const zFee = Number(feeInput.value) || 0;
-            if (zName) zones[zName] = zFee;
+            if (zName) {
+                const fee = Number(feeInput.value) || 0;
+                const thresh = threshInput ? (Number(threshInput.value) || 400) : 400;
+                const pShare = pShareInput ? (Number(pShareInput.value) || Math.round(fee * 0.75)) : Math.round(fee * 0.75);
+                const cShare = cShareInput ? (Number(cShareInput.value) || (fee - pShare)) : (fee - pShare);
+                const pEarn = pEarnInput ? (Number(pEarnInput.value) || 35) : 35;
+
+                zones[zName] = {
+                    customer_delivery_fee: fee,
+                    free_delivery_threshold: thresh,
+                    partner_share: pShare,
+                    company_share: cShare,
+                    partner_earning_regular: pEarn,
+                    partner_earning_subscription: 30,
+                    free_delivery_partner_payout: 30,
+                    enabled: true
+                };
+            }
         }
     });
     return zones;
 }
 
-function updateCalcPreview() {
-    const deliveryEnabled = document.getElementById("cfgDeliveryChargesEnabled").checked;
-    const fixedCharge = Number(document.getElementById("cfgFixedCharge").value) || 30;
-    const threshold = Number(document.getElementById("cfgFreeThreshold").value) || 299;
-    const distanceEnabled = document.getElementById("cfgDistanceEnabled").checked;
-    const distanceBaseKm = Number(document.getElementById("cfgDistanceBaseKm").value) || 5;
-    const distanceRate = Number(document.getElementById("cfgDistanceRatePerKm").value) || 8;
-    const partnerBase = Number(document.getElementById("cfgPartnerBasePayout").value) || 35;
-    const partnerBonus = Number(document.getElementById("cfgPartnerDistanceBonus").value) || 6;
-
-    const zones = collectZoneCharges();
-
+async function updateCalcPreview() {
     const subtotal = Number(document.getElementById("simSubtotal").value) || 0;
-    const simZone = document.getElementById("simZone").value;
-    const simDist = Number(document.getElementById("simDistance").value) || 1;
-    const simType = document.getElementById("simOrderType").value;
+    const zone = document.getElementById("simZone").value;
+    const distance_km = Number(document.getElementById("simDistance").value) || 1;
+    const order_type = document.getElementById("simOrderType").value;
 
-    const feeEl = document.getElementById("simResultFee");
-    const badgeWrap = document.getElementById("simResultBadgeWrap");
-    const reasonEl = document.getElementById("simResultReason");
-    const partnerEl = document.getElementById("simPartnerPayout");
-
-    if (simType === "pickup") {
-        feeEl.textContent = "₹0.00";
-        badgeWrap.innerHTML = `<span class="badge" style="background:#E8F5E9; color:var(--thulirva-forest); font-weight:700;">STORE PICKUP FREE</span>`;
-        reasonEl.textContent = "Farm store self-pickup is always 100% free.";
-        partnerEl.textContent = "₹0.00 (Self Pickup)";
-        return;
-    }
-
-    if (!deliveryEnabled) {
-        feeEl.textContent = "₹0.00";
-        badgeWrap.innerHTML = `<span class="badge" style="background:#E8F5E9; color:var(--thulirva-forest); font-weight:700;">CHARGES WAIVED</span>`;
-        reasonEl.textContent = "Delivery fees are currently disabled store-wide.";
-        partnerEl.textContent = `₹${partnerBase.toFixed(2)}`;
-        return;
-    }
-
-    if (subtotal >= threshold) {
-        feeEl.textContent = "₹0.00";
-        badgeWrap.innerHTML = `<span class="badge" style="background:#E8F5E9; color:var(--thulirva-forest); font-weight:700;">🎉 FREE DELIVERY UNLOCKED</span>`;
-        reasonEl.textContent = `Cart subtotal ₹${subtotal} exceeds the ₹${threshold} free delivery threshold.`;
-    } else {
-        let base = fixedCharge;
-        if (simZone && zones[simZone] !== undefined) {
-            base = Number(zones[simZone]);
+    try {
+        const res = await fetch("/api/config/delivery/simulate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ subtotal, zone, distance_km, order_type })
+        });
+        const calc = await res.json();
+        if (calc.success) {
+            document.getElementById("simResultFee").textContent = calc.is_free ? "FREE" : `₹${calc.customer_delivery_fee.toFixed(2)}`;
+            document.getElementById("simResultBadgeWrap").innerHTML = calc.is_free
+                ? `<span class="badge" style="background:#E8F5E9; color:#2E7D32; font-weight:700;">🎉 FREE DELIVERY UNLOCKED</span>`
+                : `<span class="badge" style="background:#FEF3C7; color:#B45309; font-weight:700;">Standard Fee Applied</span>`;
+            document.getElementById("simResultReason").textContent = calc.reason;
+            document.getElementById("simPartnerPayout").textContent = `₹${calc.partner_earning.toFixed(2)}`;
+            document.getElementById("simCompanyRevenue").textContent = `₹${calc.company_delivery_revenue.toFixed(2)}`;
+            document.getElementById("simCompanyExpense").textContent = `₹${calc.company_funded_delivery_expense.toFixed(2)}`;
+            document.getElementById("simTotalPayable").textContent = `₹${calc.total_partner_payable.toFixed(2)}`;
         }
-
-        let distCharge = 0;
-        if (distanceEnabled && simDist > distanceBaseKm) {
-            distCharge = (simDist - distanceBaseKm) * distanceRate;
-        }
-
-        const totalFee = base + distCharge;
-        const shortfall = threshold - subtotal;
-
-        feeEl.textContent = `₹${totalFee.toFixed(2)}`;
-        badgeWrap.innerHTML = `<span class="badge" style="background:#FEF3C7; color:#B45309;">Standard Rate Applied</span>`;
-        reasonEl.textContent = `Add ₹${shortfall.toFixed(0)} more items for FREE delivery! (Base: ₹${base}${distCharge ? ` + Dist: ₹${distCharge.toFixed(0)}` : ''})`;
-    }
-
-    // Partner Payout Calculation
-    let extraPartnerDist = 0;
-    if (simDist > distanceBaseKm) {
-        extraPartnerDist = (simDist - distanceBaseKm) * partnerBonus;
-    }
-    const partnerTotal = partnerBase + extraPartnerDist;
-    partnerEl.textContent = `₹${partnerTotal.toFixed(2)} (Base ₹${partnerBase} + Dist ₹${extraPartnerDist.toFixed(0)})`;
+    } catch (_) {}
 }
 
 async function saveAllSettings() {
+    if (!validateDistribution()) {
+        showToast("Please correct distribution shares: Partner + Company must equal Customer Fee.", "error");
+        return;
+    }
+
+    const zonesObj = collectZonesObject();
+    const zoneChargesLegacy = {};
+    Object.keys(zonesObj).forEach(k => { zoneChargesLegacy[k] = zonesObj[k].customer_delivery_fee; });
+
+    const mode = document.getElementById("cfgDistMode").value;
+    const fixedFee = Number(document.getElementById("cfgFixedCharge").value) || 40;
+    const pShare = Number(document.getElementById("cfgPartnerShare").value) || 30;
+    const cShare = Number(document.getElementById("cfgCompanyShare").value) || 10;
+
     const payload = {
         delivery_charges_enabled: document.getElementById("cfgDeliveryChargesEnabled").checked,
-        fixed_delivery_charge: Number(document.getElementById("cfgFixedCharge").value),
+        fixed_delivery_charge: fixedFee,
         free_delivery_threshold: Number(document.getElementById("cfgFreeThreshold").value),
         min_order_value_for_delivery: Number(document.getElementById("cfgMinOrderValue").value),
-        distance_charges_enabled: document.getElementById("cfgDistanceEnabled").checked,
-        distance_base_km: Number(document.getElementById("cfgDistanceBaseKm").value),
-        distance_rate_per_km: Number(document.getElementById("cfgDistanceRatePerKm").value),
-        partner_base_payout: Number(document.getElementById("cfgPartnerBasePayout").value),
-        partner_distance_bonus_per_km: Number(document.getElementById("cfgPartnerDistanceBonus").value),
-        zone_charges: collectZoneCharges(),
+        delivery_fee_distribution: {
+            distribution_mode: mode,
+            customer_delivery_fee: fixedFee,
+            partner_share: mode === "percentage" ? Math.round((fixedFee * pShare) / 100 * 100) / 100 : pShare,
+            company_share: mode === "percentage" ? Math.round((fixedFee * cShare) / 100 * 100) / 100 : cShare,
+            partner_share_pct: mode === "percentage" ? pShare : (fixedFee > 0 ? Math.round((pShare / fixedFee) * 100) : 75),
+            company_share_pct: mode === "percentage" ? cShare : (fixedFee > 0 ? Math.round((cShare / fixedFee) * 100) : 25)
+        },
+        free_delivery_funding_policy: {
+            policy: document.getElementById("cfgFundingPolicy").value,
+            partner_payout_on_free_delivery: Number(document.getElementById("cfgFreeDeliveryPartnerPayout").value) || 30,
+            company_subsidy_amount: Number(document.getElementById("cfgFreeDeliveryPartnerPayout").value) || 30
+        },
+        partner_earnings_config: {
+            default_regular_order_earning: Number(document.getElementById("cfgPartnerBasePayout").value) || 35,
+            default_subscription_earning: Number(document.getElementById("cfgSubEarning").value) || 30,
+            distance_bonus_enabled: document.getElementById("cfgDistanceBonusEnabled").value === "true",
+            base_distance_km: Number(document.getElementById("cfgDistanceBaseKm").value) || 5.0,
+            bonus_per_km: Number(document.getElementById("cfgPartnerDistanceBonus").value) || 6,
+            min_earning_per_delivery: Number(document.getElementById("cfgMinEarning").value) || 25,
+            max_earning_per_delivery: Number(document.getElementById("cfgMaxEarning").value) || 150,
+            free_delivery_earning: Number(document.getElementById("cfgFreeDeliveryPartnerPayout").value) || 30,
+            rules_enabled: true
+        },
+        partner_base_payout: Number(document.getElementById("cfgPartnerBasePayout").value) || 35,
+        partner_distance_bonus_per_km: Number(document.getElementById("cfgPartnerDistanceBonus").value) || 6,
+        distance_base_km: Number(document.getElementById("cfgDistanceBaseKm").value) || 5.0,
+        zones: zonesObj,
+        zone_charges: zoneChargesLegacy,
         admin_name: (window.getAdminName && window.getAdminName()) || "Super Admin"
     };
 
@@ -616,7 +942,7 @@ async function saveAllSettings() {
 
         const data = await res.json();
         if (data.success) {
-            showToast("Delivery charges & partner rates saved successfully!");
+            showToast("Delivery pricing & financial distribution saved successfully!");
             loadDeliveryConfig();
         } else {
             showToast(data.message || "Failed to save configuration", "error");
