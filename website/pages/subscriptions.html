@@ -90,11 +90,15 @@
         }
         .sub-plan-img {
             width: 100%;
-            height: 220px;
+            aspect-ratio: 4 / 3;
+            height: auto;
+            max-height: 240px;
             object-fit: contain;
+            object-position: center;
             background: #FAF8EF;
             padding: 10px;
             border-bottom: 1px solid var(--border);
+            box-sizing: border-box;
         }
         .sub-plan-body {
             padding: 22px;
@@ -640,7 +644,13 @@ function renderPlansGrid(plans) {
     plans.forEach(p => {
         const card = document.createElement("div");
         card.className = "sub-plan-card";
-        const img = p.product_image || "/assets/images/products/fresh_cow_milk.jpg";
+        let img = p.product_image || "/assets/images/products/fresh_cow_milk.jpg";
+        if (img && !img.startsWith('data:')) {
+            const v = p.updated_at ? new Date(p.updated_at).getTime() : '';
+            if (v && !img.includes('?')) {
+                img = `${img}?v=${v}`;
+            }
+        }
         card.innerHTML = `
             ${p.badge ? `<span class="sub-plan-badge">${p.badge}</span>` : ""}
             <img src="${img}" alt="${p.product_name}" class="sub-plan-img" onerror="this.onerror=null;this.src='/assets/images/products/fresh_cow_milk.jpg'">
@@ -680,7 +690,13 @@ function openBuySubModal(planId) {
     if (!selectedPlan) return;
 
     // Fill plan summary
-    const img = selectedPlan.product_image || "/assets/images/products/fresh_cow_milk.jpg";
+    let img = selectedPlan.product_image || "/assets/images/products/fresh_cow_milk.jpg";
+    if (img && !img.startsWith('data:')) {
+        const v = selectedPlan.updated_at ? new Date(selectedPlan.updated_at).getTime() : '';
+        if (v && !img.includes('?')) {
+            img = `${img}?v=${v}`;
+        }
+    }
     document.getElementById("modalPlanImg").src = img;
     document.getElementById("modalPlanTitle").textContent = selectedPlan.product_name;
     document.getElementById("modalPlanSubtitle").textContent = selectedPlan.frequency || "Daily Morning Plan";

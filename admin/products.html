@@ -414,7 +414,7 @@
 
         async function loadProducts() {
             try {
-                const res = await fetch("/api/admin/products", {
+                const res = await fetch(`/api/admin/products?_t=${Date.now()}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (res.ok) {
@@ -422,7 +422,7 @@
                     catalog = data.products || [];
                 } else {
                     // Fallback catalog
-                    const pubRes = await fetch("/api/products");
+                    const pubRes = await fetch(`/api/products?_t=${Date.now()}`);
                     if (pubRes.ok) {
                         const pData = await pubRes.json();
                         catalog = pData.products || [];
@@ -735,17 +735,45 @@
             }
         }
 
-        function handleImageFileUpload(e) {
+        async function handleImageFileUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
+
+            // Fast instant preview
             const reader = new FileReader();
             reader.onload = (event) => {
                 currentUploadedImageBase64 = event.target.result;
                 document.getElementById("imagePreview").src = currentUploadedImageBase64;
-                document.getElementById("previewLabel").textContent = "✓ Uploaded: " + file.name;
                 updateLivePreview();
             };
             reader.readAsDataURL(file);
+
+            const labelEl = document.getElementById("previewLabel");
+            if (labelEl) labelEl.textContent = "⏳ Uploading " + file.name + "...";
+
+            try {
+                const formData = new FormData();
+                formData.append("image", file);
+                const token = localStorage.getItem("thulirva_admin_token");
+                const res = await fetch("/api/admin/products/upload", {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${token}` },
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success && (data.image_url || data.url)) {
+                    const url = data.image_url || data.url;
+                    currentUploadedImageBase64 = url;
+                    document.getElementById("imagePreview").src = url;
+                    document.getElementById("prodCustomImage").value = url;
+                    if (labelEl) labelEl.textContent = "✓ Uploaded to server: " + file.name;
+                } else {
+                    if (labelEl) labelEl.textContent = "✓ Local image loaded: " + file.name;
+                }
+            } catch (_) {
+                if (labelEl) labelEl.textContent = "✓ Image selected: " + file.name;
+            }
+            updateLivePreview();
         }
 
         function previewCustomUrl(url) {

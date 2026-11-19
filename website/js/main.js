@@ -299,6 +299,13 @@ function buildProductCard(product, isShop = false) {
     if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('/')) {
         imgSrc = isPagesDir && !imgSrc.startsWith('../') ? '../' + imgSrc : imgSrc;
     }
+    if (imgSrc && !imgSrc.startsWith('data:')) {
+        const v = product.updated_at ? new Date(product.updated_at).getTime() : '';
+        if (v && !imgSrc.includes('?')) {
+            imgSrc = `${imgSrc}?v=${v}`;
+        }
+    }
+    const defaultFallback = isPagesDir ? '../assets/images/products/fresh_cow_milk.jpg' : '/assets/images/products/fresh_cow_milk.jpg';
     const emoji = product.emoji || EMOJIS[product.category] || "🛒";
     const card = document.createElement("div");
     card.className = "product-card";
@@ -309,7 +316,7 @@ function buildProductCard(product, isShop = false) {
         <button class="product-wishlist" title="Add to Wishlist" onclick="toggleWishlist(this)">♡</button>
         <a href="${productHref}" class="product-image">
             ${imgSrc
-                ? `<img src="${imgSrc}" alt="${product.name}" loading="lazy">`
+                ? `<img src="${imgSrc}" alt="${product.name}" loading="lazy" onerror="this.onerror=null;this.src='${defaultFallback}';">`
                 : `<div class="product-emoji">${emoji}</div>`}
         </a>
         <div class="product-info">
@@ -352,7 +359,10 @@ async function loadProducts() {
     if (!grid) return;
 
     try {
-        const res = await fetch(`${API}/products`);
+        const res = await fetch(`${API}/products?_t=${Date.now()}`, {
+            cache: "no-store",
+            headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" }
+        });
         if (!res.ok) throw new Error("API status " + res.status);
         const data = await res.json();
         allProducts = (data && data.products && data.products.length > 0) ? data.products : getSampleProducts();

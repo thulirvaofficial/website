@@ -11,7 +11,10 @@ async function loadProductDetail() {
 
     let product;
     try {
-        const res = await fetch(`/api/products/${id}`);
+        const res = await fetch(`/api/products/${id}?_t=${Date.now()}`, {
+            cache: "no-store",
+            headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" }
+        });
         if (!res.ok) throw new Error("API status " + res.status);
         const data = await res.json();
         product = data.product;
@@ -41,6 +44,12 @@ async function loadProductDetail() {
     if (detailImgSrc && !detailImgSrc.startsWith('http') && !detailImgSrc.startsWith('/') && !detailImgSrc.startsWith('../')) {
         detailImgSrc = '../' + detailImgSrc;
     }
+    if (detailImgSrc && !detailImgSrc.startsWith('data:')) {
+        const v = product.updated_at ? new Date(product.updated_at).getTime() : '';
+        if (v && !detailImgSrc.includes('?')) {
+            detailImgSrc = `${detailImgSrc}?v=${v}`;
+        }
+    }
 
     const pkgWeight = product.weight || product.unit || "Standard Pack";
 
@@ -48,7 +57,7 @@ async function loadProductDetail() {
         <div class="product-gallery">
             <div class="product-main-image" id="mainImage">
                 ${detailImgSrc
-                    ? `<img src="${detailImgSrc}" alt="${product.name}" id="mainImg">`
+                    ? `<img src="${detailImgSrc}" alt="${product.name}" id="mainImg" onerror="this.onerror=null;this.src='../assets/images/products/fresh_cow_milk.jpg';">`
                     : `<div style="font-size:120px">${emoji}</div>`}
             </div>
         </div>
