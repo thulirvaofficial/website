@@ -22,8 +22,8 @@ function getDefaultCategories() {
 async function initShop() {
     try {
         const [prodRes, catRes] = await Promise.all([
-            fetch(`/api/products`),
-            fetch(`/api/categories`)
+            fetch(`/api/products?t=${Date.now()}`, { cache: "no-store" }),
+            fetch(`/api/categories?t=${Date.now()}`, { cache: "no-store" })
         ]);
         const prodData = await prodRes.json();
         const catData = await catRes.json();

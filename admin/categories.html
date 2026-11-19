@@ -374,7 +374,8 @@ let filteredCategories = [];
 
 async function loadCategories() {
     try {
-        const res = await fetch("/api/admin/categories", {
+        const timestamp = Date.now();
+        const res = await fetch(`/api/admin/categories?t=${timestamp}`, {
             cache: "no-store",
             headers: token ? { Authorization: `Bearer ${token}` } : {}
         });
@@ -382,7 +383,7 @@ async function loadCategories() {
             const data = await res.json();
             categories = data.categories || [];
         } else {
-            const pubRes = await fetch("/api/categories?all=true", { cache: "no-store" });
+            const pubRes = await fetch(`/api/categories?all=true&t=${timestamp}`, { cache: "no-store" });
             if (pubRes.ok) {
                 const pData = await pubRes.json();
                 categories = pData.categories || [];
@@ -417,14 +418,17 @@ function renderCategoriesTable() {
 
     filteredCategories.forEach(c => {
         const row = document.createElement("tr");
-        const img = c.category_image || c.image_web || c.image || "/assets/images/products/fresh_cow_milk.jpg";
+        const img = (c.category_image || c.image_web || c.image || "").trim();
         const isActive = c.is_active !== false;
         const descText = (c.category_description || c.description || "").trim();
+
+        const cacheBuster = c.updated_at ? `?v=${encodeURIComponent(c.updated_at)}` : `?t=${Date.now()}`;
+        const finalThumbSrc = img ? (img.includes('?') ? `${img}&_cb=${Date.parse(c.updated_at) || Date.now()}` : `${img}${cacheBuster}`) : '/assets/images/products/fresh_cow_milk.jpg';
 
         row.innerHTML = `
             <td><strong class="font-mono">#${c.display_order || 1}</strong></td>
             <td>
-                <img src="${img}" alt="${c.name}" class="cat-thumb" onerror="this.onerror=null;this.src='/assets/images/products/fresh_cow_milk.jpg';">
+                <img src="${finalThumbSrc}" alt="${c.name}" class="cat-thumb" onerror="this.onerror=null;this.src='/assets/images/products/fresh_cow_milk.jpg';">
             </td>
             <td>
                 <span class="badge badge-neutral font-mono">${c.name}</span>
@@ -479,7 +483,8 @@ function openEditModal(id) {
         document.getElementById("catImageUrl").value = img;
         document.getElementById("catImageWeb").value = img;
         const filename = img.split("/").pop() || "Current Category Image";
-        setPreviewCard(img, filename, "Current saved category image");
+        const previewUrl = img.includes('?') ? `${img}&_t=${Date.now()}` : `${img}?_t=${Date.now()}`;
+        setPreviewCard(previewUrl, filename, "Current saved category image");
     } else {
         removeCurrentImage();
     }
@@ -781,8 +786,16 @@ async function handleCategorySubmit(e) {
         const data = await res.json();
         if (data.success) {
             showToast(isEdit ? "Category updated successfully." : "Category created successfully.");
+            // Immediately update category in memory for instant visual feedback
+            if (isEdit && data.category) {
+                const idx = categories.findIndex(item => Number(item.id) === Number(id));
+                if (idx !== -1) {
+                    categories[idx] = data.category;
+                    filterCategories();
+                }
+            }
             closeModal();
-            loadCategories();
+            await loadCategories();
         } else {
             showToast(data.message || "Failed to save category", "error");
         }

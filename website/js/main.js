@@ -770,6 +770,61 @@ async function loadActiveAnnouncements() {
 }
 
 /* =========================================================
+   DYNAMIC HOMEPAGE CATEGORIES SYNCHRONIZATION
+========================================================= */
+async function loadDynamicHomepageCategories() {
+    const grid = document.querySelector(".category-grid");
+    if (!grid) return;
+
+    try {
+        const res = await fetch(`/api/categories?t=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data || !data.categories || !data.categories.length) return;
+
+        const activeCats = data.categories.filter(c => c.is_active !== false);
+        if (!activeCats.length) return;
+
+        const isPages = window.location.pathname.includes("/pages/");
+        const shopPrefix = isPages ? "shop.html" : "pages/shop.html";
+
+        const brandTags = {
+            "Milk": "THULIRVA PURE",
+            "Ghee": "THULIRVA BILONA",
+            "Paneer": "THULIRVA FRESH",
+            "Curd": "THULIRVA NATURAL",
+            "Oils": "THULIRVA WOOD PRESSED",
+            "Masalas": "THULIRVA NATURAL",
+            "Vegan": "THULIRVA VEGAN"
+        };
+
+        grid.innerHTML = activeCats.map(c => {
+            const rawImg = c.category_image || c.website_image || c.image || "/assets/images/products/fresh_cow_milk.jpg";
+            const tag = brandTags[c.name] || (c.category_icon ? `${c.category_icon} THULIRVA` : "THULIRVA FRESH");
+            const title = c.displayName || c.display_name || c.name;
+            const desc = c.category_description || c.description || "";
+            const slug = encodeURIComponent(c.name);
+            const cacheBustImg = rawImg.includes("?") 
+                ? `${rawImg}&v=${encodeURIComponent(c.updated_at || Date.now())}` 
+                : `${rawImg}?v=${encodeURIComponent(c.updated_at || Date.now())}`;
+
+            return `
+                <a href="${shopPrefix}?category=${slug}" class="category-card">
+                    <div class="category-card-img-wrap">
+                        <img src="${cacheBustImg}" alt="THULIRVA ${title}" onerror="this.onerror=null;this.src='/assets/images/products/fresh_cow_milk.jpg';">
+                        <span class="category-brand-tag">${tag}</span>
+                    </div>
+                    <div class="category-content" style="padding:14px 16px;">
+                        <h3>${title}</h3>
+                        ${desc ? `<span>${desc}</span>` : `<span>Farm Fresh &amp; Direct</span>`}
+                    </div>
+                </a>
+            `;
+        }).join("");
+    } catch (_) {}
+}
+
+/* =========================================================
    INIT & EVENT LISTENERS
 ========================================================= */
 updateCartCount();
@@ -777,6 +832,7 @@ loadProducts();
 document.addEventListener("DOMContentLoaded", () => {
     initOffersDrawer();
     loadActiveAnnouncements();
+    loadDynamicHomepageCategories();
 });
 
 // Real-time synchronization
@@ -788,11 +844,18 @@ if (typeof io !== "undefined") {
         socket.on("announcement:deleted", () => loadActiveAnnouncements());
         socket.on("announcement:sync", () => loadActiveAnnouncements());
         socket.on("config:banner_updated", () => loadActiveAnnouncements());
+        socket.on("category:updated", () => loadDynamicHomepageCategories());
     } catch (_) {}
 }
 
 // Window visibility and focus listeners
 document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) loadActiveAnnouncements();
+    if (!document.hidden) {
+        loadActiveAnnouncements();
+        loadDynamicHomepageCategories();
+    }
 });
-window.addEventListener("focus", () => loadActiveAnnouncements());
+window.addEventListener("focus", () => {
+    loadActiveAnnouncements();
+    loadDynamicHomepageCategories();
+});
