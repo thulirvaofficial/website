@@ -19,6 +19,126 @@
             object-fit: cover;
             border: 1px solid var(--thulirva-border);
         }
+
+        /* Category Image Upload Component */
+        .upload-dropzone {
+            border: 2px dashed var(--thulirva-border, #E5E0D5);
+            border-radius: 12px;
+            background: var(--thulirva-cream, #FAF7F0);
+            padding: 22px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        .upload-dropzone:hover, .upload-dropzone.dragover {
+            border-color: var(--thulirva-forest, #173F2D);
+            background: #EBF3EE;
+            box-shadow: 0 0 0 3px rgba(23, 63, 45, 0.08);
+        }
+        .dropzone-icon {
+            font-size: 30px;
+            line-height: 1;
+        }
+        .dropzone-title {
+            margin: 0;
+            font-size: 13px;
+            color: var(--thulirva-text, #17241A);
+        }
+        .dropzone-browse {
+            color: var(--thulirva-forest, #173F2D);
+            font-weight: 700;
+            text-decoration: underline;
+        }
+        .dropzone-sub {
+            margin: 2px 0 0 0;
+            font-size: 11px;
+            color: var(--thulirva-text-muted, #59655B);
+        }
+        .upload-preview-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1.5px solid var(--thulirva-border, #E5E0D5);
+            background: #FFFFFF;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+        }
+        .preview-thumbnail-container {
+            width: 72px;
+            height: 72px;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #F3EFE4;
+            border: 1px solid var(--thulirva-border, #E5E0D5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .preview-thumbnail {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .preview-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .preview-filename {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--thulirva-forest-deep, #091C13);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 3px;
+        }
+        .preview-meta {
+            font-size: 11.5px;
+            color: var(--thulirva-text-muted, #59655B);
+            margin-bottom: 8px;
+        }
+        .preview-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .upload-progress-wrapper {
+            background: #FFFFFF;
+            border: 1px solid var(--thulirva-border, #E5E0D5);
+            border-radius: 8px;
+            padding: 8px 12px;
+        }
+        .progress-bar-bg {
+            width: 100%;
+            height: 6px;
+            background: #E5E0D5;
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--thulirva-forest, #173F2D);
+            border-radius: 99px;
+            transition: width 0.15s ease-in-out;
+        }
+        .upload-error-banner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #FEE2E2;
+            border: 1px solid #F87171;
+            color: #991B1B;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body>
@@ -160,9 +280,76 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Image URL</label>
-                    <input type="text" id="catImageWeb" placeholder="/assets/images/categories/milk.jpg" class="form-control">
+                <!-- CATEGORY IMAGE UPLOAD COMPONENT -->
+                <div class="form-group" style="margin-top: 14px; margin-bottom: 10px;">
+                    <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Category Image</span>
+                        <span style="font-size:11px; font-weight:normal; color:var(--thulirva-text-muted);">Max 5 MB (JPG, PNG, WEBP)</span>
+                    </label>
+
+                    <!-- Hidden storage for the active image URL -->
+                    <input type="hidden" id="catImageUrl" value="">
+                    <!-- Hidden file input for file picker -->
+                    <input type="file" id="categoryFileInput" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="handleFileSelect(event)">
+
+                    <!-- Drag-and-Drop Area -->
+                    <div id="categoryDropzone" class="upload-dropzone" onclick="triggerFileInput()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                        <div class="dropzone-icon">📷</div>
+                        <div class="dropzone-content">
+                            <p class="dropzone-title"><strong>Drag &amp; drop image here</strong> or <span class="dropzone-browse">Browse Files</span></p>
+                            <p class="dropzone-sub">Supports JPG, PNG, WEBP up to 5 MB</p>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); triggerFileInput();" style="margin-top:4px;">
+                            📁 Select Image
+                        </button>
+                    </div>
+
+                    <!-- Image Preview Card -->
+                    <div id="categoryPreviewCard" class="upload-preview-card" style="display:none;">
+                        <div class="preview-thumbnail-container">
+                            <img id="categoryImagePreview" src="" alt="Category preview" class="preview-thumbnail" onerror="this.onerror=null;this.src='/assets/images/products/fresh_cow_milk.jpg';">
+                        </div>
+                        <div class="preview-info">
+                            <div id="categoryImageName" class="preview-filename">category-image.jpg</div>
+                            <div id="categoryImageMeta" class="preview-meta">Ready</div>
+                            <div class="preview-actions">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="triggerFileInput()" id="btnReplaceImage" title="Replace with a new image">
+                                    🔄 Replace Image
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="removeCurrentImage()" id="btnRemoveImage" title="Remove image">
+                                    ✕ Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Progress Bar -->
+                    <div id="categoryUploadProgress" class="upload-progress-wrapper" style="display:none; margin-top:8px;">
+                        <div style="display:flex; justify-content:space-between; font-size:11.5px; margin-bottom:4px; color:var(--thulirva-forest);">
+                            <span id="uploadStatusText">Uploading image...</span>
+                            <span id="uploadPercentText" style="font-weight:600;">0%</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div id="uploadProgressBar" class="progress-bar-fill" style="width:0%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Validation / Error Alert -->
+                    <div id="categoryImageError" class="upload-error-banner" style="display:none;">
+                        <span>⚠️</span>
+                        <span id="categoryImageErrorMsg" style="flex:1;"></span>
+                    </div>
+
+                    <!-- Manual URL Fallback (Collapsible) -->
+                    <div style="margin-top:8px;">
+                        <a href="javascript:void(0)" onclick="toggleManualUrlInput()" style="font-size:11px; color:var(--thulirva-forest-light); text-decoration:underline;">
+                            ⚙ Advanced: Custom Image URL
+                        </a>
+                        <div id="manualUrlContainer" style="display:none; margin-top:6px;">
+                            <input type="text" id="catImageWeb" placeholder="/assets/images/categories/milk.jpg" class="form-control" style="font-size:12px;" oninput="handleManualUrlChange(this.value)">
+                            <small style="font-size:10.5px; color:var(--thulirva-text-muted); display:block; margin-top:2px;">URL is automatically kept in sync with the uploaded file.</small>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -237,7 +424,7 @@ function renderCategoriesTable() {
         row.innerHTML = `
             <td><strong class="font-mono">#${c.display_order || 1}</strong></td>
             <td>
-                <img src="${img}" alt="${c.name}" class="cat-thumb">
+                <img src="${img}" alt="${c.name}" class="cat-thumb" onerror="this.onerror=null;this.src='/assets/images/products/fresh_cow_milk.jpg';">
             </td>
             <td>
                 <span class="badge badge-neutral font-mono">${c.name}</span>
@@ -270,6 +457,7 @@ function openAddModal() {
     document.getElementById("catId").value = "";
     document.getElementById("categoryForm").reset();
     document.getElementById("catDescription").value = "";
+    removeCurrentImage();
     document.getElementById("categoryModal").classList.add("active");
 }
 
@@ -284,19 +472,286 @@ function openEditModal(id) {
     document.getElementById("catDescription").value = c.category_description || c.description || "";
     document.getElementById("catDisplayOrder").value = c.display_order || 1;
     document.getElementById("catIsActive").value = c.is_active === false ? "false" : "true";
-    document.getElementById("catImageWeb").value = c.category_image || c.image_web || c.image || "";
+    
+    // Populate Image component
+    const img = (c.category_image || c.image_web || c.image || "").trim();
+    if (img) {
+        document.getElementById("catImageUrl").value = img;
+        document.getElementById("catImageWeb").value = img;
+        const filename = img.split("/").pop() || "Current Category Image";
+        setPreviewCard(img, filename, "Current saved category image");
+    } else {
+        removeCurrentImage();
+    }
+
     document.getElementById("categoryModal").classList.add("active");
 }
 
 function closeModal() {
+    if (isUploadingImage && currentUploadXhr) {
+        try { currentUploadXhr.abort(); } catch (_) {}
+        isUploadingImage = false;
+    }
     document.getElementById("categoryModal").classList.remove("active");
+}
+
+// ==========================================
+// IMAGE UPLOAD & PREVIEW CONTROLLER
+// ==========================================
+let isUploadingImage = false;
+let currentUploadXhr = null;
+
+function triggerFileInput() {
+    clearImageError();
+    document.getElementById("categoryFileInput").click();
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const dropzone = document.getElementById("categoryDropzone");
+    if (dropzone) dropzone.classList.add("dragover");
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const dropzone = document.getElementById("categoryDropzone");
+    if (dropzone) dropzone.classList.remove("dragover");
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const dropzone = document.getElementById("categoryDropzone");
+    if (dropzone) dropzone.classList.remove("dragover");
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        processCategoryFile(e.dataTransfer.files[0]);
+    }
+}
+
+function handleFileSelect(e) {
+    if (e.target && e.target.files && e.target.files.length > 0) {
+        processCategoryFile(e.target.files[0]);
+    }
+}
+
+function showImageError(msg) {
+    const errBox = document.getElementById("categoryImageError");
+    const errMsg = document.getElementById("categoryImageErrorMsg");
+    if (errBox && errMsg) {
+        errMsg.textContent = msg;
+        errBox.style.display = "flex";
+    }
+}
+
+function clearImageError() {
+    const errBox = document.getElementById("categoryImageError");
+    if (errBox) errBox.style.display = "none";
+}
+
+function formatFileSize(bytes) {
+    if (!bytes || isNaN(bytes)) return "";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+}
+
+function toggleManualUrlInput() {
+    const container = document.getElementById("manualUrlContainer");
+    if (container) {
+        container.style.display = container.style.display === "none" ? "block" : "none";
+    }
+}
+
+function handleManualUrlChange(val) {
+    val = (val || "").trim();
+    document.getElementById("catImageUrl").value = val;
+    if (val) {
+        setPreviewCard(val, val.split("/").pop() || "Custom URL", "Direct URL specified");
+    } else {
+        removeCurrentImage(false);
+    }
+}
+
+function setPreviewCard(url, filename, metaText) {
+    const dropzone = document.getElementById("categoryDropzone");
+    const previewCard = document.getElementById("categoryPreviewCard");
+    const previewImg = document.getElementById("categoryImagePreview");
+    const filenameEl = document.getElementById("categoryImageName");
+    const metaEl = document.getElementById("categoryImageMeta");
+
+    previewImg.src = url;
+    filenameEl.textContent = filename || "category-image";
+    metaEl.textContent = metaText || "Ready";
+
+    dropzone.style.display = "none";
+    previewCard.style.display = "flex";
+    clearImageError();
+}
+
+function removeCurrentImage(clearManualInput = true) {
+    if (currentUploadXhr) {
+        try { currentUploadXhr.abort(); } catch (_) {}
+        currentUploadXhr = null;
+    }
+    isUploadingImage = false;
+
+    document.getElementById("catImageUrl").value = "";
+    if (clearManualInput) {
+        document.getElementById("catImageWeb").value = "";
+    }
+    document.getElementById("categoryFileInput").value = "";
+
+    const dropzone = document.getElementById("categoryDropzone");
+    const previewCard = document.getElementById("categoryPreviewCard");
+    const progressWrapper = document.getElementById("categoryUploadProgress");
+
+    if (dropzone) dropzone.style.display = "flex";
+    if (previewCard) previewCard.style.display = "none";
+    if (progressWrapper) progressWrapper.style.display = "none";
+
+    clearImageError();
+
+    const saveBtn = document.getElementById("modalSubmitBtn");
+    if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.style.opacity = "1";
+    }
+}
+
+function processCategoryFile(file) {
+    clearImageError();
+    if (!file) return;
+
+    // Allowed extensions & mime types: JPG, JPEG, PNG, WEBP (Max 5MB)
+    const validExtensions = ["jpg", "jpeg", "png", "webp"];
+    const ext = (file.name.split(".").pop() || "").toLowerCase();
+    const mime = (file.type || "").toLowerCase();
+
+    const isExtValid = validExtensions.includes(ext);
+    const isMimeValid = mime === "image/jpeg" || mime === "image/png" || mime === "image/webp" || mime.startsWith("image/");
+
+    if (!isExtValid || !isMimeValid) {
+        showImageError("Invalid file type. Only JPG, JPEG, PNG, and WEBP formats are accepted.");
+        return;
+    }
+
+    const maxBytes = 5 * 1024 * 1024; // 5 MB
+    if (file.size > maxBytes) {
+        showImageError(`File size (${formatFileSize(file.size)}) exceeds the maximum allowed limit of 5 MB.`);
+        return;
+    }
+
+    // Show preview card immediately with client-side blob
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewCard(objectUrl, file.name, `Selected (${formatFileSize(file.size)}) • Uploading...`);
+
+    // Initiate backend upload
+    uploadFileToServer(file);
+}
+
+function uploadFileToServer(file) {
+    isUploadingImage = true;
+    const progressWrapper = document.getElementById("categoryUploadProgress");
+    const progressBar = document.getElementById("uploadProgressBar");
+    const progressStatus = document.getElementById("uploadStatusText");
+    const progressPercent = document.getElementById("uploadPercentText");
+    const saveBtn = document.getElementById("modalSubmitBtn");
+
+    if (progressWrapper) progressWrapper.style.display = "block";
+    if (progressBar) progressBar.style.width = "0%";
+    if (progressPercent) progressPercent.textContent = "0%";
+    if (progressStatus) progressStatus.textContent = "Uploading image...";
+
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.style.opacity = "0.7";
+        saveBtn.textContent = "Uploading Image...";
+    }
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const xhr = new XMLHttpRequest();
+    currentUploadXhr = xhr;
+
+    xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+            const pct = Math.round((event.loaded / event.total) * 100);
+            if (progressBar) progressBar.style.width = pct + "%";
+            if (progressPercent) progressPercent.textContent = pct + "%";
+            if (progressStatus) progressStatus.textContent = pct < 100 ? `Uploading (${pct}%)...` : "Processing on server...";
+        }
+    };
+
+    xhr.onload = () => {
+        isUploadingImage = false;
+        currentUploadXhr = null;
+        const id = document.getElementById("catId").value;
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.style.opacity = "1";
+            saveBtn.textContent = id ? "Update Category" : "Save Category";
+        }
+
+        try {
+            const res = JSON.parse(xhr.responseText || "{}");
+            if (xhr.status >= 200 && xhr.status < 300 && res.success) {
+                const uploadedUrl = res.image_url || res.url;
+                document.getElementById("catImageUrl").value = uploadedUrl;
+                document.getElementById("catImageWeb").value = uploadedUrl;
+
+                setPreviewCard(uploadedUrl, file.name, `✓ Uploaded (${formatFileSize(file.size)}) • Ready`);
+                if (progressWrapper) progressWrapper.style.display = "none";
+                showToast("Category image uploaded successfully.");
+            } else {
+                showImageError(res.message || "Failed to upload image. Please try again.");
+                if (progressWrapper) progressWrapper.style.display = "none";
+            }
+        } catch (err) {
+            showImageError("Server response error: " + err.message);
+            if (progressWrapper) progressWrapper.style.display = "none";
+        }
+    };
+
+    xhr.onerror = () => {
+        isUploadingImage = false;
+        currentUploadXhr = null;
+        const id = document.getElementById("catId").value;
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.style.opacity = "1";
+            saveBtn.textContent = id ? "Update Category" : "Save Category";
+        }
+        showImageError("Network error occurred while uploading. Please check connection.");
+        if (progressWrapper) progressWrapper.style.display = "none";
+    };
+
+    xhr.open("POST", "/api/admin/categories/upload");
+    if (token) {
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    }
+    xhr.send(formData);
 }
 
 async function handleCategorySubmit(e) {
     e.preventDefault();
+    if (isUploadingImage) {
+        showToast("Please wait for the category image upload to complete.", "warning");
+        return;
+    }
+
     const id = document.getElementById("catId").value;
     const isEdit = Boolean(id);
     const desc = document.getElementById("catDescription").value.trim();
+    const finalImageUrl = (document.getElementById("catImageUrl").value || document.getElementById("catImageWeb").value || "").trim();
+
+    const saveBtn = document.getElementById("modalSubmitBtn");
+    const originalBtnText = saveBtn.textContent;
+    saveBtn.disabled = true;
+    saveBtn.style.opacity = "0.7";
+    saveBtn.textContent = "Saving Category...";
 
     const payload = {
         name: document.getElementById("catName").value.trim(),
@@ -305,8 +760,11 @@ async function handleCategorySubmit(e) {
         category_description: desc,
         display_order: Number(document.getElementById("catDisplayOrder").value) || 1,
         is_active: document.getElementById("catIsActive").value === "true",
-        image_web: document.getElementById("catImageWeb").value.trim(),
-        category_image: document.getElementById("catImageWeb").value.trim()
+        image_web: finalImageUrl,
+        category_image: finalImageUrl,
+        website_image: finalImageUrl,
+        mobile_image: finalImageUrl,
+        image: finalImageUrl
     };
 
     try {
@@ -322,7 +780,7 @@ async function handleCategorySubmit(e) {
         });
         const data = await res.json();
         if (data.success) {
-            showToast(isEdit ? "Category updated." : "Category created.");
+            showToast(isEdit ? "Category updated successfully." : "Category created successfully.");
             closeModal();
             loadCategories();
         } else {
@@ -330,6 +788,10 @@ async function handleCategorySubmit(e) {
         }
     } catch (err) {
         showToast("Error: " + err.message, "error");
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.style.opacity = "1";
+        saveBtn.textContent = originalBtnText;
     }
 }
 
