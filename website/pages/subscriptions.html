@@ -320,7 +320,7 @@
 
         <form id="subscribeForm" onsubmit="handleSubPurchase(event)">
             <!-- Selected Plan Summary Card -->
-            <div style="background:var(--pale-green); border-radius:10px; padding:14px 18px; margin-bottom:22px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div style="background:var(--pale-green); border-radius:10px; padding:14px 18px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                 <div>
                     <div style="font-size:12px; color:var(--text-mid);">Plan Time Period: <strong id="modalPlanPeriod">Daily Morning (30 Days)</strong></div>
                     <div style="font-size:12px; color:var(--forest-green); font-weight:700; margin-top:2px;">✓ Zero Delivery Charges &bull; Morning Delivery before 7:00 AM</div>
@@ -328,6 +328,16 @@
                 <div style="text-align:right;">
                     <div style="font-size:11.5px; color:var(--text-mid);">Total Subscription Price</div>
                     <div id="modalPlanPrice" style="font-size:24px; font-weight:800; color:var(--forest-green); font-family:'Playfair Display',serif;">₹1,320</div>
+                </div>
+            </div>
+
+            <!-- DYNAMIC QUANTITY SELECTION -->
+            <div id="subQuantitySection" style="margin-bottom:18px; background:#FAF8F2; padding:12px 14px; border-radius:8px; border:1px solid var(--border);">
+                <label style="font-weight:700; font-size:12.5px; color:var(--forest-green); margin-bottom:8px; display:block;">
+                    🥛 Daily Delivery Quantity <span id="subQuantityUnitLabel" style="font-weight:400; color:var(--text-muted); font-size:12px;"></span> *
+                </label>
+                <div id="subQuantityChips" style="display:flex; flex-wrap:wrap; gap:8px;">
+                    <!-- Injected dynamically based on admin plan config -->
                 </div>
             </div>
 
@@ -376,15 +386,14 @@
             </div>
 
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:24px;">
-                <div class="form-field">
+                <div class="form-field" id="subStartDateSection">
                     <label style="font-weight:700; font-size:12.5px; color:var(--forest-green); margin-bottom:4px; display:block;">Delivery Start Date *</label>
                     <input type="date" id="subCustStartDate" required style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13.5px;">
                 </div>
-                <div class="form-field">
-                    <label style="font-weight:700; font-size:12.5px; color:var(--forest-green); margin-bottom:4px; display:block;">Morning Delivery Slot *</label>
-                    <select id="subCustSlot" style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13.5px;">
-                        <option value="6:00 AM - 7:00 AM">⏰ Early Morning (6:00 AM - 7:00 AM)</option>
-                        <option value="7:00 AM - 8:00 AM">⏰ Morning (7:00 AM - 8:00 AM)</option>
+                <div class="form-field" id="subSlotSection">
+                    <label style="font-weight:700; font-size:12.5px; color:var(--forest-green); margin-bottom:4px; display:block;">Delivery Time Window / Slot *</label>
+                    <select id="subCustSlot" onchange="recalculatePrice()" style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13.5px;">
+                        <!-- Injected dynamically from admin plan config -->
                     </select>
                 </div>
             </div>
@@ -567,6 +576,10 @@ let availablePlans = [];
 let selectedPlan = null;
 let currentProofBase64 = "";
 let latestSubscriptionData = null;
+let currentSubQuantity = 1;
+let currentCalculatedPrice = 0;
+let subPageDiscount = 0;
+let appliedSubPagePromo = null;
 
 async function loadPlans() {
     try {
@@ -581,7 +594,7 @@ async function loadPlans() {
             { id: 4, product_name: "Pure Bilona Cow Ghee (500ml)", product_image: "/assets/images/products/pure_cow_ghee.jpg", time_period: "Monthly Delivery (1 Jar/Month)", frequency: "Monthly", price: 499, original_price: 600, badge: "Pure Bilona", description: "A fresh 500ml jar of fragrant Bilona churned golden ghee dispatched once a month." }
         ];
     }
-    renderPlansGrid(availablePlans.filter(p => p.status !== 'inactive'));
+    renderPlansGrid(availablePlans.filter(p => p.status !== 'inactive' && !p.is_archived));
 }
 
 function renderPlansGrid(plans) {
@@ -642,8 +655,104 @@ function openBuySubModal(planId) {
     document.getElementById("modalPlanTitle").textContent = selectedPlan.product_name;
     document.getElementById("modalPlanSubtitle").textContent = selectedPlan.frequency || "Daily Morning Plan";
     document.getElementById("modalPlanPeriod").textContent = selectedPlan.time_period || "Daily (30 Days)";
+    currentCalculatedPrice = selectedPlan.price;
     document.getElementById("modalPlanPrice").textContent = `₹${selectedPlan.price.toLocaleString()}`;
     document.getElementById("modalPayExact").textContent = `₹${selectedPlan.price.toLocaleString()}`;
+
+    // 1. DYNAMIC QUANTITY CONFIGURATION
+    const qConfig = selectedPlan.quantity_config || { enabled: true, default: 1, unit: "Packet", options: [{ quantity: 1, label: "1 Packet" }, { quantity: 2, label: "2 Packets" }, { quantity: 3, label: "3 Packets" }, { quantity: 4, label: "4 Packets" }] };
+    const qtySec = document.getElementById("subQuantitySection");
+    const chipsCont = document.getElementById("subQuantityChips");
+    const unitLabel = document.getElementById("subQuantityUnitLabel");
+
+    if (qConfig.enabled === false) {
+        if (qtySec) qtySec.style.display = "none";
+        currentSubQuantity = Number(qConfig.default) || 1;
+    } else {
+        if (qtySec) qtySec.style.display = "block";
+        if (unitLabel) unitLabel.textContent = `(${qConfig.unit || 'Packets'})`;
+        currentSubQuantity = Number(qConfig.default) || 1;
+        chipsCont.innerHTML = "";
+        const options = (Array.isArray(qConfig.options) && qConfig.options.length)
+            ? qConfig.options
+            : [1, 2, 3, 4].map(q => ({ quantity: q, label: `${q} ${qConfig.unit || 'Packet'}${q > 1 ? 's' : ''}` }));
+
+        options.forEach(opt => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "qty-chip";
+            const isSelected = (opt.quantity === currentSubQuantity);
+            btn.style.cssText = `padding:8px 16px; border-radius:20px; font-weight:700; font-size:13px; cursor:pointer; border:1.5px solid ${isSelected ? 'var(--forest-green)' : 'var(--border)'}; background:${isSelected ? 'var(--forest-green)' : 'white'}; color:${isSelected ? 'white' : 'var(--text-dark)'}; transition:all 0.2s;`;
+            btn.textContent = opt.label || `${opt.quantity} ${qConfig.unit || 'Pack'}`;
+            btn.onclick = () => {
+                currentSubQuantity = opt.quantity;
+                Array.from(chipsCont.children).forEach(c => {
+                    c.style.background = "white";
+                    c.style.color = "var(--text-dark)";
+                    c.style.borderColor = "var(--border)";
+                });
+                btn.style.background = "var(--forest-green)";
+                btn.style.color = "white";
+                btn.style.borderColor = "var(--forest-green)";
+                recalculatePrice();
+            };
+            chipsCont.appendChild(btn);
+        });
+    }
+
+    // 2. DYNAMIC DELIVERY SLOTS CONFIGURATION
+    const slotSec = document.getElementById("subSlotSection");
+    const slotSelect = document.getElementById("subCustSlot");
+    const sBody = selectedPlan.delivery_slot_config || { enabled: true, slots: [] };
+
+    if (sBody.enabled === false) {
+        if (slotSec) slotSec.style.display = "none";
+        if (slotSelect) slotSelect.innerHTML = `<option value="${sBody.default_slot || 'Morning: 6:00 AM - 7:00 AM'}">${sBody.default_slot || 'Morning: 6:00 AM - 7:00 AM'}</option>`;
+    } else {
+        if (slotSec) slotSec.style.display = "block";
+        let slotHtml = "";
+        const availableSlots = (Array.isArray(sBody.slots) && sBody.slots.length)
+            ? sBody.slots.filter(s => s.enabled !== false)
+            : [
+                { id: "morning_early", name: "Morning: 6:00 AM – 7:00 AM" },
+                { id: "morning_standard", name: "Morning: 7:00 AM – 8:00 AM" }
+            ];
+        availableSlots.forEach(s => {
+            slotHtml += `<option value="${s.name || s.id}">${s.name || s.id}</option>`;
+        });
+        if (sBody.allow_multiple_slots) {
+            slotHtml += `<option value="Both Morning & Evening">☀️🌙 Both Morning & Evening (2x Deliveries/Day)</option>`;
+        }
+        slotSelect.innerHTML = slotHtml;
+        if (sBody.default_slot) {
+            slotSelect.value = sBody.default_slot;
+        }
+    }
+
+    // 3. DYNAMIC START DATE CONFIGURATION
+    const dateSec = document.getElementById("subStartDateSection");
+    const dateInput = document.getElementById("subCustStartDate");
+    const dConfig = selectedPlan.start_date_config || { enabled: true, min_notice_hours: 12, max_advance_days: 30 };
+
+    if (dConfig.enabled === false) {
+        if (dateSec) dateSec.style.display = "none";
+    } else {
+        if (dateSec) dateSec.style.display = "block";
+    }
+
+    const noticeHours = Number(dConfig.min_notice_hours) || 12;
+    const earliest = new Date(Date.now() + noticeHours * 3600 * 1000);
+    const yyyy = earliest.getFullYear();
+    const mm = String(earliest.getMonth() + 1).padStart(2, '0');
+    const dd = String(earliest.getDate()).padStart(2, '0');
+    const minDate = `${yyyy}-${mm}-${dd}`;
+    dateInput.min = minDate;
+    if (!dateInput.value || dateInput.value < minDate) dateInput.value = minDate;
+
+    if (dConfig.max_advance_days) {
+        const maxD = new Date(Date.now() + (dConfig.max_advance_days + 1) * 86400 * 1000);
+        dateInput.max = `${maxD.getFullYear()}-${String(maxD.getMonth() + 1).padStart(2, '0')}-${String(maxD.getDate()).padStart(2, '0')}`;
+    }
 
     // Prefill user data if logged in
     const user = JSON.parse(localStorage.getItem("thulirva_user") || "null");
@@ -652,17 +761,6 @@ function openBuySubModal(planId) {
         if (user.phone) document.getElementById("subCustPhone").value = user.phone;
         if (user.address) document.getElementById("subCustAddress").value = user.address;
     }
-
-    // Set tomorrow as default start date
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const yyyy = tomorrow.getFullYear();
-    const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
-    const dd = String(tomorrow.getDate()).padStart(2, '0');
-    const minDate = `${yyyy}-${mm}-${dd}`;
-    const dateInput = document.getElementById("subCustStartDate");
-    dateInput.min = minDate;
-    if (!dateInput.value) dateInput.value = minDate;
 
     // Reset upload preview
     currentProofBase64 = "";
@@ -676,11 +774,47 @@ function openBuySubModal(planId) {
     const promoStat = document.getElementById("subModalPromoStatus");
     if (promoStat) promoStat.style.display = "none";
 
+    recalculatePrice();
     document.getElementById("buySubModal").classList.add("active");
 }
 
-let subPageDiscount = 0;
-let appliedSubPagePromo = null;
+async function recalculatePrice() {
+    if (!selectedPlan) return;
+    const slot = document.getElementById("subCustSlot")?.value || "";
+    const freq = selectedPlan.frequency || "Daily";
+
+    try {
+        const res = await fetch("/api/subscriptions/calculate-price", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                plan_id: selectedPlan.id,
+                quantity: currentSubQuantity,
+                delivery_slot: slot,
+                frequency: freq,
+                coupon_code: appliedSubPagePromo
+            })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            currentCalculatedPrice = data.total_price;
+            document.getElementById("modalPlanPrice").textContent = `₹${data.total_price.toLocaleString()}`;
+            document.getElementById("modalPayExact").textContent = `₹${data.total_price.toLocaleString()}`;
+            return;
+        }
+    } catch (_) {}
+
+    // Local calculation fallback
+    const deliveries = Number(selectedPlan.deliveries_count || selectedPlan.duration_days) || 30;
+    const base = Number(selectedPlan.pricing_config?.base_price_per_delivery) || (selectedPlan.price / deliveries) || 44;
+    const discountPercent = Number(selectedPlan.pricing_config?.discount_percent) || 0;
+    const slotMultiplier = slot.toLowerCase().includes("both") ? 2 : 1;
+    const rawTotal = Math.round(base * currentSubQuantity * slotMultiplier * deliveries * (1 - discountPercent / 100));
+    const finalTotal = Math.max(0, rawTotal - subPageDiscount);
+    currentCalculatedPrice = finalTotal;
+    document.getElementById("modalPlanPrice").textContent = `₹${finalTotal.toLocaleString()}`;
+    document.getElementById("modalPayExact").textContent = `₹${finalTotal.toLocaleString()}`;
+}
 
 async function applySubPagePromo() {
     if (!selectedPlan) return;
@@ -699,26 +833,23 @@ async function applySubPagePromo() {
         const res = await fetch("/api/coupons/validate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ code, total: selectedPlan.price })
+            body: JSON.stringify({ code, total: currentCalculatedPrice || selectedPlan.price })
         });
         const data = await res.json();
         if (data.valid) {
             appliedSubPagePromo = data.code;
             subPageDiscount = data.discount;
-            const newTotal = Math.max(0, selectedPlan.price - subPageDiscount);
-            document.getElementById("modalPlanPrice").textContent = `₹${newTotal.toLocaleString()}`;
-            document.getElementById("modalPayExact").textContent = `₹${newTotal.toLocaleString()}`;
+            await recalculatePrice();
             if (statusEl) {
                 statusEl.style.display = "block";
                 statusEl.style.color = "#2e7d32";
-                statusEl.textContent = `✓ Promo ${data.code} applied! Saved ₹${data.discount}. Total: ₹${newTotal}.`;
+                statusEl.textContent = `✓ Promo ${data.code} applied! Saved ₹${data.discount}. Total: ₹${currentCalculatedPrice}.`;
             }
             showToast(`✓ Promo code ${data.code} applied! Saved ₹${data.discount}`, "success");
         } else {
             subPageDiscount = 0;
             appliedSubPagePromo = null;
-            document.getElementById("modalPlanPrice").textContent = `₹${selectedPlan.price.toLocaleString()}`;
-            document.getElementById("modalPayExact").textContent = `₹${selectedPlan.price.toLocaleString()}`;
+            await recalculatePrice();
             if (statusEl) {
                 statusEl.style.display = "block";
                 statusEl.style.color = "#c0392b";
@@ -729,6 +860,7 @@ async function applySubPagePromo() {
         subPageDiscount = 0;
         appliedSubPagePromo = null;
     }
+}
 }
 
 function closeBuySubModal() {
@@ -832,6 +964,9 @@ async function handleSubPurchase(e) {
     const savedUser = JSON.parse(localStorage.getItem("thulirva_user") || "{}");
     const fullDeliveryAddress = `${addr}, ${locName}`;
 
+    const finalTotal = currentCalculatedPrice > 0 ? currentCalculatedPrice : Math.max(0, selectedPlan.price - subPageDiscount);
+    const deliveriesCount = Number(selectedPlan.deliveries_count || selectedPlan.duration_days) || 30;
+
     const payload = {
         user_id: savedUser.id || null,
         customer_name: custName,
@@ -842,10 +977,10 @@ async function handleSubPurchase(e) {
         product_image: selectedPlan.product_image || "/assets/images/products/fresh_cow_milk.jpg",
         time_period: selectedPlan.time_period || "Daily (30 Days)",
         frequency: selectedPlan.frequency || "Daily",
-        quantity: 1,
+        quantity: currentSubQuantity,
         delivery_slot: slot,
-        price_per_delivery: Math.round((selectedPlan.price - subPageDiscount) / 30),
-        total_price: Math.max(0, selectedPlan.price - subPageDiscount),
+        price_per_delivery: Math.round(finalTotal / deliveriesCount),
+        total_price: finalTotal,
         start_date: startDate,
         address: fullDeliveryAddress,
         delivery_location: locName,
@@ -866,6 +1001,12 @@ async function handleSubPurchase(e) {
             body: JSON.stringify(payload)
         });
         const data = await res.json();
+        if (data.success === false) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = "Confirm &amp; Place Subscription Order 🥛";
+            showToast(data.message || "Failed to place subscription", "error");
+            return;
+        }
         if (data.subscription && data.subscription.id) {
             subId = data.subscription.id;
         }
@@ -890,16 +1031,16 @@ async function handleSubPurchase(e) {
         time_period: selectedPlan.time_period,
         timePeriod: selectedPlan.time_period,
         frequency: selectedPlan.frequency,
-        quantity: 1,
+        quantity: currentSubQuantity,
         delivery_slot: slot,
         deliverySlot: slot,
         start_date: startDate,
         startDate: startDate,
         address: `${fullDeliveryAddress} - ${pincode}`,
         delivery_location: locName,
-        total_price: selectedPlan.price,
-        totalPrice: selectedPlan.price,
-        total: selectedPlan.price,
+        total_price: finalTotal,
+        totalPrice: finalTotal,
+        total: finalTotal,
         transaction_id: transactionId,
         transactionId: transactionId,
         payment_proof: currentProofBase64,

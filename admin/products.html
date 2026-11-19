@@ -151,89 +151,248 @@
         </div>
     </div>
 
-    <!-- ADD / EDIT PRODUCT MODAL -->
+    <!-- ADD / EDIT PRODUCT MODAL (COMPLETE PRODUCT DETAILS MANAGEMENT) -->
     <div class="modal-overlay" id="productModal">
-        <div class="modal-content" style="max-width: 620px;">
-            <div class="modal-header">
-                <h3 class="modal-title" id="modalTitle">Add New Farm Product</h3>
+        <div class="modal-content" style="max-width: 860px; max-height: 90vh; display: flex; flex-direction: column;">
+            <div class="modal-header" style="flex-shrink: 0;">
+                <div>
+                    <h3 class="modal-title" id="modalTitle">Add New Farm Product</h3>
+                    <small style="color:var(--thulirva-text-muted); font-size:12px;">Manage full product details, feature badges, highlights, ingredients, storage &amp; SEO.</small>
+                </div>
                 <button class="modal-close-btn" onclick="closeModal()">✕</button>
             </div>
-            <form id="productForm" onsubmit="handleProductSubmit(event)">
+
+            <form id="productForm" onsubmit="handleProductSubmit(event)" style="display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden;">
                 <input type="hidden" id="prodId">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-label">Product Name *</label>
-                        <input type="text" id="prodName" required placeholder="e.g. Farm Fresh A2 Desi Cow Milk"
-                            class="form-control">
-                    </div>
+                <div class="modal-body" style="overflow-y: auto; padding: 18px 24px; flex:1;">
 
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-                        <div class="form-group">
-                            <label class="form-label">Category *</label>
-                            <select id="prodCategory" required class="form-select">
-                                <option value="Dairy">Dairy</option>
-                                <option value="Ghee">Ghee</option>
-                                <option value="Paneer">Paneer</option>
-                                <option value="Curd">Curd</option>
-                                <option value="Oils">Oils</option>
-                                <option value="Honey">Honey</option>
-                            </select>
+                    <!-- SECTION 1: BASIC INFORMATION -->
+                    <div class="prod-section" style="margin-bottom:18px; border:1px solid var(--thulirva-border); border-radius:var(--radius-md); overflow:hidden; background:white;">
+                        <div class="prod-section-header" onclick="toggleSection('secBasic')" style="background:#FAF8F2; padding:12px 16px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; font-weight:700; color:var(--thulirva-forest-deep); font-size:14px;">
+                            <span>📋 1. Basic Information</span>
+                            <span id="secBasic_icon">▼</span>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Weight / Volume *</label>
-                            <input type="text" id="prodWeight" placeholder="e.g. 1 Litre / 500g" class="form-control">
-                        </div>
-                    </div>
+                        <div id="secBasic" style="padding:16px;">
+                            <div class="form-group" style="margin-bottom:12px;">
+                                <label class="form-label">Product Name *</label>
+                                <input type="text" id="prodName" required placeholder="e.g. Farm Fresh A2 Desi Cow Milk" class="form-control" oninput="updateLivePreview()">
+                            </div>
 
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-                        <div class="form-group">
-                            <label class="form-label">Selling Price (₹) *</label>
-                            <input type="number" id="prodPrice" required min="1" placeholder="75" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Compare / Original Price (₹)</label>
-                            <input type="number" id="prodComparePrice" placeholder="90" class="form-control">
-                        </div>
-                    </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:12px;">
+                                <div class="form-group">
+                                    <label class="form-label">Category *</label>
+                                    <select id="prodCategory" required class="form-select" onchange="updateLivePreview()">
+                                        <option value="Milk">Milk</option>
+                                        <option value="Ghee">Ghee</option>
+                                        <option value="Paneer">Paneer</option>
+                                        <option value="Curd">Curd</option>
+                                        <option value="Oils">Oils</option>
+                                        <option value="Masalas">Masalas</option>
+                                        <option value="Dairy">Dairy</option>
+                                        <option value="Honey">Honey</option>
+                                        <option value="Vegan">Vegan</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Weight / Volume *</label>
+                                    <input type="text" id="prodWeight" placeholder="e.g. 500 ml / 1 Litre / 200 g" class="form-control" oninput="updateLivePreview()">
+                                </div>
+                            </div>
 
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-                        <div class="form-group">
-                            <label class="form-label">Inventory Stock Units *</label>
-                            <input type="number" id="prodStock" required min="0" value="50" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Storefront Badge Tag</label>
-                            <input type="text" id="prodBadge" placeholder="e.g. Best Seller / Fresh Batch"
-                                class="form-control">
-                        </div>
-                    </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:12px;">
+                                <div class="form-group">
+                                    <label class="form-label">Selling Price (₹) *</label>
+                                    <input type="number" id="prodPrice" required min="1" placeholder="44" class="form-control" oninput="updateLivePreview()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Compare / Original Price (₹)</label>
+                                    <input type="number" id="prodComparePrice" placeholder="50" class="form-control" oninput="updateLivePreview()">
+                                </div>
+                            </div>
 
-                    <!-- Product Photo Preview & Upload -->
-                    <div class="form-group">
-                        <label class="form-label">Product Image</label>
-                        <div style="display:flex; align-items:center; gap:16px; margin-bottom:10px;">
-                            <img id="imagePreview" src="/assets/images/products/fresh_cow_milk.jpg" alt="Preview"
-                                style="width:64px; height:64px; border-radius:var(--radius-sm); object-fit:cover; border:1px solid var(--thulirva-border);">
-                            <div>
-                                <input type="file" id="prodImageFile" accept="image/*"
-                                    onchange="handleImageFileUpload(event)" style="font-size:12px;">
-                                <small id="previewLabel"
-                                    style="display:block; color:var(--thulirva-text-muted); font-size:11px; margin-top:4px;">Upload
-                                    JPG, PNG or WEBP.</small>
+                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;">
+                                <div class="form-group">
+                                    <label class="form-label">Inventory Stock Units *</label>
+                                    <input type="number" id="prodStock" required min="0" value="50" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Storefront Badge Tag</label>
+                                    <input type="text" id="prodBadge" placeholder="e.g. Farm Fresh / Bestseller" class="form-control" oninput="updateLivePreview()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Catalog Status</label>
+                                    <select id="prodStatus" class="form-select">
+                                        <option value="active">Active (Visible)</option>
+                                        <option value="inactive">Inactive (Hidden)</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                        <input type="text" id="prodCustomImage" placeholder="Or enter image URL"
-                            oninput="previewCustomUrl(this.value)" class="form-control" style="font-size:12px;">
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Short Description</label>
-                        <textarea id="prodDescription" rows="2"
-                            placeholder="Rich in A2 protein, ethically milked, delivered chilled."
-                            class="form-control"></textarea>
+                    <!-- SECTION 2: PRODUCT IMAGES -->
+                    <div class="prod-section" style="margin-bottom:18px; border:1px solid var(--thulirva-border); border-radius:var(--radius-md); overflow:hidden; background:white;">
+                        <div class="prod-section-header" onclick="toggleSection('secImage')" style="background:#FAF8F2; padding:12px 16px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; font-weight:700; color:var(--thulirva-forest-deep); font-size:14px;">
+                            <span>🖼️ 2. Product Images</span>
+                            <span id="secImage_icon">▼</span>
+                        </div>
+                        <div id="secImage" style="padding:16px;">
+                            <div style="display:flex; align-items:center; gap:16px; margin-bottom:12px;">
+                                <img id="imagePreview" src="/assets/images/products/fresh_cow_milk.jpg" alt="Preview"
+                                    style="width:72px; height:72px; border-radius:var(--radius-sm); object-fit:cover; border:1.5px solid var(--thulirva-border);">
+                                <div style="flex:1;">
+                                    <label class="form-label" style="margin-bottom:4px;">Upload Image File</label>
+                                    <input type="file" id="prodImageFile" accept="image/*" onchange="handleImageFileUpload(event)" style="font-size:12px;">
+                                    <small id="previewLabel" style="display:block; color:var(--thulirva-text-muted); font-size:11px; margin-top:4px;">
+                                        Supported: JPG, PNG, WEBP (Max 5MB). Direct server preview enabled.
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Or Custom Image URL</label>
+                                <input type="text" id="prodCustomImage" placeholder="https://... or /assets/images/products/..."
+                                    oninput="previewCustomUrl(this.value)" class="form-control" style="font-size:12.5px;">
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- SECTION 3: DESCRIPTION -->
+                    <div class="prod-section" style="margin-bottom:18px; border:1px solid var(--thulirva-border); border-radius:var(--radius-md); overflow:hidden; background:white;">
+                        <div class="prod-section-header" onclick="toggleSection('secDesc')" style="background:#FAF8F2; padding:12px 16px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; font-weight:700; color:var(--thulirva-forest-deep); font-size:14px;">
+                            <span>📝 3. Product Descriptions</span>
+                            <span id="secDesc_icon">▼</span>
+                        </div>
+                        <div id="secDesc" style="padding:16px;">
+                            <div class="form-group" style="margin-bottom:14px;">
+                                <label class="form-label">Short Description (for cards and fast view) *</label>
+                                <input type="text" id="prodShortDescription" placeholder="e.g. 100% pure raw chilled A2 cow milk directly from pasture-fed cows." class="form-control" oninput="updateLivePreview()">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Full Product Description (Detailed Multiline) *</label>
+                                <textarea id="prodDescription" rows="4" placeholder="Detailed product history, farm origin, milking process, purity guarantees, and health benefits..." class="form-control" oninput="updateLivePreview()"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 4: FEATURE BADGES -->
+                    <div class="prod-section" style="margin-bottom:18px; border:1px solid var(--thulirva-border); border-radius:var(--radius-md); overflow:hidden; background:white;">
+                        <div class="prod-section-header" onclick="toggleSection('secBadges')" style="background:#FAF8F2; padding:12px 16px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; font-weight:700; color:var(--thulirva-forest-deep); font-size:14px;">
+                            <span>🏷️ 4. Feature Badges (Storefront Icons)</span>
+                            <span id="secBadges_icon">▼</span>
+                        </div>
+                        <div id="secBadges" style="padding:16px;">
+                            <p style="font-size:12px; color:var(--thulirva-text-muted); margin-bottom:12px;">
+                                Feature badges appear on product detail pages and cards (e.g. 🌿 100% Natural, 🛡️ No Preservatives, 💪 Rich in Protein).
+                            </p>
+                            <div id="featureBadgesList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;"></div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addFeatureBadgeRow()">＋ Add Feature Badge</button>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 5: KEY HIGHLIGHTS -->
+                    <div class="prod-section" style="margin-bottom:18px; border:1px solid var(--thulirva-border); border-radius:var(--radius-md); overflow:hidden; background:white;">
+                        <div class="prod-section-header" onclick="toggleSection('secHighlights')" style="background:#FAF8F2; padding:12px 16px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; font-weight:700; color:var(--thulirva-forest-deep); font-size:14px;">
+                            <span>✨ 5. Key Highlights</span>
+                            <span id="secHighlights_icon">▼</span>
+                        </div>
+                        <div id="secHighlights" style="padding:16px;">
+                            <p style="font-size:12px; color:var(--thulirva-text-muted); margin-bottom:12px;">
+                                Add bullet points highlighting unique quality attributes, delivery guarantees, and packaging standards.
+                            </p>
+                            <div id="highlightsList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;"></div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addHighlightRow()">＋ Add Key Highlight</button>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 6: PURE INGREDIENTS -->
+                    <div class="prod-section" style="margin-bottom:18px; border:1px solid var(--thulirva-border); border-radius:var(--radius-md); overflow:hidden; background:white;">
+                        <div class="prod-section-header" onclick="toggleSection('secIngredients')" style="background:#FAF8F2; padding:12px 16px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; font-weight:700; color:var(--thulirva-forest-deep); font-size:14px;">
+                            <span>🥛 6. Pure Ingredients</span>
+                            <span id="secIngredients_icon">▼</span>
+                        </div>
+                        <div id="secIngredients" style="padding:16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                                <label style="font-size:12.5px; font-weight:600; color:var(--thulirva-forest);">
+                                    <input type="checkbox" id="enableIngredientsSection" checked onchange="updateLivePreview()">
+                                    Enable Ingredients Section
+                                </label>
+                            </div>
+                            <div id="ingredientsList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;"></div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addIngredientRow()">＋ Add Ingredient</button>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 7: STORAGE & USAGE -->
+                    <div class="prod-section" style="margin-bottom:18px; border:1px solid var(--thulirva-border); border-radius:var(--radius-md); overflow:hidden; background:white;">
+                        <div class="prod-section-header" onclick="toggleSection('secStorage')" style="background:#FAF8F2; padding:12px 16px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; font-weight:700; color:var(--thulirva-forest-deep); font-size:14px;">
+                            <span>❄️ 7. Storage, Usage &amp; Quality</span>
+                            <span id="secStorage_icon">▼</span>
+                        </div>
+                        <div id="secStorage" style="padding:16px;">
+                            <div class="form-group" style="margin-bottom:12px;">
+                                <label class="form-label">❄️ Storage Instructions</label>
+                                <textarea id="prodStorageInstructions" rows="2" placeholder="e.g. Store strictly under refrigeration between 2°C and 4°C. Consume within 48 hours." class="form-control" oninput="updateLivePreview()"></textarea>
+                            </div>
+                            <div class="form-group" style="margin-bottom:12px;">
+                                <label class="form-label">💡 Usage Instructions</label>
+                                <textarea id="prodUsageInstructions" rows="2" placeholder="e.g. Gentle boiling recommended. Ideal for authentic South Indian filter coffee and homemade curd." class="form-control" oninput="updateLivePreview()"></textarea>
+                            </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                                <div class="form-group">
+                                    <label class="form-label">⏱️ Shelf Life</label>
+                                    <input type="text" id="prodShelfLife" placeholder="e.g. 48 Hours Chilled / 6 Months" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">📜 Certification &amp; Purity Tag</label>
+                                    <input type="text" id="prodCertification" placeholder="e.g. FSSAI Certified • Verified A2 Beta-Casein" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 8: SEO INFORMATION -->
+                    <div class="prod-section" style="margin-bottom:18px; border:1px solid var(--thulirva-border); border-radius:var(--radius-md); overflow:hidden; background:white;">
+                        <div class="prod-section-header" onclick="toggleSection('secSeo')" style="background:#FAF8F2; padding:12px 16px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; font-weight:700; color:var(--thulirva-forest-deep); font-size:14px;">
+                            <span>🔍 8. SEO Metadata</span>
+                            <span id="secSeo_icon">▼</span>
+                        </div>
+                        <div id="secSeo" style="padding:16px;">
+                            <div class="form-group" style="margin-bottom:12px;">
+                                <label class="form-label">SEO Meta Title</label>
+                                <input type="text" id="prodSeoTitle" placeholder="e.g. Farm Fresh A2 Desi Cow Milk | THULIRVA" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">SEO Meta Description</label>
+                                <textarea id="prodSeoDescription" rows="2" placeholder="e.g. Pure raw unadulterated cow milk delivered fresh to your door in Kanchipuram and Chennai." class="form-control"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LIVE STOREFRONT PREVIEW -->
+                    <div style="background:#FAF8F2; border:1.5px dashed var(--thulirva-border); border-radius:var(--radius-md); padding:16px; margin-top:8px;">
+                        <div style="font-size:12px; font-weight:700; color:var(--thulirva-forest); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">
+                            👁️ Live Storefront &amp; Mobile App Preview
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:16px; border:1px solid var(--thulirva-border); display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start;">
+                            <img id="livePreviewImg" src="/assets/images/products/fresh_cow_milk.jpg" alt="Preview" style="width:90px; height:90px; border-radius:8px; object-fit:cover;">
+                            <div style="flex:1; min-width:200px;">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <span class="badge badge-active" id="livePreviewCat">Milk</span>
+                                    <span class="badge" style="background:#FEF3C7; color:#B45309;" id="livePreviewBadge">Farm Fresh</span>
+                                </div>
+                                <h4 id="livePreviewTitle" style="font-size:16px; color:var(--thulirva-forest-deep); margin:6px 0 4px;">Farm Fresh A2 Desi Cow Milk</h4>
+                                <div style="font-size:14px; font-weight:700; color:var(--thulirva-forest); margin-bottom:6px;">
+                                    ₹<span id="livePreviewPrice">44</span> <span style="font-size:12px; color:var(--thulirva-text-muted); font-weight:400;" id="livePreviewWeight">(500 ml)</span>
+                                </div>
+                                <div id="livePreviewBadges" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;"></div>
+                                <div id="livePreviewShortDesc" style="font-size:12px; color:var(--thulirva-text-muted); line-height:1.4;"></div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-                <div class="modal-footer">
+
+                <div class="modal-footer" style="flex-shrink: 0; background:white; border-top:1px solid var(--thulirva-border); padding:14px 24px;">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary" id="modalSubmitBtn">Save Product</button>
                 </div>
@@ -355,6 +514,227 @@
             });
         }
 
+        function toggleSection(secId) {
+            const sec = document.getElementById(secId);
+            const icon = document.getElementById(secId + "_icon");
+            if (!sec) return;
+            if (sec.style.display === "none") {
+                sec.style.display = "block";
+                if (icon) icon.textContent = "▼";
+            } else {
+                sec.style.display = "none";
+                if (icon) icon.textContent = "▶";
+            }
+        }
+
+        // --- DYNAMIC FEATURE BADGES ---
+        let currentFeatureBadges = [];
+        function renderFeatureBadges(badges) {
+            currentFeatureBadges = Array.isArray(badges) ? badges : [];
+            const container = document.getElementById("featureBadgesList");
+            container.innerHTML = "";
+            currentFeatureBadges.forEach((b, idx) => {
+                const row = document.createElement("div");
+                row.style.cssText = "display:flex; align-items:center; gap:8px; background:#F8FAFC; border:1px solid #E2E8F0; padding:8px 10px; border-radius:6px;";
+                const iconVal = typeof b === "object" ? (b.icon || "🌿") : "🌿";
+                const textVal = typeof b === "object" ? (b.text || b.title || "") : String(b);
+                const enabled = typeof b === "object" ? (b.enabled !== false) : true;
+
+                row.innerHTML = `
+                    <input type="text" value="${escapeHtml(iconVal)}" placeholder="Icon/Emoji" style="width:60px; font-size:14px; text-align:center;" class="form-control" oninput="updateFeatureBadge(${idx}, 'icon', this.value)">
+                    <input type="text" value="${escapeHtml(textVal)}" placeholder="Badge Text (e.g. 100% Pure Raw)" style="flex:1;" class="form-control" oninput="updateFeatureBadge(${idx}, 'text', this.value)">
+                    <label style="display:flex; align-items:center; gap:4px; font-size:12px; cursor:pointer; user-select:none; white-space:nowrap;">
+                        <input type="checkbox" ${enabled ? 'checked' : ''} onchange="updateFeatureBadge(${idx}, 'enabled', this.checked)"> Active
+                    </label>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:4px 8px;" onclick="moveFeatureBadge(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>↑</button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:4px 8px;" onclick="moveFeatureBadge(${idx}, 1)" ${idx === currentFeatureBadges.length - 1 ? 'disabled' : ''}>↓</button>
+                    <button type="button" class="btn btn-danger btn-sm" style="padding:4px 8px;" onclick="removeFeatureBadge(${idx})">✕</button>
+                `;
+                container.appendChild(row);
+            });
+            updateLivePreview();
+        }
+
+        function addFeatureBadgeRow(badge) {
+            const newBadge = badge || { icon: "🌿", text: "100% Natural", enabled: true };
+            currentFeatureBadges.push(newBadge);
+            renderFeatureBadges(currentFeatureBadges);
+        }
+
+        function updateFeatureBadge(idx, field, val) {
+            if (currentFeatureBadges[idx]) {
+                if (typeof currentFeatureBadges[idx] !== "object") {
+                    currentFeatureBadges[idx] = { icon: "🌿", text: currentFeatureBadges[idx], enabled: true };
+                }
+                currentFeatureBadges[idx][field] = val;
+                updateLivePreview();
+            }
+        }
+
+        function moveFeatureBadge(idx, dir) {
+            const target = idx + dir;
+            if (target < 0 || target >= currentFeatureBadges.length) return;
+            const temp = currentFeatureBadges[idx];
+            currentFeatureBadges[idx] = currentFeatureBadges[target];
+            currentFeatureBadges[target] = temp;
+            renderFeatureBadges(currentFeatureBadges);
+        }
+
+        function removeFeatureBadge(idx) {
+            currentFeatureBadges.splice(idx, 1);
+            renderFeatureBadges(currentFeatureBadges);
+        }
+
+        // --- DYNAMIC KEY HIGHLIGHTS ---
+        let currentHighlights = [];
+        function renderHighlights(highlights) {
+            currentHighlights = Array.isArray(highlights) ? highlights : [];
+            const container = document.getElementById("highlightsList");
+            container.innerHTML = "";
+            currentHighlights.forEach((hl, idx) => {
+                const row = document.createElement("div");
+                row.style.cssText = "display:flex; align-items:center; gap:8px; background:#F8FAFC; border:1px solid #E2E8F0; padding:8px 10px; border-radius:6px;";
+                const iconVal = typeof hl === "object" ? (hl.icon || "✓") : "✓";
+                const textVal = typeof hl === "object" ? (hl.text || "") : String(hl);
+
+                row.innerHTML = `
+                    <input type="text" value="${escapeHtml(iconVal)}" placeholder="Icon" style="width:50px; text-align:center;" class="form-control" oninput="updateHighlight(${idx}, 'icon', this.value)">
+                    <input type="text" value="${escapeHtml(textVal)}" placeholder="e.g. Single-origin farm milk, delivered within 3 hours" style="flex:1;" class="form-control" oninput="updateHighlight(${idx}, 'text', this.value)">
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:4px 8px;" onclick="moveHighlight(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>↑</button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:4px 8px;" onclick="moveHighlight(${idx}, 1)" ${idx === currentHighlights.length - 1 ? 'disabled' : ''}>↓</button>
+                    <button type="button" class="btn btn-danger btn-sm" style="padding:4px 8px;" onclick="removeHighlight(${idx})">✕</button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function addHighlightRow(hl) {
+            const item = hl || { icon: "✓", text: "Farm-fresh morning delivery guarantee" };
+            currentHighlights.push(item);
+            renderHighlights(currentHighlights);
+        }
+
+        function updateHighlight(idx, field, val) {
+            if (currentHighlights[idx]) {
+                if (typeof currentHighlights[idx] !== "object") {
+                    currentHighlights[idx] = { icon: "✓", text: currentHighlights[idx] };
+                }
+                currentHighlights[idx][field] = val;
+            }
+        }
+
+        function moveHighlight(idx, dir) {
+            const target = idx + dir;
+            if (target < 0 || target >= currentHighlights.length) return;
+            const temp = currentHighlights[idx];
+            currentHighlights[idx] = currentHighlights[target];
+            currentHighlights[target] = temp;
+            renderHighlights(currentHighlights);
+        }
+
+        function removeHighlight(idx) {
+            currentHighlights.splice(idx, 1);
+            renderHighlights(currentHighlights);
+        }
+
+        // --- DYNAMIC INGREDIENTS ---
+        let currentIngredients = [];
+        function renderIngredients(ingredients) {
+            currentIngredients = Array.isArray(ingredients) ? ingredients : [];
+            const container = document.getElementById("ingredientsList");
+            container.innerHTML = "";
+            currentIngredients.forEach((ing, idx) => {
+                const row = document.createElement("div");
+                row.style.cssText = "display:flex; align-items:center; gap:8px; background:#F8FAFC; border:1px solid #E2E8F0; padding:8px 10px; border-radius:6px;";
+                const nameVal = typeof ing === "object" ? (ing.name || "") : String(ing);
+                const noteVal = typeof ing === "object" ? (ing.note || ing.percentage || "") : "";
+
+                row.innerHTML = `
+                    <input type="text" value="${escapeHtml(nameVal)}" placeholder="Ingredient (e.g. Pure Raw A2 Milk)" style="flex:1;" class="form-control" oninput="updateIngredient(${idx}, 'name', this.value)">
+                    <input type="text" value="${escapeHtml(noteVal)}" placeholder="Note (e.g. 100% Desi Breed)" style="width:180px;" class="form-control" oninput="updateIngredient(${idx}, 'note', this.value)">
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:4px 8px;" onclick="moveIngredient(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>↑</button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:4px 8px;" onclick="moveIngredient(${idx}, 1)" ${idx === currentIngredients.length - 1 ? 'disabled' : ''}>↓</button>
+                    <button type="button" class="btn btn-danger btn-sm" style="padding:4px 8px;" onclick="removeIngredient(${idx})">✕</button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function addIngredientRow(ing) {
+            const item = ing || { name: "100% Pure Fresh Whole Milk", note: "No preservatives added" };
+            currentIngredients.push(item);
+            renderIngredients(currentIngredients);
+        }
+
+        function updateIngredient(idx, field, val) {
+            if (currentIngredients[idx]) {
+                if (typeof currentIngredients[idx] !== "object") {
+                    currentIngredients[idx] = { name: currentIngredients[idx], note: "" };
+                }
+                currentIngredients[idx][field] = val;
+            }
+        }
+
+        function moveIngredient(idx, dir) {
+            const target = idx + dir;
+            if (target < 0 || target >= currentIngredients.length) return;
+            const temp = currentIngredients[idx];
+            currentIngredients[idx] = currentIngredients[target];
+            currentIngredients[target] = temp;
+            renderIngredients(currentIngredients);
+        }
+
+        function removeIngredient(idx) {
+            currentIngredients.splice(idx, 1);
+            renderIngredients(currentIngredients);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return "";
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        function updateLivePreview() {
+            const name = document.getElementById("prodName")?.value || "Product Name";
+            const cat = document.getElementById("prodCategory")?.value || "Dairy";
+            const price = document.getElementById("prodPrice")?.value || "0";
+            const weight = document.getElementById("prodWeight")?.value || "";
+            const badge = document.getElementById("prodBadge")?.value || "";
+            const shortDesc = document.getElementById("prodShortDescription")?.value || "";
+
+            const pTitle = document.getElementById("livePreviewTitle");
+            const pCat = document.getElementById("livePreviewCat");
+            const pPrice = document.getElementById("livePreviewPrice");
+            const pWeight = document.getElementById("livePreviewWeight");
+            const pBadge = document.getElementById("livePreviewBadge");
+            const pShortDesc = document.getElementById("livePreviewShortDesc");
+            const pImg = document.getElementById("livePreviewImg");
+            const pBadgesContainer = document.getElementById("livePreviewBadges");
+
+            if (pTitle) pTitle.textContent = name;
+            if (pCat) pCat.textContent = cat;
+            if (pPrice) pPrice.textContent = price;
+            if (pWeight) pWeight.textContent = weight ? `(${weight})` : "";
+            if (pBadge) {
+                pBadge.textContent = badge;
+                pBadge.style.display = badge ? "inline-block" : "none";
+            }
+            if (pShortDesc) pShortDesc.textContent = shortDesc;
+            if (pImg) pImg.src = currentUploadedImageBase64;
+
+            if (pBadgesContainer) {
+                pBadgesContainer.innerHTML = "";
+                currentFeatureBadges.filter(b => (typeof b === "object" ? b.enabled !== false : true)).forEach(b => {
+                    const icon = typeof b === "object" ? (b.icon || "🌿") : "🌿";
+                    const text = typeof b === "object" ? (b.text || "") : String(b);
+                    const span = document.createElement("span");
+                    span.style.cssText = "font-size:11px; background:#ECFDF5; color:#065F46; padding:2px 6px; border-radius:4px; font-weight:600; border:1px solid #A7F3D0;";
+                    span.textContent = `${icon} ${text}`;
+                    pBadgesContainer.appendChild(span);
+                });
+            }
+        }
+
         function handleImageFileUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -363,6 +743,7 @@
                 currentUploadedImageBase64 = event.target.result;
                 document.getElementById("imagePreview").src = currentUploadedImageBase64;
                 document.getElementById("previewLabel").textContent = "✓ Uploaded: " + file.name;
+                updateLivePreview();
             };
             reader.readAsDataURL(file);
         }
@@ -371,6 +752,7 @@
             if (url) {
                 currentUploadedImageBase64 = url;
                 document.getElementById("imagePreview").src = url;
+                updateLivePreview();
             }
         }
 
@@ -381,6 +763,32 @@
             document.getElementById("productForm").reset();
             currentUploadedImageBase64 = "/assets/images/products/fresh_cow_milk.jpg";
             document.getElementById("imagePreview").src = currentUploadedImageBase64;
+            document.getElementById("previewLabel").textContent = "Supported: JPG, PNG, WEBP (Max 5MB). Direct server preview enabled.";
+
+            renderFeatureBadges([
+                { icon: "🌿", text: "100% Pure & Raw", enabled: true },
+                { icon: "🛡️", text: "No Preservatives", enabled: true },
+                { icon: "💪", text: "Rich in A2 Protein", enabled: true }
+            ]);
+            renderHighlights([
+                { icon: "✓", text: "Chilled immediately after hygienic milking" },
+                { icon: "✓", text: "Delivered fresh to your doorstep every morning" },
+                { icon: "✓", text: "Eco-friendly sealed tamper-proof packaging" }
+            ]);
+            renderIngredients([
+                { name: "Pure Raw Desi Cow Milk", note: "100% Natural, unpasteurized cold-chain preserved" }
+            ]);
+
+            document.getElementById("prodShortDescription").value = "";
+            document.getElementById("prodDescription").value = "";
+            document.getElementById("prodStorageInstructions").value = "Store under refrigeration between 2°C and 4°C. Consume within 48 hours.";
+            document.getElementById("prodUsageInstructions").value = "Gentle boiling recommended. Ideal for direct consumption, tea, coffee, and curd.";
+            document.getElementById("prodShelfLife").value = "48 Hours Chilled";
+            document.getElementById("prodCertification").value = "FSSAI Verified • Lab Tested Pure";
+            document.getElementById("prodSeoTitle").value = "";
+            document.getElementById("prodSeoDescription").value = "";
+
+            updateLivePreview();
             document.getElementById("productModal").classList.add("active");
         }
 
@@ -397,11 +805,36 @@
             document.getElementById("prodComparePrice").value = p.compare_price || "";
             document.getElementById("prodStock").value = p.stock || 0;
             document.getElementById("prodBadge").value = p.badge || "";
+            document.getElementById("prodStatus").value = (p.is_active === false || p.status === "inactive") ? "inactive" : "active";
+
+            // Rich descriptions
+            document.getElementById("prodShortDescription").value = p.short_description || "";
             document.getElementById("prodDescription").value = p.description || "";
+
+            // Dynamic badges, highlights, ingredients
+            renderFeatureBadges(p.feature_badges || (p.features ? p.features.map(f => ({ icon: "🌿", text: f, enabled: true })) : []));
+            renderHighlights(p.highlights || (p.key_highlights || []));
+            renderIngredients(p.ingredients || (p.pure_ingredients || []));
+            if (document.getElementById("enableIngredientsSection")) {
+                document.getElementById("enableIngredientsSection").checked = (p.ingredients_enabled !== false);
+            }
+
+            // Storage & usage
+            document.getElementById("prodStorageInstructions").value = p.storage_instructions || p.storage || "";
+            document.getElementById("prodUsageInstructions").value = p.usage_instructions || p.usage || "";
+            document.getElementById("prodShelfLife").value = p.shelf_life || "";
+            document.getElementById("prodCertification").value = p.certification || "";
+
+            // SEO
+            document.getElementById("prodSeoTitle").value = p.seo_title || "";
+            document.getElementById("prodSeoDescription").value = p.seo_description || "";
 
             currentUploadedImageBase64 = p.image || "/assets/images/products/fresh_cow_milk.jpg";
             document.getElementById("imagePreview").src = currentUploadedImageBase64;
             document.getElementById("prodCustomImage").value = p.image || "";
+            document.getElementById("previewLabel").textContent = "Current image active.";
+
+            updateLivePreview();
             document.getElementById("productModal").classList.add("active");
         }
 
@@ -422,8 +855,29 @@
                 compare_price: Number(document.getElementById("prodComparePrice").value) || null,
                 stock: Number(document.getElementById("prodStock").value),
                 badge: document.getElementById("prodBadge").value.trim(),
+                status: document.getElementById("prodStatus").value,
+                is_active: document.getElementById("prodStatus").value === "active",
+                image: currentUploadedImageBase64,
+
+                // Rich Descriptions
+                short_description: document.getElementById("prodShortDescription").value.trim(),
                 description: document.getElementById("prodDescription").value.trim(),
-                image: currentUploadedImageBase64
+
+                // Dynamic Badges, Highlights, Ingredients
+                feature_badges: currentFeatureBadges,
+                highlights: currentHighlights,
+                ingredients: currentIngredients,
+                ingredients_enabled: document.getElementById("enableIngredientsSection") ? document.getElementById("enableIngredientsSection").checked : true,
+
+                // Storage, Usage, Quality
+                storage_instructions: document.getElementById("prodStorageInstructions").value.trim(),
+                usage_instructions: document.getElementById("prodUsageInstructions").value.trim(),
+                shelf_life: document.getElementById("prodShelfLife").value.trim(),
+                certification: document.getElementById("prodCertification").value.trim(),
+
+                // SEO Metadata
+                seo_title: document.getElementById("prodSeoTitle").value.trim(),
+                seo_description: document.getElementById("prodSeoDescription").value.trim()
             };
 
             try {
@@ -439,7 +893,7 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showToast(isEdit ? "Product updated successfully." : "Product added to catalog.");
+                    showToast(isEdit ? "Product updated successfully with all specifications." : "Product added to catalog.");
                     closeModal();
                     loadProducts();
                 } else {

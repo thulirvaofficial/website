@@ -85,9 +85,20 @@ async function loadProductDetail() {
             </div>
 
             <div class="product-tags">
-                <span class="product-tag">🌿 100% Natural</span>
-                <span class="product-tag">✕ No Preservatives</span>
-                <span class="product-tag">🐄 Direct from Kanchipuram Farm</span>
+                ${(() => {
+                    const badges = Array.isArray(product.feature_badges) && product.feature_badges.length > 0
+                        ? product.feature_badges.filter(b => typeof b === 'object' ? b.enabled !== false : true)
+                        : (Array.isArray(product.features) ? product.features.map(f => ({ icon: '🌿', text: f })) : [
+                            { icon: '🌿', text: '100% Pure & Raw' },
+                            { icon: '🛡️', text: 'No Preservatives' },
+                            { icon: '🐄', text: 'Direct from THULIRVA Farms' }
+                        ]);
+                    return badges.map(b => {
+                        const icon = typeof b === 'object' ? (b.icon || '🌿') : '🌿';
+                        const text = typeof b === 'object' ? (b.text || b.title || '') : String(b);
+                        return `<span class="product-tag">${icon} ${text}</span>`;
+                    }).join('');
+                })()}
             </div>
 
             <div class="product-tabs">
@@ -100,23 +111,37 @@ async function loadProductDetail() {
                 </div>
                 <div class="tab-content active" id="tab-description">
                     <div style="font-size:14.5px; line-height:1.7; color:var(--text-mid);">
-                        <p>${product.description || 'Ethically sourced and freshly produced at THULIRVA farms in Kanchipuram. We maintain the highest standards of hygiene and animal welfare to ensure pure, wholesome nourishment for your family.'}</p>
+                        <p>${product.description || product.short_description || 'Ethically sourced and freshly produced at THULIRVA farms in Kanchipuram. We maintain the highest standards of hygiene and animal welfare to ensure pure, wholesome nourishment for your family.'}</p>
                         ${Array.isArray(product.highlights) && product.highlights.length > 0 ? `
                         <div style="margin-top:14px; background:var(--light-cream); padding:14px 18px; border-radius:10px; border:1px solid var(--border);">
                             <strong style="color:var(--forest-green); font-size:13.5px; display:block; margin-bottom:8px;">🌿 Key Highlights:</strong>
                             <ul style="margin:0; padding-left:20px; font-size:13px; color:var(--text-dark);">
-                                ${product.highlights.map(h => `<li style="margin-bottom:4px;">${h}</li>`).join('')}
+                                ${product.highlights.map(h => {
+                                    const icon = typeof h === 'object' ? (h.icon || '✓') : '✓';
+                                    const text = typeof h === 'object' ? (h.text || '') : String(h);
+                                    return `<li style="margin-bottom:6px;">${icon} ${text}</li>`;
+                                }).join('')}
                             </ul>
                         </div>
                         ` : ''}
-                        ${Array.isArray(product.ingredients) && product.ingredients.length > 0 ? `
-                        <p style="margin-top:12px; font-size:13px;"><strong>🥛 Ingredients:</strong> ${product.ingredients.join(', ')}</p>
+                        ${(product.ingredients_enabled !== false) && Array.isArray(product.ingredients) && product.ingredients.length > 0 ? `
+                        <p style="margin-top:12px; font-size:13px;"><strong>🥛 Ingredients:</strong> ${product.ingredients.map(ing => {
+                            const name = typeof ing === 'object' ? (ing.name || '') : String(ing);
+                            const note = typeof ing === 'object' && ing.note ? ` (${ing.note})` : '';
+                            return `${name}${note}`;
+                        }).join(', ')}</p>
                         ` : ''}
-                        ${product.storage_instructions ? `
-                        <p style="margin-top:6px; font-size:13px;"><strong>❄️ Storage:</strong> ${product.storage_instructions}</p>
+                        ${(product.storage_instructions || product.storage) ? `
+                        <p style="margin-top:6px; font-size:13px;"><strong>❄️ Storage:</strong> ${product.storage_instructions || product.storage}</p>
                         ` : ''}
-                        ${product.usage_instructions ? `
-                        <p style="margin-top:6px; font-size:13px;"><strong>💡 Usage:</strong> ${product.usage_instructions}</p>
+                        ${(product.usage_instructions || product.usage) ? `
+                        <p style="margin-top:6px; font-size:13px;"><strong>💡 Usage:</strong> ${product.usage_instructions || product.usage}</p>
+                        ` : ''}
+                        ${product.shelf_life ? `
+                        <p style="margin-top:6px; font-size:13px;"><strong>⏱️ Shelf Life:</strong> ${product.shelf_life}</p>
+                        ` : ''}
+                        ${product.certification ? `
+                        <p style="margin-top:6px; font-size:13px;"><strong>📜 Certification:</strong> ${product.certification}</p>
                         ` : ''}
                     </div>
                 </div>
@@ -245,13 +270,13 @@ async function loadProductDetail() {
  */
 function updateProductSeo(product) {
     if (!product) return;
-    const pageTitle = `${product.name} | THULIRVA`;
+    const pageTitle = product.seo_title || `${product.name} | THULIRVA`;
     document.title = pageTitle;
 
     const pageUrl = `https://thulirva.com/pages/product.html?id=${product.id}`;
-    const cleanDesc = product.description 
+    const cleanDesc = product.seo_description || (product.description 
         ? product.description.replace(/\s+/g, ' ').trim() 
-        : `Buy fresh, pure ${product.name} from THULIRVA. Direct from our sustainable farm in Kanchipuram with doorstep delivery.`;
+        : `Buy fresh, pure ${product.name} from THULIRVA. Direct from our sustainable farm in Kanchipuram with doorstep delivery.`);
 
     let imgUrl = product.image || "";
     if (imgUrl && !imgUrl.startsWith("http")) {
