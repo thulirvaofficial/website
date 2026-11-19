@@ -102,6 +102,7 @@
                                 <th style="width: 70px;">Thumbnail</th>
                                 <th>Category Key</th>
                                 <th>Display Title</th>
+                                <th>Description</th>
                                 <th>Status</th>
                                 <th style="text-align: right;">Actions</th>
                             </tr>
@@ -135,6 +136,14 @@
                 <div class="form-group">
                     <label class="form-label">Display Title *</label>
                     <input type="text" id="catDisplayName" required placeholder="e.g. Farm Fresh Milk &amp; Dairy" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Category Description</label>
+                    <textarea id="catDescription" rows="3" placeholder="Enter customer-facing category description (leave empty to hide on mobile app)..." class="form-control"></textarea>
+                    <small style="font-size:11px; color:var(--thulirva-text-muted); display:block; margin-top:3px;">
+                        Displayed dynamically in the customer Flutter app under the category title. Leave empty to hide description completely.
+                    </small>
                 </div>
 
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
@@ -179,27 +188,21 @@ let filteredCategories = [];
 async function loadCategories() {
     try {
         const res = await fetch("/api/admin/categories", {
-            headers: { Authorization: `Bearer ${token}` }
+            cache: "no-store",
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
         });
         if (res.ok) {
             const data = await res.json();
             categories = data.categories || [];
         } else {
-            // Fallback default categories
-            const pubRes = await fetch("/api/categories");
+            const pubRes = await fetch("/api/categories?all=true", { cache: "no-store" });
             if (pubRes.ok) {
                 const pData = await pubRes.json();
                 categories = pData.categories || [];
             }
         }
     } catch (_) {
-        categories = [
-            { id: 1, name: "Dairy", display_name: "Fresh Farm Milk", display_order: 1, is_active: true, image_web: "/assets/images/products/fresh_cow_milk.jpg" },
-            { id: 2, name: "Ghee", display_name: "Pure Bilona Ghee", display_order: 2, is_active: true, image_web: "/assets/images/products/pure_cow_ghee.jpg" },
-            { id: 3, name: "Paneer", display_name: "Artisanal Paneer", display_order: 3, is_active: true, image_web: "/assets/images/products/fresh_paneer.jpg" },
-            { id: 4, name: "Oils", display_name: "Wood Pressed Oils", display_order: 4, is_active: true, image_web: "/assets/images/products/cold_pressed_oil.jpg" },
-            { id: 5, name: "Honey", display_name: "Raw Organic Honey", display_order: 5, is_active: true, image_web: "/assets/images/products/raw_honey.jpg" }
-        ];
+        categories = [];
     }
 
     document.getElementById("totalCategoriesCount").textContent = categories.length;
@@ -227,8 +230,9 @@ function renderCategoriesTable() {
 
     filteredCategories.forEach(c => {
         const row = document.createElement("tr");
-        const img = c.image_web || c.image || "/assets/images/products/fresh_cow_milk.jpg";
+        const img = c.category_image || c.image_web || c.image || "/assets/images/products/fresh_cow_milk.jpg";
         const isActive = c.is_active !== false;
+        const descText = (c.category_description || c.description || "").trim();
 
         row.innerHTML = `
             <td><strong class="font-mono">#${c.display_order || 1}</strong></td>
@@ -240,6 +244,9 @@ function renderCategoriesTable() {
             </td>
             <td>
                 <strong style="color:var(--thulirva-forest-deep);">${c.display_name || c.name}</strong>
+            </td>
+            <td>
+                ${descText ? `<span style="font-size:12px; color:var(--thulirva-text-muted); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;" title="${descText}">${descText}</span>` : `<span class="badge" style="background:#F3F4F6; color:#9CA3AF; font-style:italic;">No description</span>`}
             </td>
             <td>
                 <span class="badge ${isActive ? 'badge-active' : 'badge-danger'}">
@@ -262,6 +269,7 @@ function openAddModal() {
     document.getElementById("modalSubmitBtn").textContent = "Save Category";
     document.getElementById("catId").value = "";
     document.getElementById("categoryForm").reset();
+    document.getElementById("catDescription").value = "";
     document.getElementById("categoryModal").classList.add("active");
 }
 
@@ -272,10 +280,11 @@ function openEditModal(id) {
     document.getElementById("modalSubmitBtn").textContent = "Update Category";
     document.getElementById("catId").value = c.id;
     document.getElementById("catName").value = c.name || "";
-    document.getElementById("catDisplayName").value = c.display_name || "";
+    document.getElementById("catDisplayName").value = c.display_name || c.displayName || "";
+    document.getElementById("catDescription").value = c.category_description || c.description || "";
     document.getElementById("catDisplayOrder").value = c.display_order || 1;
     document.getElementById("catIsActive").value = c.is_active === false ? "false" : "true";
-    document.getElementById("catImageWeb").value = c.image_web || c.image || "";
+    document.getElementById("catImageWeb").value = c.category_image || c.image_web || c.image || "";
     document.getElementById("categoryModal").classList.add("active");
 }
 
@@ -287,13 +296,17 @@ async function handleCategorySubmit(e) {
     e.preventDefault();
     const id = document.getElementById("catId").value;
     const isEdit = Boolean(id);
+    const desc = document.getElementById("catDescription").value.trim();
 
     const payload = {
         name: document.getElementById("catName").value.trim(),
         display_name: document.getElementById("catDisplayName").value.trim(),
+        description: desc,
+        category_description: desc,
         display_order: Number(document.getElementById("catDisplayOrder").value) || 1,
         is_active: document.getElementById("catIsActive").value === "true",
-        image_web: document.getElementById("catImageWeb").value.trim()
+        image_web: document.getElementById("catImageWeb").value.trim(),
+        category_image: document.getElementById("catImageWeb").value.trim()
     };
 
     try {
