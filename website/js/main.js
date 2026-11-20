@@ -4,6 +4,17 @@
 
 const API = "/api";
 
+// Auto-load Global Connectivity & Offline Manager if not already loaded
+(function() {
+    if (!window.ThulirvaConnectivity && !document.querySelector('script[src*="connectivity.js"]')) {
+        const isPagesDir = window.location.pathname.includes('/pages/');
+        const script = document.createElement('script');
+        script.src = (isPagesDir ? '../' : '') + 'js/connectivity.js';
+        script.async = true;
+        document.head.appendChild(script);
+    }
+})();
+
 /* ---- Premium Mobile Navigation Drawer with Backdrop & Touch Controls ---- */
 function initMobileNavigationDrawer() {
     const mobileNav = document.getElementById("mobileNavigation");
