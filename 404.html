@@ -1,160 +1,1330 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Page Not Found (404) | THULIRVA</title>
-    <meta name="robots" content="noindex, nofollow">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="manifest" href="/manifest.json">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
-    <style>
-        .error-page-wrap {
-            min-height: 65vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 60px 20px;
-            background: var(--light-cream, #FAF7F2);
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 – Moo! Page Not Found | Thulirva</title>
+  <meta name="description" content="Looks like this page has gone dry. Let's get you back to fresh goodness with Thulirva." />
+
+  <!-- Google Fonts: Cormorant Garamond / Fraunces for Thulirva Brand + Plus Jakarta Sans for clean UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            thulirva: {
+              cream: '#FAF8F2',
+              creamWarm: '#F3EFE4',
+              forest: '#163A28',
+              forestDeep: '#0F291C',
+              sage: '#4A7C59',
+              sageSoft: '#CFE0C8',
+              leaf: '#84A982',
+              leafLight: '#E3EDE0',
+              umber: '#5E3D2E',
+              chestnut: '#7C4B36',
+              peach: '#FAD4C0',
+              muted: '#5A6B60',
+            }
+          },
+          fontFamily: {
+            brand: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            display: ['Fraunces', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+          }
         }
-        .error-card {
-            max-width: 580px;
-            background: #fff;
-            padding: 48px 36px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(26, 74, 46, 0.08);
-            border: 1px solid rgba(212, 175, 55, 0.2);
-        }
-        .error-badge {
-            display: inline-block;
-            font-size: 72px;
-            font-family: 'Playfair Display', serif;
-            font-weight: 800;
-            color: var(--forest-green, #1E3D2F);
-            line-height: 1;
-            margin-bottom: 12px;
-        }
-        .error-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 26px;
-            color: var(--forest-green, #1E3D2F);
-            margin-bottom: 12px;
-        }
-        .error-desc {
-            color: var(--text-mid, #556B2F);
-            font-size: 15px;
-            line-height: 1.6;
-            margin-bottom: 28px;
-        }
-        .error-actions {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-    </style>
+      }
+    };
+  </script>
+
+  <style>
+    /* ==========================================================================
+       THULIRVA CUSTOM 404 STYLES & STORYBOOK WATERCOLOR AMBIENT KEYFRAMES
+       ========================================================================== */
+    :root {
+      --bg-cream: #FAF8F2;
+      --forest-green: #163A28;
+      --sage-green: #4A7C59;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-cream);
+      color: var(--forest-green);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      overflow-x: hidden;
+      min-height: 100dvh;
+    }
+
+    /* Subtle watercolor paper grain texture */
+    .paper-grain {
+      background-image: radial-gradient(rgba(22, 58, 40, 0.03) 1px, transparent 0);
+      background-size: 22px 22px;
+    }
+
+    /* Ambient drifting clouds */
+    @keyframes cloudDriftSlow {
+      0%, 100% { transform: translateX(0px); }
+      50% { transform: translateX(14px); }
+    }
+    @keyframes cloudDriftReverse {
+      0%, 100% { transform: translateX(0px); }
+      50% { transform: translateX(-11px); }
+    }
+    .cloud-drift-1 {
+      animation: cloudDriftSlow 12s ease-in-out infinite;
+    }
+    .cloud-drift-2 {
+      animation: cloudDriftReverse 15s ease-in-out infinite;
+    }
+
+    /* Gentle sun pulse */
+    @keyframes sunGlowPulse {
+      0%, 100% { transform: scale(1); opacity: 0.85; }
+      50% { transform: scale(1.06); opacity: 1; }
+    }
+    .sun-halo {
+      transform-origin: 455px 62px;
+      animation: sunGlowPulse 6.5s ease-in-out infinite;
+    }
+
+    /* Hanging botanical branch gentle breeze */
+    @keyframes branchSway {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(2.2deg); }
+    }
+    .hanging-branch {
+      transform-origin: 0px 0px;
+      animation: branchSway 5.5s ease-in-out infinite;
+    }
+
+    /* Floating organic leaves */
+    @keyframes leafFloatA {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      33% { transform: translate(7px, -9px) rotate(10deg); }
+      66% { transform: translate(-4px, -16px) rotate(-7deg); }
+    }
+    @keyframes leafFloatB {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      50% { transform: translate(-9px, -12px) rotate(-14deg); }
+    }
+    .floating-leaf-1 {
+      transform-origin: center;
+      animation: leafFloatA 8s ease-in-out infinite;
+    }
+    .floating-leaf-2 {
+      transform-origin: center;
+      animation: leafFloatB 9.5s ease-in-out infinite 1.4s;
+    }
+
+    /* Idle breathing after storytelling finishes */
+    @keyframes idleBreathe {
+      0%, 100% { transform: translateY(0px) scaleY(1); }
+      50% { transform: translateY(1.4px) scaleY(0.992); }
+    }
+    .cow-idle-breathe {
+      transform-box: fill-box;
+      transform-origin: bottom center;
+      animation: idleBreathe 3.6s ease-in-out infinite;
+    }
+
+    /* Cute eye blink */
+    @keyframes cuteBlink {
+      0%, 92%, 100% { transform: scaleY(0); }
+      95% { transform: scaleY(1); }
+    }
+    .eyelid-blink {
+      transform-box: fill-box;
+      transform-origin: top center;
+      animation: cuteBlink 4.6s ease-in-out infinite;
+    }
+
+    /* Teardrop shimmer */
+    @keyframes tearGlisten {
+      0%, 100% { transform: scale(1) translateY(0); opacity: 0.94; }
+      50% { transform: scale(1.12) translateY(1.4px); opacity: 1; }
+    }
+    .tear-glisten {
+      transform-box: fill-box;
+      transform-origin: top center;
+      animation: tearGlisten 2.4s ease-in-out infinite;
+    }
+
+    /* Stage reveal classes (controlled cleanly by JS timeline) */
+    .reveal-item {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.72s cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 0.72s cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: none;
+    }
+    .reveal-item.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    /* Reduced Motion Accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      .cloud-drift-1,
+      .cloud-drift-2,
+      .sun-halo,
+      .hanging-branch,
+      .floating-leaf-1,
+      .floating-leaf-2,
+      .cow-idle-breathe,
+      .eyelid-blink,
+      .tear-glisten {
+        animation: none !important;
+      }
+      .reveal-item {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+        pointer-events: auto !important;
+      }
+    }
+  </style>
 </head>
-<body>
+<body class="paper-grain flex flex-col justify-between min-h-dvh selection:bg-thulirva-leafLight selection:text-thulirva-forest">
 
-<div class="announcement-bar">
-    <div class="container announcement-content">
-        <span>🌿 Pure by Nature, Made for You!</span>
-        <span>🌾 Farm Fresh</span>
-        <span>✕ No Preservatives</span>
-        <span>🚚 Home Delivery</span>
-        <span>📞 93606 71533</span>
+  <!-- ========================================================================
+       HEADER: Exact Thulirva Dark Forest Green Header Bar
+       ======================================================================== -->
+  <header class="w-full bg-thulirva-forest text-thulirva-cream rounded-b-[26px] sm:rounded-b-[32px] shadow-[0_8px_24px_-8px_rgba(22,58,40,0.35)] z-20">
+    <div class="max-w-6xl mx-auto px-4 sm:px-8 py-3 sm:py-3.5 flex items-center justify-between">
+      <!-- Left: Home Shortcut -->
+      <a
+        href="/"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-thulirva-cream/90 hover:text-white hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-thulirva-sageSoft"
+        aria-label="Back to Thulirva Home"
+      >
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m15 18-6-6 6-6" />
+        </svg>
+        <span class="hidden sm:inline">Home</span>
+      </a>
+
+      <!-- Center: Official Thulirva Circular Leaf-Wreath "T" Emblem + Wordmark -->
+      <a href="/" class="inline-flex items-center gap-2.5 sm:gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-thulirva-sageSoft rounded-xl px-2 py-0.5" aria-label="Thulirva Agro & Dairy Products">
+        <!-- Circular Botanical Leaf-Wreath "T" Emblem -->
+        <svg class="w-10 h-10 sm:w-11 sm:h-11 shrink-0" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="32" cy="32" r="28" fill="#123021" stroke="#A7C4A0" stroke-width="1.6" />
+          <circle cx="32" cy="32" r="24.5" stroke="#D9E6D4" stroke-width="0.7" stroke-opacity="0.45" />
+          <!-- Botanical Leaf Wreath Curve -->
+          <path d="M22 51 C36 53, 49 43, 50 26" stroke="#8FB88A" stroke-width="1.6" stroke-linecap="round" fill="none" />
+          <!-- Leaves along Wreath -->
+          <path d="M49 27 C52 24, 54 27, 50 30 Z" fill="#A7C4A0" />
+          <path d="M48 33 C53 31, 54 35, 48 36 Z" fill="#8FB88A" />
+          <path d="M45 39 C50 39, 50 43, 44 42 Z" fill="#A7C4A0" />
+          <path d="M40 44 C45 46, 44 49, 39 47 Z" fill="#8FB88A" />
+          <path d="M34 48 C38 51, 36 54, 32 50 Z" fill="#A7C4A0" />
+          <path d="M27 50 C30 53, 27 55, 25 51 Z" fill="#8FB88A" />
+          <!-- Serif Capital "T" with Sprout Accent -->
+          <path d="M20 20 H42 V25 H40.5 C39.8 22.5 38.5 21.8 35.5 21.8 H33 V42 C33 44.5 33.8 45.2 36.2 45.5 V47 H25.8 V45.5 C28.2 45.2 29 44.5 29 42 V21.8 H26.5 C23.5 21.8 22.2 22.5 21.5 25 H20 V20 Z" fill="#FAF8F2" />
+          <!-- Tiny Sprout Leaf on T Stem -->
+          <path d="M31 32 C26 31, 24 27, 27 25 C29.5 26.5, 30.8 29, 31 32 Z" fill="#8FB88A" />
+        </svg>
+
+        <!-- Vertical Divider -->
+        <span class="h-8 w-[1px] bg-thulirva-cream/30"></span>
+
+        <!-- Brand Text Stack -->
+        <div class="flex flex-col text-left leading-none">
+          <span class="font-brand font-bold text-xl sm:text-2xl tracking-[0.12em] text-thulirva-cream">
+            THULIRVA
+          </span>
+          <span class="flex items-center gap-1.5 my-0.5">
+            <span class="h-[0.5px] flex-1 bg-thulirva-cream/40"></span>
+            <span class="text-[7px] sm:text-[8px] tracking-[0.2em] uppercase text-thulirva-sageSoft font-semibold">
+              Rooted in Nature
+            </span>
+            <span class="h-[0.5px] flex-1 bg-thulirva-cream/40"></span>
+          </span>
+          <span class="text-[7.5px] sm:text-[8.5px] tracking-[0.14em] uppercase text-thulirva-cream/85 font-medium">
+            Agro &amp; Dairy Products
+          </span>
+        </div>
+      </a>
+
+      <!-- Right: Replay Story Button -->
+      <button
+        id="replayBtn"
+        type="button"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-thulirva-cream bg-white/12 hover:bg-white/20 border border-white/15 transition-all active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-thulirva-sageSoft"
+        title="Replay cow story animation"
+      >
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+          <path d="M3 3v5h5" />
+        </svg>
+        <span>Replay</span>
+      </button>
     </div>
-</div>
+  </header>
 
-<header class="site-header">
-    <div class="container header-container">
-        <a href="/" class="brand">
-            <div class="brand-logo-wrap">
-                <img src="/thulirva-favicon-512.png" alt="THULIRVA – Rooted in Nature" class="brand-logo-img">
-                <div class="brand-text">
-                    <span class="brand-name">THULIRVA</span>
-                    <span class="brand-tagline">ROOTED IN NATURE</span>
-                </div>
-            </div>
+  <!-- ========================================================================
+       MAIN STAGE: Single Unified SVG Storybook Watercolor Animation + 404 Reveal
+       ======================================================================== -->
+  <main class="flex-1 w-full max-w-4xl mx-auto px-3 sm:px-8 py-2 sm:py-4 flex flex-col items-center justify-center">
+
+    <!-- SINGLE HERO ILLUSTRATION CONTAINER (No duplicate SVG elements) -->
+    <div
+      id="sceneContainer"
+      class="w-full max-w-[640px] relative overflow-visible transition-opacity duration-700 opacity-0"
+      role="img"
+      aria-label="Animated storybook watercolor illustration of the Thulirva baby cow with all four legs walking up to an open silver Thulirva milk can, climbing onto the rim with both front paws to look inside, realizing it is empty, and sitting sadly with all four legs tucked, drooping ears, and a tiny tear."
+    >
+      <svg
+        id="scene-svg"
+        viewBox="0 0 560 365"
+        class="w-full h-auto block select-none overflow-visible"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <!-- Subtle Watercolor Paper & Brush Edge Filter -->
+          <filter id="watercolorWash" x="-8%" y="-8%" width="116%" height="116%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.032" numOctaves="3" seed="14" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.4" xChannelSelector="R" yChannelSelector="G" result="displaced" />
+            <feGaussianBlur in="displaced" stdDeviation="0.35" result="softened" />
+            <feMerge>
+              <feMergeNode in="softened" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <!-- Soft Watercolor Edge Bleed for Patches & Hills -->
+          <filter id="softWatercolorEdge" x="-10%" y="-10%" width="120%" height="120%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.042" numOctaves="3" seed="7" result="turb" />
+            <feDisplacementMap in="SourceGraphic" in2="turb" scale="3.2" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+
+          <!-- Warm Sunlight Glow -->
+          <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.65" />
+            <stop offset="55%" stop-color="#FDE68A" stop-opacity="0.2" />
+            <stop offset="100%" stop-color="#FAF8F2" stop-opacity="0" />
+          </radialGradient>
+
+          <!-- Seamless Cream Vignette Fade Mask -->
+          <radialGradient id="vignetteFade" cx="50%" cy="54%" r="53%">
+            <stop offset="72%" stop-color="#FFFFFF" stop-opacity="1" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+          </radialGradient>
+          <mask id="sceneVignetteMask">
+            <rect x="0" y="0" width="560" height="365" fill="url(#vignetteFade)" />
+          </mask>
+
+          <!-- Soft Watercolor Pasture Hills -->
+          <linearGradient id="farHillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#DCE8D4" />
+            <stop offset="100%" stop-color="#C6D9BC" />
+          </linearGradient>
+
+          <linearGradient id="midHillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#BCD2B2" />
+            <stop offset="100%" stop-color="#9EB994" />
+          </linearGradient>
+
+          <linearGradient id="foregroundGroundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#E8DEC7" />
+            <stop offset="55%" stop-color="#DDD0B4" />
+            <stop offset="100%" stop-color="#FAF8F2" />
+          </linearGradient>
+
+          <!-- Brushed Stainless-Steel Dairy Milk Can Gradient -->
+          <linearGradient id="milkCanSilver" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#BFC7C2" />
+            <stop offset="28%" stop-color="#F6F8F6" />
+            <stop offset="64%" stop-color="#B6BEB9" />
+            <stop offset="100%" stop-color="#939D97" />
+          </linearGradient>
+
+          <linearGradient id="milkCanInterior" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#27322C" />
+            <stop offset="100%" stop-color="#111714" />
+          </linearGradient>
+
+          <!-- Painterly Watercolor Fur & Patch Gradients (Exact Reference Calf Colors) -->
+          <radialGradient id="cowCreamBodyGrad" cx="44%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="#FFFDF9" />
+            <stop offset="62%" stop-color="#F7EFE2" />
+            <stop offset="100%" stop-color="#E5D4BA" />
+          </radialGradient>
+
+          <radialGradient id="cowHeadCreamGrad" cx="48%" cy="36%" r="68%">
+            <stop offset="0%" stop-color="#FFFDF9" />
+            <stop offset="65%" stop-color="#FAF2E5" />
+            <stop offset="100%" stop-color="#E9D8C0" />
+          </radialGradient>
+
+          <linearGradient id="cowChestnutRich" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#96634B" />
+            <stop offset="50%" stop-color="#7C4B36" />
+            <stop offset="100%" stop-color="#5E3828" />
+          </linearGradient>
+
+          <linearGradient id="cowHornGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#8C5B46" />
+            <stop offset="55%" stop-color="#6E4433" />
+            <stop offset="100%" stop-color="#4F2F22" />
+          </linearGradient>
+
+          <radialGradient id="cowPeachMuzzleGrad" cx="48%" cy="36%" r="65%">
+            <stop offset="0%" stop-color="#FFF0E6" />
+            <stop offset="58%" stop-color="#FBE0D0" />
+            <stop offset="100%" stop-color="#EEBFA9" />
+          </radialGradient>
+
+          <linearGradient id="cowInnerEarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FAD0C3" />
+            <stop offset="55%" stop-color="#F2A896" />
+            <stop offset="100%" stop-color="#DE8572" />
+          </linearGradient>
+
+          <radialGradient id="cheekBlushGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#F6B5A3" stop-opacity="0.72" />
+            <stop offset="70%" stop-color="#F6B5A3" stop-opacity="0.28" />
+            <stop offset="100%" stop-color="#F6B5A3" stop-opacity="0" />
+          </radialGradient>
+
+          <!-- Soft Ground Contact Shadow -->
+          <radialGradient id="groundShadow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#5E3D2E" stop-opacity="0.24" />
+            <stop offset="65%" stop-color="#5E3D2E" stop-opacity="0.09" />
+            <stop offset="100%" stop-color="#5E3D2E" stop-opacity="0" />
+          </radialGradient>
+
+          <!-- Clip paths for organic watercolor patches on body & head -->
+          <clipPath id="cowTorsoClip">
+            <path d="M-76 -12 C-76 -48, -42 -66, 8 -66 C56 -66, 82 -44, 82 -8 C82 26, 54 42, 4 42 C-48 42, -76 22, -76 -12 Z" />
+          </clipPath>
+
+          <clipPath id="cowHeadClip">
+            <path d="M-64 -4 C-66 -42, -38 -62, 0 -62 C38 -62, 66 -42, 64 -4 C62 28, 42 46, 0 46 C-42 46, -62 28, -64 -4 Z" />
+          </clipPath>
+        </defs>
+
+        <!-- Seamless Watercolor Vignette Wrapper -->
+        <g mask="url(#sceneVignetteMask)">
+          <!-- ==================================================================
+               LAYER 1: SKY, WARM SUNLIGHT, DRIFTING CLOUDS & HANGING LEAVES
+               ================================================================== -->
+          <g id="layer-sky">
+            <circle class="sun-halo" cx="455" cy="62" r="112" fill="url(#sunGlow)" />
+
+            <g class="cloud-drift-1" fill="#F1EDE2" opacity="0.92" filter="url(#softWatercolorEdge)">
+              <path d="M108 72h68a14 14 0 0 0 0-28 20 20 0 0 0-39-5 16 16 0 0 0-29 12 12 12 0 0 0 0 21Z" />
+            </g>
+            <g class="cloud-drift-2" fill="#F1EDE2" opacity="0.85" filter="url(#softWatercolorEdge)">
+              <path d="M318 54h52a11 11 0 0 0 0-22 15 15 0 0 0-30-4 13 13 0 0 0-22 11 9 9 0 0 0 0 15Z" />
+            </g>
+
+            <!-- Hanging Botanical Branch in Top-Left (Matches Reference Offline Screen) -->
+            <g class="hanging-branch" opacity="0.94" filter="url(#watercolorWash)">
+              <path d="M-6 4 C 36 16, 82 22, 138 12" stroke="#6B9164" stroke-width="2.1" fill="none" stroke-linecap="round" />
+              <path d="M16 10 C 34 32, 54 44, 74 58" stroke="#6B9164" stroke-width="1.7" fill="none" stroke-linecap="round" />
+              <path d="M12 9 C 2 23, 10 40, 24 37 C 29 25, 22 14, 12 9 Z" fill="#88B07E" />
+              <path d="M40 14 C 32 30, 42 45, 55 41 C 59 29, 51 18, 40 14 Z" fill="#719A68" />
+              <path d="M72 17 C 67 33, 79 45, 91 39 C 93 27, 83 18, 72 17 Z" fill="#98BD8D" />
+              <path d="M106 14 C 108 29, 122 35, 132 27 C 127 16, 116 12, 106 14 Z" fill="#7EA675" />
+              <path d="M48 38 C 38 50, 44 65, 58 62 C 63 51, 57 42, 48 38 Z" fill="#98BD8D" />
+              <path d="M24 26 C 12 34, 13 49, 26 50 C 33 42, 31 32, 24 26 Z" fill="#779F6E" />
+            </g>
+          </g>
+
+          <!-- ==================================================================
+               LAYER 2: WATERCOLOR PASTURE, DISTANT FARM BARN & GRAZING COW
+               ================================================================== -->
+          <g id="layer-pasture">
+            <path d="M0 218 Q 155 174 330 206 T 560 188 L 560 365 L 0 365 Z" fill="url(#farHillGrad)" filter="url(#softWatercolorEdge)" />
+
+            <!-- Distant White Barn & Grazing Cow Silhouette on Right Hill -->
+            <g transform="translate(436, 146)" opacity="0.88">
+              <path d="M0 38 L0 15 L27 2 L54 15 L54 38 Z" fill="#FAF8F2" stroke="#96B390" stroke-width="1.5" />
+              <path d="M-5 16 L27 0 L59 16" fill="none" stroke="#82A47C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+              <rect x="18" y="19" width="18" height="19" rx="1.5" fill="#A6C29C" />
+              <g transform="translate(27, 29) scale(0.55)" fill="#688B62">
+                <rect x="-10" y="-6" width="18" height="10" rx="4" />
+                <circle cx="10" cy="-3" r="4" />
+                <line x1="-7" y1="4" x2="-7" y2="11" stroke="#688B62" stroke-width="2.2" stroke-linecap="round" />
+                <line x1="-2" y1="4" x2="-2" y2="11" stroke="#688B62" stroke-width="2.2" stroke-linecap="round" />
+                <line x1="4" y1="4" x2="4" y2="11" stroke="#688B62" stroke-width="2.2" stroke-linecap="round" />
+                <line x1="7" y1="4" x2="7" y2="11" stroke="#688B62" stroke-width="2.2" stroke-linecap="round" />
+              </g>
+            </g>
+
+            <path d="M0 244 Q 185 208 370 238 T 560 222 L 560 365 L 0 365 Z" fill="url(#midHillGrad)" filter="url(#softWatercolorEdge)" />
+
+            <path d="M0 294 Q 280 284 560 296 L 560 365 L 0 365 Z" fill="url(#foregroundGroundGrad)" />
+            <path d="M0 294 Q 280 284 560 296" fill="none" stroke="#96B68E" stroke-width="4.5" opacity="0.65" filter="url(#softWatercolorEdge)" />
+
+            <g fill="#86AC7D" opacity="0.72">
+              <path d="M36 296 Q 31 282 25 278 Q 35 283 39 296 Z" />
+              <path d="M42 296 Q 43 280 47 275 Q 47 283 45 296 Z" />
+              <path d="M512 295 Q 507 281 501 277 Q 511 282 515 295 Z" />
+              <path d="M518 295 Q 520 279 525 275 Q 524 283 521 295 Z" />
+            </g>
+
+            <g class="floating-leaf-1" transform="translate(152, 92)">
+              <path d="M0 0 C 8 -8, 18 -3, 20 5 C 12 10, 2 8, 0 0 Z" fill="#88B07E" opacity="0.75" />
+            </g>
+            <g class="floating-leaf-2" transform="translate(362, 102)">
+              <path d="M0 0 C -7 -7, -17 -3, -19 5 C -11 9, -2 7, 0 0 Z" fill="#739B6A" opacity="0.68" />
+            </g>
+          </g>
+
+          <!-- ==================================================================
+               LAYER 3: LARGE OPEN SILVER THULIRVA MILK CAN (~112px tall)
+               Positioned at x=432, y=322 so the calf can climb onto its top rim
+               ================================================================== -->
+          <g id="milk-can-group" transform="translate(432, 322)">
+            <!-- Ground Contact Shadow -->
+            <ellipse cx="0" cy="6" rx="44" ry="10" fill="url(#groundShadow)" />
+
+            <!-- Articulated Milk Can Body (~112px tall from y=0 to y=-112) -->
+            <g id="milk-can-body" transform-origin="0 0">
+              <!-- Cylindrical Brushed Steel Drum -->
+              <path d="M-33 -74 L33 -74 L34 -5 C34 4, -34 4, -34 -5 Z" fill="url(#milkCanSilver)" stroke="#68726C" stroke-width="1.8" />
+
+              <!-- Subtle Horizontal Rib Rings -->
+              <path d="M-33.5 -18 Q 0 -14 33.5 -18" fill="none" stroke="#808B85" stroke-width="1.8" />
+              <path d="M-33 -68 Q 0 -64 33 -68" fill="none" stroke="#808B85" stroke-width="1.8" />
+
+              <!-- Tapered Shoulder -->
+              <path d="M-33 -74 L-20 -97 L20 -97 L33 -74 Z" fill="url(#milkCanSilver)" stroke="#68726C" stroke-width="1.8" stroke-linejoin="round" />
+
+              <!-- Side Carry Handles -->
+              <path d="M-31 -66 C-43 -66, -43 -44, -32 -44" fill="none" stroke="#68726C" stroke-width="2.6" stroke-linecap="round" />
+              <path d="M31 -66 C43 -66, 43 -44, 32 -44" fill="none" stroke="#68726C" stroke-width="2.6" stroke-linecap="round" />
+
+              <!-- Neck Collar -->
+              <rect x="-20" y="-109" width="40" height="12" rx="3" fill="url(#milkCanSilver)" stroke="#68726C" stroke-width="1.8" />
+
+              <!-- Open Top Rim & Dark Empty Interior (Top rim at y=-109) -->
+              <ellipse cx="0" cy="-109" rx="21.5" ry="7" fill="#E8ECE9" stroke="#68726C" stroke-width="1.8" />
+              <ellipse cx="0" cy="-109" rx="16.5" ry="5" fill="url(#milkCanInterior)" />
+
+              <!-- Official Circular Green Leaf-Wreath "T" Emblem on Front of Milk Can -->
+              <g transform="translate(0, -42)">
+                <circle cx="0" cy="0" r="16" fill="#FAF8F2" fill-opacity="0.95" stroke="#4A7C59" stroke-width="1.3" />
+                <path d="M-5.5 11.5 C3 12.5, 11.5 6.5, 11.5 -3" stroke="#4A7C59" stroke-width="1.5" fill="none" stroke-linecap="round" />
+                <circle cx="10.2" cy="3.2" r="1.5" fill="#4A7C59" />
+                <circle cx="6" cy="8.5" r="1.5" fill="#4A7C59" />
+                <path d="M-7 -7 H7 V-4 H1.8 V8 H-1.8 V-4 H-7 Z" fill="#163A28" />
+              </g>
+
+              <!-- Lid Resting Beside the Can on the Grass -->
+              <g transform="translate(46, -2) rotate(11)">
+                <ellipse cx="0" cy="0" rx="17" ry="5" fill="#D5DBD7" stroke="#68726C" stroke-width="1.6" />
+                <rect x="-6" y="-7" width="12" height="6" rx="2.5" fill="#B5BEB8" stroke="#68726C" stroke-width="1.5" />
+              </g>
+            </g>
+
+            <!-- Empty Can Dry-Air Puff / Hollow Dust Swirl (Appears when cow looks inside) -->
+            <g id="empty-can-cue" opacity="0" transform="translate(0, -120)">
+              <ellipse cx="0" cy="0" rx="14" ry="4.5" fill="none" stroke="#858F89" stroke-width="1.7" stroke-dasharray="3.5 3" />
+              <path d="M-8 -8 C-13 -14, -4 -19, -9 -25" fill="none" stroke="#9AA39E" stroke-width="1.5" stroke-linecap="round" />
+              <path d="M6 -7 C11 -13, 3 -18, 8 -24" fill="none" stroke="#9AA39E" stroke-width="1.5" stroke-linecap="round" />
+              <circle cx="-11" cy="-14" r="2.4" fill="#C4CBC6" />
+              <circle cx="10" cy="-16" r="2.1" fill="#C4CBC6" />
+              <circle cx="0" cy="-24" r="1.8" fill="#DCE2DE" />
+            </g>
+          </g>
+
+          <!-- ==================================================================
+               LAYER 4: HERO THULIRVA CHIBI CALF WITH ALL FOUR LEGS CLEARLY VISIBLE
+               - Walking/Standing: All 4 tapered chubby legs clearly separated in
+                 3/4 perspective (far-left, near-left, far-right, near-right)
+               - Climbing: Rears up on both hind legs; reaches both front legs up
+                 onto the silver milk can rim (y=-109) to peek inside!
+               - Seated Resting Pose: All 4 legs clearly visible!
+                 * Both front paws tucked neatly forward under chin/collar
+                 * Both hind haunches/back hooves visibly tucked beside hindquarters
+               ================================================================== -->
+          <g id="thulirva-cow-mascot" transform="translate(-160, 322)">
+            <!-- Soft Ground Contact Shadow -->
+            <ellipse id="cow-shadow" cx="2" cy="6" rx="98" ry="14" fill="url(#groundShadow)" />
+
+            <!-- Idle Breathing Wrapper -->
+            <g id="cow-idle-wrapper">
+              <!-- Main Body & Sit Rig -->
+              <g id="cow-body-rig" transform="translate(0, 0)">
+
+                <!-- Swishing Tail with Chestnut Tuft -->
+                <g id="cow-tail" transform="translate(-74, -68)">
+                  <path d="M0 0 C -18 -5, -24 15, -16 30" fill="none" stroke="#5E3D2E" stroke-width="2.4" stroke-linecap="round" />
+                  <path d="M-16 27 C -23 33, -22 44, -13 46 C -7 44, -7 33, -16 27 Z" fill="url(#cowChestnutRich)" stroke="#5E3D2E" stroke-width="1.7" />
+                </g>
+
+                <!-- SEATED FAR-RIGHT HIND HOOF PEEKING OUT ON OPPOSITE SIDE (Visible when seated!) -->
+                <g id="seated-hind-right" transform="translate(76, -34)" opacity="0">
+                  <path d="M-8 0 C4 -6, 22 -4, 24 6 C25 13, 12 15, -6 12 Z" fill="#E8D8C0" stroke="#5E3D2E" stroke-width="1.8" stroke-linejoin="round" />
+                  <!-- Dark Brown Split Hind Hoof -->
+                  <path d="M12 -2 C19 -2, 24 1, 24 6 C24 12, 18 14, 12 13 Z" fill="#6E4433" stroke="#4F2F22" stroke-width="1.6" />
+                  <path d="M18 5 L23 5" stroke="#45271B" stroke-width="1.2" stroke-linecap="round" />
+                </g>
+
+                <!-- WALKING/STANDING FAR LEGS (Back-Left & Front-Left, clearly offset in perspective) -->
+                <g id="leg-back-left" transform="translate(-54, -48)">
+                  <path d="M-11 -6 C-11 8, -9 24, -8 42 C-8 46, 8 46, 8 42 C9 24, 11 8, 11 -6 Z" fill="#E5D4BA" stroke="#5E3D2E" stroke-width="1.8" stroke-linejoin="round" />
+                  <path d="M-8.5 34 L8.5 34 L8 42 C8 46, -8 46, -8 42 Z" fill="#6E4433" stroke="#4F2F22" stroke-width="1.6" />
+                  <path d="M0 36 L0 45" stroke="#45271B" stroke-width="1.2" stroke-linecap="round" />
+                </g>
+
+                <g id="leg-front-left" transform="translate(26, -48)">
+                  <path d="M-11 -6 C-11 8, -9 24, -8 42 C-8 46, 8 46, 8 42 C9 24, 11 8, 11 -6 Z" fill="#E5D4BA" stroke="#5E3D2E" stroke-width="1.8" stroke-linejoin="round" />
+                  <path d="M-8.5 34 L8.5 34 L8 42 C8 46, -8 46, -8 42 Z" fill="#6E4433" stroke="#4F2F22" stroke-width="1.6" />
+                  <path d="M0 36 L0 45" stroke="#45271B" stroke-width="1.2" stroke-linecap="round" />
+                </g>
+
+                <!-- COMPACT PLUMP WATERCOLOR CALF BODY (3/4 Front-Facing Chibi Torso) -->
+                <g id="cow-torso" transform="translate(4, -66)">
+                  <path d="M-76 -12 C-76 -48, -42 -66, 8 -66 C56 -66, 82 -44, 82 -8 C82 26, 54 42, 4 42 C-48 42, -76 22, -76 -12 Z" fill="url(#cowCreamBodyGrad)" />
+
+                  <g clip-path="url(#cowTorsoClip)" filter="url(#softWatercolorEdge)">
+                    <path d="M-38 -68 C-12 -68, 8 -50, -2 -28 C-12 -10, -42 -14, -54 -34 C-60 -48, -50 -68, -38 -68 Z" fill="url(#cowChestnutRich)" />
+                    <path d="M-78 -22 C-58 -28, -46 -4, -60 16 C-70 28, -80 14, -78 -22 Z" fill="url(#cowChestnutRich)" />
+                    <path d="M52 -32 C68 -34, 84 -16, 78 6 C72 22, 54 18, 48 2 C44 -12, 44 -30, 52 -32 Z" fill="url(#cowChestnutRich)" />
+                  </g>
+
+                  <path d="M-76 -12 C-76 -48, -42 -66, 8 -66 C56 -66, 82 -44, 82 -8 C82 26, 54 42, 4 42 C-48 42, -76 22, -76 -12 Z" fill="none" stroke="#5E3D2E" stroke-width="1.9" />
+                </g>
+
+                <!-- WALKING/STANDING NEAR LEGS (Back-Right & Front-Right, bright cream fur, all 4 legs unmistakable!) -->
+                <g id="leg-back-right" transform="translate(-30, -46)">
+                  <path d="M-12 -8 C-12 8, -9.5 24, -8.5 42 C-8.5 46.5, 8.5 46.5, 8.5 42 C9.5 24, 12 8, 12 -8 Z" fill="#FAF2E5" stroke="#5E3D2E" stroke-width="1.9" stroke-linejoin="round" />
+                  <path d="M-9 34 L9 34 L8.5 42 C8.5 46.5, -8.5 46.5, -8.5 42 Z" fill="#6E4433" stroke="#4F2F22" stroke-width="1.7" />
+                  <path d="M0 36 L0 45.5" stroke="#45271B" stroke-width="1.3" stroke-linecap="round" />
+                </g>
+
+                <g id="leg-front-right" transform="translate(50, -46)">
+                  <path d="M-12 -8 C-12 8, -9.5 24, -8.5 42 C-8.5 46.5, 8.5 46.5, 8.5 42 C9.5 24, 12 8, 12 -8 Z" fill="#FAF2E5" stroke="#5E3D2E" stroke-width="1.9" stroke-linejoin="round" />
+                  <path d="M-9 34 L9 34 L8.5 42 C8.5 46.5, -8.5 46.5, -8.5 42 Z" fill="#6E4433" stroke="#4F2F22" stroke-width="1.7" />
+                  <path d="M0 36 L0 45.5" stroke="#45271B" stroke-width="1.3" stroke-linecap="round" />
+                </g>
+
+                <!-- SEATED NEAR-LEFT HIND HAUNCH & TUCKED BACK HOOF (Visible beside hip when seated!) -->
+                <g id="seated-hind-left" transform="translate(-44, -42)" opacity="0">
+                  <!-- Soft Folded Haunch / Thigh Curve -->
+                  <path d="M-24 -8 C-34 2, -32 18, -12 20 L16 20 C22 20, 22 8, 12 6 L-6 4 C-4 -6, -14 -14, -24 -8 Z" fill="#FAF2E5" stroke="#5E3D2E" stroke-width="1.9" stroke-linejoin="round" />
+                  <!-- Chestnut Spot on Haunch -->
+                  <path d="M-26 -2 C-28 5, -22 10, -16 7 C-12 4, -14 -3, -20 -5 Z" fill="#8C5B46" opacity="0.82" />
+                  <!-- Forward-Tucked Split Hind Hoof -->
+                  <path d="M6 6 C14 6, 20 8, 20 13 C20 18, 14 20, 6 20 Z" fill="#6E4433" stroke="#4F2F22" stroke-width="1.7" />
+                  <path d="M13 13 L19 13" stroke="#45271B" stroke-width="1.3" stroke-linecap="round" />
+                </g>
+
+                <!-- SEATED TUCKED FRONT PAWS (Both front legs folded neatly under chin/collar!) -->
+                <g id="resting-folded-hooves" transform="translate(44, -32)" opacity="0">
+                  <ellipse cx="2" cy="12" rx="44" ry="6.5" fill="#5E3D2E" opacity="0.16" />
+
+                  <!-- Front-Left Tucked Paw & Hoof -->
+                  <g transform="translate(-21, 0)">
+                    <path d="M-22 1 C-22 -8, -8 -10, 14 -7 C19 -6, 20 8, 13 9 C-6 10, -22 9, -22 1 Z" fill="#FAF2E5" stroke="#5E3D2E" stroke-width="1.9" stroke-linejoin="round" />
+                    <path d="M-4 -8 C3 -8, 8 -4, 5 1 C2 4, -5 2, -6 -3 Z" fill="#8C5B46" opacity="0.85" />
+                    <path d="M-22 1 C-22 -6, -15 -8, -10 -8 L-10 9 C-16 9, -22 7, -22 1 Z" fill="#6E4433" stroke="#4F2F22" stroke-width="1.6" />
+                    <path d="M-21 1 L-15 1" stroke="#45271B" stroke-width="1.3" stroke-linecap="round" />
+                  </g>
+
+                  <!-- Front-Right Tucked Paw & Hoof -->
+                  <g transform="translate(23, 0)">
+                    <path d="M22 1 C22 -8, 8 -10, -14 -7 C-19 -6, -20 8, -13 9 C6 10, 22 9, 22 1 Z" fill="#FAF2E5" stroke="#5E3D2E" stroke-width="1.9" stroke-linejoin="round" />
+                    <path d="M22 1 C22 -6, 15 -8, 10 -8 L10 9 C16 9, 22 7, 22 1 Z" fill="#6E4433" stroke="#4F2F22" stroke-width="1.6" />
+                    <path d="M21 1 L15 1" stroke="#45271B" stroke-width="1.3" stroke-linecap="round" />
+                  </g>
+                </g>
+
+                <!-- SNUG DARK FOREST-GREEN COLLAR (#163A28) & CIRCULAR WHITE "T" MEDALLION -->
+                <g id="cow-collar" transform="translate(38, -74)">
+                  <path d="M-32 -8 Q 6 12 36 -4" fill="none" stroke="#163A28" stroke-width="10.5" stroke-linecap="round" />
+                  <path d="M-30 -9 Q 6 10 34 -5" fill="none" stroke="#2D6A4F" stroke-width="2.2" stroke-linecap="round" />
+
+                  <g id="cow-medallion" transform="translate(6, 5)">
+                    <circle cx="0" cy="11" r="12.5" fill="#FFFDF9" stroke="#163A28" stroke-width="2" />
+                    <circle cx="0" cy="11" r="9.8" fill="none" stroke="#84A982" stroke-width="0.9" />
+                    <path d="M-3.5 18.5 C2.5 19.5, 8 15.5, 8 9" stroke="#4A7C59" stroke-width="1.1" fill="none" stroke-linecap="round" />
+                    <path d="M-5.5 5.2 H5.5 V7.4 H1.3 V16.8 H-1.3 V7.4 H-5.5 Z" fill="#163A28" />
+                  </g>
+                </g>
+
+                <!-- ==============================================================
+                     HERO FRONT-3/4 PORTRAIT CHIBI CALF HEAD
+                     ============================================================== -->
+                <g id="cow-head-pivot" transform="translate(42, -98)">
+                  <g id="cow-head" transform="translate(4, -36)">
+
+                    <!-- Two Short Curved Dark-Brown Baby Horns -->
+                    <path d="M-24 -54 C-35 -71, -24 -86, -13 -82 C-18 -72, -17 -61, -13 -54 Z" fill="url(#cowHornGrad)" stroke="#4F2F22" stroke-width="1.8" stroke-linejoin="round" />
+                    <path d="M24 -54 C35 -71, 24 -86, 13 -82 C18 -72, 17 -61, 13 -54 Z" fill="url(#cowHornGrad)" stroke="#4F2F22" stroke-width="1.8" stroke-linejoin="round" />
+
+                    <!-- LEFT PLUSH HORIZONTAL-FLARED EAR -->
+                    <g id="cow-ear-left" transform="translate(-48, -32)">
+                      <path d="M0 0 C-30 -16, -62 -6, -58 14 C-54 31, -24 27, 0 11 Z" fill="#FAF2E5" stroke="#5E3D2E" stroke-width="1.9" stroke-linejoin="round" />
+                      <path d="M-6 -2 C-32 -15, -59 -6, -57 11 C-50 4, -28 -2, -6 -2 Z" fill="#8C5B46" opacity="0.72" />
+                      <path d="M-7 5 C-28 -5, -48 2, -45 13 C-41 22, -21 20, -7 10 Z" fill="url(#cowInnerEarGrad)" />
+                      <path d="M-12 8 Q -28 6 -38 11" fill="none" stroke="#C96F5D" stroke-width="1.2" stroke-linecap="round" opacity="0.75" />
+                    </g>
+
+                    <!-- RIGHT PLUSH HORIZONTAL-FLARED EAR -->
+                    <g id="cow-ear-right" transform="translate(48, -32)">
+                      <path d="M0 0 C30 -16, 62 -6, 58 14 C54 31, 24 27, 0 11 Z" fill="#FAF2E5" stroke="#5E3D2E" stroke-width="1.9" stroke-linejoin="round" />
+                      <path d="M6 -2 C32 -15, 59 -6, 57 11 C50 4, 28 -2, 6 -2 Z" fill="#8C5B46" opacity="0.72" />
+                      <path d="M7 5 C28 -5, 48 2, 45 13 C41 22, 21 20, 7 10 Z" fill="url(#cowInnerEarGrad)" />
+                      <path d="M12 8 Q 28 6 38 11" fill="none" stroke="#C96F5D" stroke-width="1.2" stroke-linecap="round" opacity="0.75" />
+                    </g>
+
+                    <!-- Chubby Soft-Cheeked Chibi Head Base -->
+                    <path d="M-64 -4 C-66 -42, -38 -62, 0 -62 C38 -62, 66 -42, 64 -4 C62 28, 42 46, 0 46 C-42 46, -62 28, -64 -4 Z" fill="url(#cowHeadCreamGrad)" />
+
+                    <!-- Asymmetric Chestnut Forehead Hair Patches + White Center Blaze -->
+                    <g clip-path="url(#cowHeadClip)" filter="url(#softWatercolorEdge)">
+                      <path d="M-66 -12 C-66 -44, -42 -64, -18 -62 C-12 -46, -20 -26, -36 -18 C-48 -12, -58 -11, -66 -12 Z" fill="url(#cowChestnutRich)" />
+                      <path d="M66 -6 C66 -44, 40 -64, 12 -62 C6 -44, 14 -20, 32 -10 C45 -3, 58 -3, 66 -6 Z" fill="url(#cowChestnutRich)" />
+                    </g>
+
+                    <path d="M-64 -4 C-66 -42, -38 -62, 0 -62 C38 -62, 66 -42, 64 -4 C62 28, 42 46, 0 46 C-42 46, -62 28, -64 -4 Z" fill="none" stroke="#5E3D2E" stroke-width="1.9" />
+
+                    <!-- 3 Fluffy Crown Hair Tufts -->
+                    <g transform="translate(0, -60)">
+                      <path d="M-13 2 C-18 -13, -7 -21, -2 -10 C2 -22, 13 -19, 8 -7 C15 -14, 23 -8, 15 3" fill="#8C5B46" stroke="#5E3D2E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                      <path d="M-4 1 C-5 -9, 2 -12, 4 -3" fill="#FFFDF9" stroke="#5E3D2E" stroke-width="1.5" stroke-linecap="round" />
+                    </g>
+
+                    <!-- Soft Rosy Peach Cheek Blush Ovals -->
+                    <ellipse cx="-41" cy="7" rx="13" ry="7.5" fill="url(#cheekBlushGrad)" />
+                    <ellipse cx="41" cy="7" rx="13" ry="7.5" fill="url(#cheekBlushGrad)" />
+
+                    <!-- OPEN GLOSSY ANIME EYES -->
+                    <g id="cow-eyes-open">
+                      <g transform="translate(-26, -12)">
+                        <ellipse cx="0" cy="0" rx="8" ry="8.8" fill="#3E2519" />
+                        <ellipse cx="0" cy="2" rx="6.2" ry="5.2" fill="#5C3827" opacity="0.55" />
+                        <circle cx="-2.8" cy="-3.2" r="3" fill="#FFFFFF" />
+                        <circle cx="2.6" cy="2.6" r="1.45" fill="#FFFFFF" opacity="0.9" />
+                        <path d="M-8.5 -2 C-6 -8.5, 4 -9.5, 8.5 -3" fill="none" stroke="#3E2519" stroke-width="2" stroke-linecap="round" />
+                        <rect class="eyelid-blink" x="-9.5" y="-9.5" width="19" height="19" rx="8" fill="#FAF2E5" />
+                      </g>
+                      <g transform="translate(26, -12)">
+                        <ellipse cx="0" cy="0" rx="8" ry="8.8" fill="#3E2519" />
+                        <ellipse cx="0" cy="2" rx="6.2" ry="5.2" fill="#5C3827" opacity="0.55" />
+                        <circle cx="-2.8" cy="-3.2" r="3" fill="#FFFFFF" />
+                        <circle cx="2.6" cy="2.6" r="1.45" fill="#FFFFFF" opacity="0.9" />
+                        <path d="M-8.5 -3 C-4 -9.5, 6 -8.5, 8.5 -2" fill="none" stroke="#3E2519" stroke-width="2" stroke-linecap="round" />
+                        <rect class="eyelid-blink" x="-9.5" y="-9.5" width="19" height="19" rx="8" fill="#FAF2E5" />
+                      </g>
+                    </g>
+
+                    <!-- GLISTENING TEARY PUPPY EYES (Final Sad Pose) -->
+                    <g id="cow-eyes-sad-teary" opacity="0">
+                      <g transform="translate(-26, -11)">
+                        <ellipse cx="0" cy="0" rx="8.2" ry="8.6" fill="#3E2519" />
+                        <path d="M-6.8 4 Q 0 8.5 6.8 4" fill="none" stroke="#BAE6FD" stroke-width="2.1" stroke-linecap="round" />
+                        <circle cx="-2.8" cy="-3.2" r="3.2" fill="#FFFFFF" />
+                        <circle cx="2.8" cy="2.2" r="1.7" fill="#FFFFFF" />
+                        <circle cx="-3.6" cy="2.4" r="1.1" fill="#E0F2FE" />
+                        <path d="M-9 -4 Q 0 -8.5 9 -2" fill="none" stroke="#4F2F22" stroke-width="2.2" stroke-linecap="round" />
+                      </g>
+                      <g transform="translate(26, -11)">
+                        <ellipse cx="0" cy="0" rx="8.2" ry="8.6" fill="#3E2519" />
+                        <path d="M-6.8 4 Q 0 8.5 6.8 4" fill="none" stroke="#BAE6FD" stroke-width="2.1" stroke-linecap="round" />
+                        <circle cx="-2.8" cy="-3.2" r="3.2" fill="#FFFFFF" />
+                        <circle cx="2.8" cy="2.2" r="1.7" fill="#FFFFFF" />
+                        <circle cx="-3.6" cy="2.4" r="1.1" fill="#E0F2FE" />
+                        <path d="M-9 -2 Q 0 -8.5 9 -4" fill="none" stroke="#4F2F22" stroke-width="2.2" stroke-linecap="round" />
+                      </g>
+                    </g>
+
+                    <!-- WORRIED ANGLED EYEBROWS -->
+                    <path id="cow-brow-left" d="M-34 -26 Q -26 -30 -18 -26" fill="none" stroke="#5E3D2E" stroke-width="2.2" stroke-linecap="round" />
+                    <path id="cow-brow-right" d="M18 -26 Q 26 -30 34 -26" fill="none" stroke="#5E3D2E" stroke-width="2.2" stroke-linecap="round" />
+
+                    <!-- DELICATE ANIMATED TEARDROP SLIDING DOWN RIGHT CHEEK -->
+                    <g id="cow-teardrop" transform="translate(34, -4)" opacity="0">
+                      <path class="tear-glisten" d="M0 0 C 4.5 5.8, 5.8 10.8, 0 13 C -5.8 10.8, -4.5 5.8, 0 0 Z" fill="#93C5FD" stroke="#3B82F6" stroke-width="1" />
+                      <circle cx="-1.5" cy="7.5" r="1.3" fill="#FFFFFF" />
+                    </g>
+
+                    <!-- BROAD ROUNDED CREAMY-PEACH MUZZLE -->
+                    <g id="cow-muzzle" transform="translate(0, 22)">
+                      <rect x="-44" y="-23" width="88" height="47" rx="23.5" fill="url(#cowPeachMuzzleGrad)" stroke="#5E3D2E" stroke-width="1.9" />
+                      <ellipse cx="-19" cy="-4" rx="2.6" ry="3.2" transform="rotate(-14 -19 -4)" fill="#5E3D2E" />
+                      <ellipse cx="19" cy="-4" rx="2.6" ry="3.2" transform="rotate(14 19 -4)" fill="#5E3D2E" />
+                      <path id="cow-mouth" d="M-7 10 Q 0 15 7 10" fill="none" stroke="#5E3D2E" stroke-width="2" stroke-linecap="round" />
+                    </g>
+
+                    <!-- CURIOSITY "?" BUBBLE -->
+                    <g id="curiosity-mark" transform="translate(58, -66)" opacity="0">
+                      <circle cx="0" cy="0" r="17" fill="#FAF8F2" stroke="#4A7C59" stroke-width="2" />
+                      <text x="0" y="6.5" text-anchor="middle" font-family="Fraunces, serif" font-weight="700" font-size="20" fill="#163A28">?</text>
+                    </g>
+
+                  </g>
+                </g>
+
+              </g>
+            </g>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <!-- ======================================================================
+         404 STORYTELLING REVEAL: Typography & Primary Actions
+         ====================================================================== -->
+    <section
+      aria-labelledby="error-heading"
+      class="w-full max-w-2xl mx-auto text-center mt-4 sm:mt-6 px-2"
+    >
+      <!-- Eyebrow Pill -->
+      <div id="reveal-badge" class="reveal-item inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-thulirva-leafLight/90 border border-thulirva-leaf/40 text-thulirva-forest text-xs font-bold tracking-widest uppercase mb-2.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-thulirva-sage"></span>
+        <span>404 Error</span>
+      </div>
+
+      <!-- Main Headline -->
+      <h1
+        id="error-heading"
+        class="reveal-item font-display font-bold text-thulirva-forest tracking-tight leading-[1.15] text-[clamp(1.85rem,4.5vw,2.75rem)]"
+      >
+        404 – Moo! Page Not Found
+      </h1>
+
+      <!-- Supporting Copy -->
+      <p
+        id="reveal-subcopy"
+        class="reveal-item mt-2.5 text-thulirva-muted text-[clamp(0.98rem,2vw,1.12rem)] leading-relaxed max-w-lg mx-auto font-normal"
+      >
+        “Looks like this page has gone dry. Let's get you back to fresh goodness!”
+      </p>
+
+      <!-- Action Buttons -->
+      <div
+        id="reveal-actions"
+        class="reveal-item mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4"
+      >
+        <!-- Primary Button: Back to Home -->
+        <a
+          href="/"
+          class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl bg-thulirva-forest hover:bg-thulirva-forestDeep text-thulirva-cream font-semibold text-sm sm:text-base shadow-[0_10px_25px_-8px_rgba(22,58,40,0.45)] hover:shadow-[0_14px_28px_-8px_rgba(22,58,40,0.55)] transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-thulirva-forest"
+        >
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+          <span>Back to Home</span>
         </a>
-        <nav class="main-navigation">
-            <a href="/" class="nav-link">Home</a>
-            <a href="/pages/shop.html" class="nav-link">Shop</a>
-            <a href="/pages/subscriptions.html" class="nav-link">Subscriptions</a>
-            <a href="/pages/about.html" class="nav-link">About Us</a>
-            <a href="/pages/farms.html" class="nav-link">Our Farms</a>
-            <a href="/pages/recipes.html" class="nav-link">Recipes</a>
-            <a href="/pages/contact.html" class="nav-link">Contact</a>
-        </nav>
-        <div class="header-actions">
-            <a href="/pages/account.html" class="header-icon" title="Account">👤</a>
-            <a href="/pages/cart.html" class="cart-button" title="Cart">🛒<span class="cart-count" id="cartCount">0</span></a>
-        </div>
-    </div>
-</header>
 
-<main class="error-page-wrap">
-    <div class="error-card">
-        <div class="error-badge">404</div>
-        <h1 class="error-title">Page Not Found</h1>
-        <p class="error-desc">
-            The farm path you followed doesn't exist or has moved. Return to our fresh catalog or discover our pure dairy products.
+        <!-- Secondary Button: Explore Products -->
+        <a
+          href="/products"
+          class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl bg-white hover:bg-thulirva-creamWarm text-thulirva-forest border-2 border-thulirva-forest/20 hover:border-thulirva-forest/40 font-semibold text-sm sm:text-base transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-thulirva-sage"
+        >
+          <svg class="w-4 h-4 text-thulirva-sage" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 2h8" />
+            <path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2" />
+            <path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0" />
+          </svg>
+          <span>Explore Products</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================================
+       FOOTER: Subtle Brand Sign-off & Dev Routing Drawer Trigger
+       ======================================================================== -->
+  <footer class="w-full max-w-6xl mx-auto px-5 sm:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-thulirva-muted/85">
+    <p>© <span id="yearSpan"></span> Thulirva Agro &amp; Dairy Products. Rooted in Nature.</p>
+
+    <button
+      id="openDevGuideBtn"
+      type="button"
+      class="inline-flex items-center gap-1.5 text-thulirva-sage hover:text-thulirva-forest font-medium underline underline-offset-4 decoration-thulirva-leaf/60 hover:decoration-thulirva-forest transition-colors p-1.5 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-thulirva-sage"
+    >
+      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="16 18 22 12 16 6" />
+        <polyline points="8 6 2 12 8 18" />
+      </svg>
+      <span>Dev: Routing Integration</span>
+    </button>
+  </footer>
+
+  <!-- ========================================================================
+       DEVELOPER MODAL: Framework Routing Integration Snippets
+       ======================================================================== -->
+  <div
+    id="devGuideModal"
+    class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-thulirva-forestDeep/55 backdrop-blur-xs"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="devGuideTitle"
+  >
+    <div class="w-full max-w-2xl max-h-[88dvh] flex flex-col rounded-3xl bg-[#FFFDF9] border border-thulirva-leaf/40 shadow-2xl overflow-hidden">
+      <div class="px-6 py-4 bg-thulirva-cream border-b border-thulirva-leaf/25 flex items-center justify-between">
+        <div>
+          <span class="text-[11px] font-bold uppercase tracking-wider text-thulirva-sage">Production Setup</span>
+          <h2 id="devGuideTitle" class="font-display font-bold text-lg text-thulirva-forest">
+            Thulirva 404 Routing Configuration
+          </h2>
+        </div>
+        <button
+          id="closeDevGuideBtn"
+          type="button"
+          class="w-9 h-9 rounded-full bg-white hover:bg-thulirva-leafLight/50 border border-thulirva-leaf/30 flex items-center justify-center text-thulirva-forest transition-colors"
+          aria-label="Close routing guide"
+        >
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto space-y-4 text-sm text-thulirva-forest">
+        <p class="text-xs text-thulirva-muted leading-relaxed">
+          Connect this custom 404 experience as your catch-all route so valid pages remain unaffected while any missing URL displays the Thulirva cow storytelling page.
         </p>
-        <div class="error-actions">
-            <a href="/" class="btn btn-primary">Back to Homepage &rarr;</a>
-            <a href="/pages/shop.html" class="btn btn-outline">Browse Products</a>
-            <a href="/pages/subscriptions.html" class="btn btn-outline">Subscriptions</a>
-        </div>
-    </div>
-</main>
 
-<footer class="site-footer">
-    <div class="footer-top">
-        <div class="container footer-grid">
-            <div class="footer-brand">
-                <div class="brand-logo-wrap">
-                    <img src="/thulirva-favicon-512.png" alt="THULIRVA – Rooted in Nature" class="brand-logo-img">
-                    <div class="brand-text">
-                        <span class="brand-name" style="color:#e5c97a;">THULIRVA</span>
-                        <span class="brand-tagline" style="color:#c8dbbf;">ROOTED IN NATURE</span>
-                    </div>
-                </div>
-                <p class="footer-tagline">Pure by Nature, Made for You! Fresh agro and dairy products from our farms to your table.</p>
-            </div>
-            <div class="footer-column">
-                <h3>Shop</h3>
-                <a href="/pages/shop.html">Milk</a>
-                <a href="/pages/shop.html">Curd</a>
-                <a href="/pages/shop.html">Paneer</a>
-                <a href="/pages/shop.html">Ghee &amp; Butter</a>
-            </div>
-            <div class="footer-column">
-                <h3>Company</h3>
-                <a href="/pages/about.html">About Us</a>
-                <a href="/pages/farms.html">Our Farms</a>
-                <a href="/pages/contact.html">Contact Us</a>
-            </div>
-            <div class="footer-column">
-                <h3>Support</h3>
-                <p>📞 93606 71533</p>
-                <p>✉ support@thulirva.com</p>
-                <p>📍 No 1, Mayana Salai, Thimmarajampettai, Kanchipuram</p>
-            </div>
+        <div class="flex flex-wrap gap-1 bg-thulirva-cream p-1 rounded-xl border border-thulirva-leaf/25 w-fit">
+          <button type="button" data-tab="react" class="tab-btn px-3 py-1 rounded-lg text-xs font-semibold bg-thulirva-forest text-white">React Router</button>
+          <button type="button" data-tab="nextjs" class="tab-btn px-3 py-1 rounded-lg text-xs font-semibold text-thulirva-muted hover:text-thulirva-forest">Next.js</button>
+          <button type="button" data-tab="nginx" class="tab-btn px-3 py-1 rounded-lg text-xs font-semibold text-thulirva-muted hover:text-thulirva-forest">Nginx / Static</button>
         </div>
-    </div>
-    <div class="footer-bottom">
-        <div class="container footer-bottom-content">
-            <p>© 2026 THULIRVA. Pure by Nature, Made for You!</p>
-        </div>
-    </div>
-</footer>
 
+        <div class="relative">
+          <pre id="codeSnippetBox" class="p-4 rounded-2xl bg-[#0F291C] text-[#E6F2EA] text-xs font-mono overflow-x-auto leading-relaxed"></pre>
+          <button
+            id="copySnippetBtn"
+            type="button"
+            class="absolute top-3 right-3 px-3 py-1.5 rounded-xl bg-thulirva-sage hover:bg-thulirva-leaf text-white text-xs font-semibold transition-colors"
+          >
+            Copy Code
+          </button>
+        </div>
+        <p id="copyFeedback" class="text-xs text-thulirva-sage font-medium h-4"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       6.5-SECOND STORYTELLING ANIMATION ENGINE (60fps RequestAnimationFrame)
+       ======================================================================== -->
+  <script>
+    (function () {
+      'use strict';
+
+      const yearEl = document.getElementById('yearSpan');
+      if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+      // SVG Rig Elements
+      const sceneContainer = document.getElementById('sceneContainer');
+      const cowMascot = document.getElementById('thulirva-cow-mascot');
+      const cowIdleWrapper = document.getElementById('cow-idle-wrapper');
+      const cowBodyRig = document.getElementById('cow-body-rig');
+      const cowShadow = document.getElementById('cow-shadow');
+      const cowTail = document.getElementById('cow-tail');
+      const cowMedallion = document.getElementById('cow-medallion');
+
+      const legFL = document.getElementById('leg-front-left');
+      const legFR = document.getElementById('leg-front-right');
+      const legBL = document.getElementById('leg-back-left');
+      const legBR = document.getElementById('leg-back-right');
+
+      const restingHooves = document.getElementById('resting-folded-hooves');
+      const seatedHindLeft = document.getElementById('seated-hind-left');
+      const seatedHindRight = document.getElementById('seated-hind-right');
+
+      const cowHeadPivot = document.getElementById('cow-head-pivot');
+      const cowHead = document.getElementById('cow-head');
+      const earLeft = document.getElementById('cow-ear-left');
+      const earRight = document.getElementById('cow-ear-right');
+      const browLeft = document.getElementById('cow-brow-left');
+      const browRight = document.getElementById('cow-brow-right');
+      const eyesOpen = document.getElementById('cow-eyes-open');
+      const eyesSadTeary = document.getElementById('cow-eyes-sad-teary');
+      const cowMouth = document.getElementById('cow-mouth');
+      const cowTeardrop = document.getElementById('cow-teardrop');
+      const curiosityMark = document.getElementById('curiosity-mark');
+
+      const milkCanBody = document.getElementById('milk-can-body');
+      const emptyCanCue = document.getElementById('empty-can-cue');
+
+      // 404 UI Reveal Elements
+      const revealBadge = document.getElementById('reveal-badge');
+      const revealHeading = document.getElementById('error-heading');
+      const revealSubcopy = document.getElementById('reveal-subcopy');
+      const revealActions = document.getElementById('reveal-actions');
+
+      // Math & Easing Helpers
+      const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const segment = (t, start, end) => clamp((t - start) / (end - start), 0, 1);
+
+      const easeOutCubic = (x) => 1 - Math.pow(1 - x, 3);
+      const easeInOutCubic = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+      const easeOutBack = (x) => {
+        const c1 = 1.70158;
+        const c3 = c1 + 1;
+        return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+      };
+
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      let rafId = null;
+      let startTime = null;
+
+      /**
+       * Renders exact pose of the Thulirva Cow & Silver Milk Can at time `t` (seconds)
+       * Timeline:
+       *  1. 0.0s–1.4s: Scene fades in; cow walks in from the left using all 4 legs with tail wag.
+       *  2. 1.4s–2.2s: Cow stops, spots the open silver "T" milk can, ears perk up with cute `?`.
+       *  3. 2.2s–2.9s: Cow trots right up next to the milk can.
+       *  4. 2.9s–4.6s: Cow climbs onto the milk can—rearing onto its back legs, placing both front
+       *                paws firmly on the top rim of the can, leaning its head over the opening
+       *                to look inside, seeing it is completely empty (dry-air puff), and tilting
+       *                its head in disappointment.
+       *  5. 4.6s–5.6s: Cow slides down onto the grass into a cute seated pose (with BOTH front
+       *                paws folded forward AND BOTH hind legs visibly tucked beside its body),
+       *                ears droop softly, eyes become glossy & teary, small tear rolls down.
+       *  6. 5.4s–6.5s: Smooth fade-up reveal of "404 – Moo! Page Not Found", subtext & buttons.
+       */
+      function renderSceneAtTime(t) {
+        // 1. Fade in scene
+        if (t >= 0.02) {
+          sceneContainer.classList.remove('opacity-0');
+          sceneContainer.classList.add('opacity-100');
+        }
+
+        // Horizontal movement:
+        // - Walk 1 (0.0s–1.4s): -160 -> 150 (enters scene cleanly)
+        // - Walk 2 (2.2s–2.9s): 150 -> 266 (trots right up next to the milk can at x=432)
+        // - Climb Lunge (2.9s–3.35s up, 4.35s–4.85s down): +26px forward so front hooves rest squarely on rim
+        const pWalk1 = easeOutCubic(segment(t, 0.0, 1.4));
+        const pWalk2 = easeInOutCubic(segment(t, 2.2, 2.9));
+        const pClimbUp = easeInOutCubic(segment(t, 2.9, 3.35));
+        const pClimbDown = easeInOutCubic(segment(t, 4.35, 4.85));
+        const pClimb = clamp(pClimbUp - pClimbDown, 0, 1);
+
+        const cowX = -160 + pWalk1 * 310 + pWalk2 * 116 + pClimb * 26;
+        cowMascot.setAttribute('transform', `translate(${cowX.toFixed(2)}, 322)`);
+
+        // 4-leg trotting gait during Walk 1 & Walk 2
+        let walkIntensity = 0;
+        if (t <= 1.4) {
+          walkIntensity = Math.min(1, Math.sin(segment(t, 0.0, 1.4) * Math.PI) * 2.8);
+        } else if (t >= 2.2 && t <= 2.9) {
+          walkIntensity = Math.min(1, Math.sin(segment(t, 2.2, 2.9) * Math.PI) * 2.8);
+        }
+
+        const gaitPhase = t * 11.2;
+        const legSwing = Math.sin(gaitPhase) * 18 * walkIntensity;
+        const bodyBob = Math.abs(Math.sin(gaitPhase)) * -4.2 * walkIntensity;
+
+        // 2. Curiosity '?' Bubble (1.4s–2.2s)
+        const pNotice = Math.sin(segment(t, 1.4, 2.2) * Math.PI);
+
+        // 4. Inspecting Inside Milk Can & Head Tilt (3.35s–4.45s)
+        const pPeekDeep = Math.sin(segment(t, 3.3, 3.9) * Math.PI);
+        const pHeadTilt = Math.sin(segment(t, 3.8, 4.45) * Math.PI);
+
+        // 5. Seated Resting Pose & Sadness (4.6s–5.6s)
+        const pSad = easeInOutCubic(segment(t, 4.65, 5.6));
+
+        // Body Rear-Up Pitch during Climb (-26deg around hind-hip pivot) & Sit-Down Drop (+22px)
+        const climbLiftY = pClimb * -28;
+        const climbPitch = pClimb * -26;
+        const sitDropY = pSad * 22;
+        const sitPitch = pSad * -1.4;
+
+        cowBodyRig.setAttribute(
+          'transform',
+          `translate(0, ${(bodyBob + climbLiftY + sitDropY).toFixed(2)}) rotate(${(climbPitch + sitPitch).toFixed(2)} -28 -26)`
+        );
+
+        cowShadow.setAttribute('rx', (98 - pClimb * 18 + pSad * 14).toFixed(1));
+
+        // ALL FOUR LEGS VISIBILITY:
+        // - Standing/Walking/Climbing: 4 standing legs visible (opacity 1 -> 0 as cow sits)
+        // - Seated Resting Pose: 2 tucked front paws + 2 tucked hind legs visible (opacity 0 -> 1)
+        const standingLegOpacity = clamp(1 - pSad * 1.45, 0, 1);
+        const seatedLegOpacity = clamp((pSad - 0.3) * 1.55, 0, 1);
+
+        [legFL, legFR, legBL, legBR].forEach((leg) => {
+          leg.setAttribute('opacity', standingLegOpacity.toFixed(2));
+        });
+        restingHooves.setAttribute('opacity', seatedLegOpacity.toFixed(2));
+        seatedHindLeft.setAttribute('opacity', seatedLegOpacity.toFixed(2));
+        seatedHindRight.setAttribute('opacity', seatedLegOpacity.toFixed(2));
+
+        // Leg Articulation during Walking & Climbing onto Milk Can Rim:
+        // - Both hind legs counter-rotate (+26deg) during climb so back hooves remain planted on grass
+        // - Both front legs reach forward & upward (-54deg) so front hooves rest squarely on the milk can rim!
+        const legLiftY = pSad * -16;
+        const hindCounterAngle = pClimb * 26;
+        const frontReachAngle = pClimb * -54;
+        const frontReachX = pClimb * 12;
+        const frontReachY = pClimb * -8;
+
+        legFR.setAttribute(
+          'transform',
+          `translate(${(50 + frontReachX).toFixed(2)}, ${(-46 + legLiftY + frontReachY).toFixed(2)}) rotate(${(-legSwing + frontReachAngle).toFixed(2)})`
+        );
+        legFL.setAttribute(
+          'transform',
+          `translate(${(26 + frontReachX).toFixed(2)}, ${(-46 + legLiftY + frontReachY).toFixed(2)}) rotate(${(legSwing + frontReachAngle * 0.94).toFixed(2)})`
+        );
+        legBR.setAttribute(
+          'transform',
+          `translate(-30, ${(-46 + legLiftY).toFixed(2)}) rotate(${(legSwing + hindCounterAngle).toFixed(2)})`
+        );
+        legBL.setAttribute(
+          'transform',
+          `translate(-54, ${(-46 + legLiftY).toFixed(2)}) rotate(${(-legSwing + hindCounterAngle).toFixed(2)})`
+        );
+
+        // Tail & Thulirva "T" Medallion Swing
+        const tailWag = walkIntensity > 0.05
+          ? Math.sin(gaitPhase * 1.2) * 15
+          : pClimb > 0.1
+            ? Math.sin(t * 7.8) * 11
+            : Math.sin(t * 2.1) * (4.2 * (1 - pSad * 0.75)) + pSad * -10;
+        cowTail.setAttribute('transform', `translate(-74, -68) rotate(${tailWag.toFixed(2)})`);
+
+        const medallionSwing = Math.sin(gaitPhase) * 14 * walkIntensity + pClimb * 18;
+        cowMedallion.setAttribute('transform', `translate(6, 5) rotate(${medallionSwing.toFixed(2)})`);
+
+        // Head Lean & Look Inside Open Milk Can:
+        // Leans forward (+20px X) and pitches downward (+50deg) over the open rim to inspect inside!
+        const headReachX = 42 + pClimb * 20 - pSad * 4;
+        const headReachY = -98 + pClimb * 8 + pSad * 10;
+        const headPitchAngle =
+          -pNotice * 6 +
+          pClimb * 50 +
+          pPeekDeep * 8 -
+          pHeadTilt * 12 +
+          pSad * 5;
+
+        cowHeadPivot.setAttribute(
+          'transform',
+          `translate(${headReachX.toFixed(2)}, ${headReachY.toFixed(2)}) rotate(${headPitchAngle.toFixed(2)})`
+        );
+
+        const headInnerY = -36 + pHeadTilt * -3.5;
+        cowHead.setAttribute('transform', `translate(4, ${headInnerY.toFixed(2)})`);
+
+        // Curiosity "?" Bubble
+        curiosityMark.setAttribute('opacity', pNotice.toFixed(2));
+        curiosityMark.setAttribute(
+          'transform',
+          `translate(58, ${(-66 - pNotice * 7).toFixed(2)}) scale(${(0.84 + pNotice * 0.22).toFixed(2)})`
+        );
+
+        // Ears Articulation (Perk up on notice & climb -> Droop softly ~22deg in sad pose)
+        const leftEarAngle = pNotice * 14 + pClimb * 12 + pHeadTilt * 14 - pSad * 22;
+        const rightEarAngle = -pNotice * 14 - pClimb * 12 - pHeadTilt * 10 + pSad * 22;
+
+        earLeft.setAttribute('transform', `translate(-48, -32) rotate(${leftEarAngle.toFixed(2)})`);
+        earRight.setAttribute('transform', `translate(48, -32) rotate(${rightEarAngle.toFixed(2)})`);
+
+        // Worried Eyebrows, Glistening Teary Puppy Eyes & Teardrop
+        const browTilt = pSad * 16 - pNotice * 5 + pHeadTilt * 6;
+        browLeft.setAttribute('transform', `rotate(${(-browTilt).toFixed(2)} -26 -26)`);
+        browRight.setAttribute('transform', `rotate(${browTilt.toFixed(2)} 26 -26)`);
+
+        const sadEyesAlpha = clamp((pSad - 0.25) * 1.5, 0, 1);
+        eyesOpen.setAttribute('opacity', (1 - sadEyesAlpha).toFixed(2));
+        eyesSadTeary.setAttribute('opacity', sadEyesAlpha.toFixed(2));
+
+        // Mouth transitions from happy smile -> cute downturned sad pout
+        const mouthControlY = lerp(15, 5.5, pSad);
+        const mouthBaseY = lerp(10, 12, pSad);
+        cowMouth.setAttribute('d', `M-7 ${mouthBaseY.toFixed(1)} Q 0 ${mouthControlY.toFixed(1)} 7 ${mouthBaseY.toFixed(1)}`);
+
+        // Animated Teardrop Sliding Down Cheek
+        const pTear = easeOutBack(segment(t, 4.95, 5.65));
+        const tearSlideY = -4 + clamp(pTear, 0, 1) * 6;
+        cowTeardrop.setAttribute('opacity', clamp(pTear, 0, 1).toFixed(2));
+        cowTeardrop.setAttribute(
+          'transform',
+          `translate(34, ${tearSlideY.toFixed(2)}) scale(${clamp(pTear, 0.01, 1).toFixed(2)})`
+        );
+
+        // Milk Can Wobbles Slightly When Cow Climbs Onto Rim + Dry-Air Puff Rises
+        const canWobble = Math.sin(segment(t, 3.15, 3.75) * Math.PI * 2) * 3.0;
+        milkCanBody.setAttribute('transform', `rotate(${canWobble.toFixed(2)})`);
+
+        const pEmptyCue = segment(t, 3.55, 4.55);
+        const cueOpacity = Math.sin(pEmptyCue * Math.PI);
+        emptyCanCue.setAttribute('opacity', cueOpacity.toFixed(2));
+        emptyCanCue.setAttribute(
+          'transform',
+          `translate(0, ${(-120 - pEmptyCue * 22).toFixed(2)}) scale(${(0.85 + pEmptyCue * 0.35).toFixed(2)})`
+        );
+
+        // 6. 5.4s–6.5s: 404 Message & Buttons Fade-Up Reveal
+        if (t >= 5.4) revealBadge.classList.add('is-visible');
+        if (t >= 5.6) revealHeading.classList.add('is-visible');
+        if (t >= 5.85) revealSubcopy.classList.add('is-visible');
+        if (t >= 6.1) revealActions.classList.add('is-visible');
+      }
+
+      /**
+       * Main Animation Loop — Plays once on load, holds final resting pose
+       */
+      function startStoryAnimation() {
+        if (rafId) cancelAnimationFrame(rafId);
+
+        [revealBadge, revealHeading, revealSubcopy, revealActions].forEach((el) => {
+          el.classList.remove('is-visible');
+        });
+        cowIdleWrapper.classList.remove('cow-idle-breathe');
+
+        if (prefersReducedMotion) {
+          renderSceneAtTime(6.6);
+          return;
+        }
+
+        startTime = null;
+        const TOTAL_DURATION = 6.6;
+
+        function tick(now) {
+          if (!startTime) startTime = now;
+          const elapsed = (now - startTime) / 1000;
+
+          renderSceneAtTime(Math.min(elapsed, TOTAL_DURATION));
+
+          if (elapsed < TOTAL_DURATION) {
+            rafId = requestAnimationFrame(tick);
+          } else {
+            cowIdleWrapper.classList.add('cow-idle-breathe');
+          }
+        }
+
+        rafId = requestAnimationFrame(tick);
+      }
+
+      const replayBtn = document.getElementById('replayBtn');
+      if (replayBtn) {
+        replayBtn.addEventListener('click', startStoryAnimation);
+      }
+
+      // Developer Routing Modal Logic
+      const modal = document.getElementById('devGuideModal');
+      const openBtn = document.getElementById('openDevGuideBtn');
+      const closeBtn = document.getElementById('closeDevGuideBtn');
+      const codeBox = document.getElementById('codeSnippetBox');
+      const copyBtn = document.getElementById('copySnippetBtn');
+      const copyFeedback = document.getElementById('copyFeedback');
+      const tabBtns = document.querySelectorAll('.tab-btn');
+
+      const snippets = {
+        react: `// App.tsx — React Router v6+ Catch-All 404 Route
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import ProductsPage from './pages/ProductsPage';
+import ThulirvaNotFound404 from './pages/ThulirvaNotFound404';
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/products" element={<ProductsPage />} />
+        {/* Catch-all route renders custom 404 without affecting valid routes */}
+        <Route path="*" element={<ThulirvaNotFound404 />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}`,
+        nextjs: `// app/not-found.tsx — Next.js App Router Native 404 Page
+import ThulirvaNotFound404 from '@/components/ThulirvaNotFound404';
+
+export const metadata = {
+  title: '404 – Moo! Page Not Found | Thulirva',
+};
+
+export default function NotFound() {
+  return <ThulirvaNotFound404 />;
+}`,
+        nginx: `# nginx.conf — Custom 404 Page with True HTTP 404 Status
+server {
+    listen 80;
+    server_name thulirva.com;
+    root /var/www/thulirva;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    error_page 404 /404.html;
+    location = /404.html {
+        internal;
+    }
+}`
+      };
+
+      function setTab(key) {
+        codeBox.textContent = snippets[key] || snippets.react;
+        tabBtns.forEach((btn) => {
+          const active = btn.dataset.tab === key;
+          btn.className = active
+            ? 'tab-btn px-3 py-1 rounded-lg text-xs font-semibold bg-thulirva-forest text-white'
+            : 'tab-btn px-3 py-1 rounded-lg text-xs font-semibold text-thulirva-muted hover:text-thulirva-forest';
+        });
+        copyFeedback.textContent = '';
+      }
+
+      tabBtns.forEach((btn) => {
+        btn.addEventListener('click', () => setTab(btn.dataset.tab));
+      });
+      setTab('react');
+
+      openBtn.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      });
+
+      const closeModal = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      };
+
+      closeBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
+      });
+
+      copyBtn.addEventListener('click', () => {
+        const temp = document.createElement('textarea');
+        temp.value = codeBox.textContent;
+        document.body.appendChild(temp);
+        temp.select();
+        try {
+          document.execCommand('copy');
+          copyFeedback.textContent = 'Copied routing snippet to clipboard!';
+        } catch (err) {
+          copyFeedback.textContent = 'Select code above to copy.';
+        }
+        document.body.removeChild(temp);
+      });
+
+      window.addEventListener('load', startStoryAnimation);
+    })();
+  </script>
 </body>
 </html>

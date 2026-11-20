@@ -132,6 +132,7 @@ function getApiBaseUrl() {
  */
 window.getSafeAdmin = function() {
     let admin = null;
+    const token = localStorage.getItem("thulirva_admin_token");
     try {
         const raw = localStorage.getItem("thulirva_admin_user") || localStorage.getItem("admin");
         if (raw) {
@@ -139,11 +140,29 @@ window.getSafeAdmin = function() {
         }
     } catch (_) {}
 
+    const isLoginPage = window.location.pathname.endsWith("index.html") || window.location.pathname.endsWith("/admin/") || window.location.pathname.endsWith("/admin");
+
+    if (!token || !admin) {
+        if (!isLoginPage && typeof window !== "undefined" && window.location) {
+            window.location.replace("index.html");
+        }
+        return {
+            id: 0,
+            name: "Sign In Required",
+            admin_name: "Sign In Required",
+            email: "",
+            role: "unauthenticated"
+        };
+    }
+
     // Check if stored admin role is customer or delivery partner
     if (admin && admin.role && (admin.role.toLowerCase() === "customer" || admin.role.toLowerCase() === "delivery_partner")) {
         localStorage.removeItem("thulirva_admin_token");
         localStorage.removeItem("thulirva_admin_user");
         localStorage.removeItem("admin");
+        if (!isLoginPage) {
+            window.location.replace("index.html");
+        }
         return {
             id: 0,
             name: "Unauthorized",
@@ -153,21 +172,9 @@ window.getSafeAdmin = function() {
         };
     }
 
-    if (!admin || typeof admin !== "object") {
-        admin = {
-            id: 1,
-            name: "Super Admin",
-            admin_name: "Super Admin",
-            email: "admin@thulirva.com",
-            role: "Super Admin",
-            profile_photo: ""
-        };
-    } else {
-        if (!admin.admin_name) admin.admin_name = admin.name || "Super Admin";
-        if (!admin.name) admin.name = admin.admin_name;
-        if (!admin.email) admin.email = "admin@thulirva.com";
-        if (!admin.role) admin.role = "Super Admin";
-    }
+    if (!admin.admin_name) admin.admin_name = admin.name || "Administrator";
+    if (!admin.name) admin.name = admin.admin_name;
+    if (!admin.role) admin.role = "Admin";
 
     window.admin = admin;
     return admin;
@@ -186,7 +193,13 @@ window.AdminProfile = {
             return window.getSafeAdmin();
         }
         const token = localStorage.getItem("thulirva_admin_token");
-        if (!token) return window.getSafeAdmin();
+        if (!token) {
+            const isLoginPage = window.location.pathname.endsWith("index.html") || window.location.pathname.endsWith("/admin/") || window.location.pathname.endsWith("/admin");
+            if (!isLoginPage && typeof window !== "undefined" && window.location) {
+                window.location.replace("index.html");
+            }
+            return window.getSafeAdmin();
+        }
         try {
             let res = await fetch(getApiBaseUrl() + "/api/admin/profile", {
                 headers: { "Authorization": `Bearer ${token}` }
@@ -200,14 +213,14 @@ window.AdminProfile = {
                         localStorage.removeItem("thulirva_admin_token");
                         localStorage.removeItem("thulirva_admin_user");
                         localStorage.removeItem("admin");
-                        window.location.replace("../index.html");
+                        window.location.replace("index.html");
                         return window.getSafeAdmin();
                     }
                     const adminObj = {
                         id: src.id || 1,
-                        name: src.name || src.admin_name || "Super Admin",
-                        admin_name: src.admin_name || src.name || "Super Admin",
-                        email: src.email || "admin@thulirva.com",
+                        name: src.name || src.admin_name || "Admin",
+                        admin_name: src.admin_name || src.name || "Admin",
+                        email: src.email || "",
                         role: role === "super_admin" || role === "super admin" ? "Super Admin" : "Admin",
                         profile_photo: src.profile_photo || ""
                     };
@@ -217,11 +230,11 @@ window.AdminProfile = {
                     window.AdminProfile.updateUI(adminObj);
                     return adminObj;
                 }
-            } else if (res.status === 403) {
+            } else if (res.status === 401 || res.status === 403) {
                 localStorage.removeItem("thulirva_admin_token");
                 localStorage.removeItem("thulirva_admin_user");
                 localStorage.removeItem("admin");
-                window.location.replace("../index.html");
+                window.location.replace("index.html");
             }
         } catch (_) {}
         return window.getSafeAdmin();
@@ -781,12 +794,24 @@ function toggleUserDropdown() {
     if (menu) menu.classList.toggle("show");
 }
 
-function logoutAdmin() {
+async function logoutAdmin() {
     if (confirm("Are you sure you want to sign out of the THULIRVA Admin Console?")) {
+        const token = localStorage.getItem("thulirva_admin_token");
+        if (token) {
+            try {
+                await fetch(getApiBaseUrl() + "/api/auth/logout", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    }
+                });
+            } catch (_) {}
+        }
         localStorage.removeItem("thulirva_admin_token");
         localStorage.removeItem("thulirva_admin_user");
         localStorage.removeItem("admin");
-        window.location.href = "index.html";
+        window.location.replace("index.html");
     }
 }
 

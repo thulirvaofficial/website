@@ -1,12 +1,13 @@
 /**
- * THULIRVA ANIMATED OFFLINE SCREEN VERIFICATION TEST SUITE
+ * THULIRVA STATIC OFFLINE SCREEN VERIFICATION TEST SUITE
  * Validates:
- * 1. 100% Reference Art Preservation (Girl, Cow, Wi-Fi Bubble, Landscape)
- * 2. Storyboard Animation Keyframes & Eye-Contact Choreography
- * 3. Responsive Breakpoints & Accessibility (prefers-reduced-motion)
- * 4. Real Network & Backend Detection Logic
- * 5. Button State Transitions (Retry -> Checking -> Connected)
- * 6. Asset Existence & Image Dimensions on Disk
+ * 1. 100% Static Reference Artwork Preservation (Girl, Cow, Farm, Wi-Fi)
+ * 2. Zero Character Animation & Keyframe Elimination (Completely Static)
+ * 3. Wi-Fi Symbol Artifact Elimination (No split layers, no drop-shadow cutoffs)
+ * 4. Proper Connection Status States (No stuck 'Checking server status...')
+ * 5. Functional Retry Button (Debouncing, Loading, Success, Error Shake & Reset)
+ * 6. Responsive Mobile UI (No excessive vertical spacing, no overflow)
+ * 7. Real Network & Backend Detection Logic (/api/health with timeout)
  */
 
 const fs = require('fs');
@@ -14,7 +15,7 @@ const path = require('path');
 const assert = require('assert');
 
 console.log("==================================================================");
-console.log("🧪 THULIRVA ANIMATED OFFLINE SCREEN VERIFICATION TEST SUITE");
+console.log("🧪 THULIRVA STATIC OFFLINE SCREEN VERIFICATION TEST SUITE");
 console.log("==================================================================\n");
 
 let passCount = 0;
@@ -36,141 +37,161 @@ const baseDir = path.resolve(__dirname, 'website');
 const cssPath = path.join(baseDir, 'css', 'offline.css');
 const jsPath = path.join(baseDir, 'js', 'connectivity.js');
 const stylePath = path.join(baseDir, 'css', 'style.css');
-const assetsDir = path.join(baseDir, 'assets', 'offline');
+const assetsDir = path.join(baseDir, 'assets', 'images');
+const offlineAssetsDir = path.join(baseDir, 'assets', 'offline');
 
 const cssContent = fs.readFileSync(cssPath, 'utf8');
 const jsContent = fs.readFileSync(jsPath, 'utf8');
 const styleContent = fs.readFileSync(stylePath, 'utf8');
 
-console.log("▶ Testing Section 1: Artwork & Asset Preservation on Disk...");
+console.log("▶ Section 1: Static Artwork & Asset Preservation on Disk...");
 
-const requiredAssets = [
-    { name: 'bg_base.png', minSize: 100000 },
-    { name: 'wifi_bubble.png', minSize: 10000 },
-    { name: 'phone_crop.png', minSize: 10000 },
-    { name: 'girl_eyes_orig.png', minSize: 2000 },
-    { name: 'girl_eyes_blink.png', minSize: 2000 },
-    { name: 'girl_eyes_look_cow.png', minSize: 2000 },
-    { name: 'girl_mouth_neutral.png', minSize: 500 },
-    { name: 'girl_mouth_smile.png', minSize: 500 },
-    { name: 'cow_head.png', minSize: 30000 },
-    { name: 'cow_head_awake.png', minSize: 30000 },
-    { name: 'cow_ear_left.png', minSize: 2000 },
-    { name: 'cow_ear_right.png', minSize: 2000 }
+it("Primary static illustration asset exists in assets/images/no_internet_anime.png", () => {
+    const fullPath = path.join(assetsDir, 'no_internet_anime.png');
+    assert.ok(fs.existsSync(fullPath), "Missing no_internet_anime.png in assets/images");
+    const stat = fs.statSync(fullPath);
+    assert.ok(stat.size > 200000, `Asset size ${stat.size} is smaller than expected 200KB`);
+});
+
+it("Fallback static illustration asset exists in assets/offline/no_internet_static.png", () => {
+    const fullPath = path.join(offlineAssetsDir, 'no_internet_static.png');
+    assert.ok(fs.existsSync(fullPath), "Missing no_internet_static.png in assets/offline");
+});
+
+it("Static illustration has standard 768x540 PNG header dimensions", () => {
+    const fullPath = path.join(assetsDir, 'no_internet_anime.png');
+    const buf = fs.readFileSync(fullPath);
+    assert.strictEqual(buf.slice(0, 8).toString('hex'), '89504e470d0a1a0a', "Invalid PNG signature");
+    const width = buf.readUInt32BE(16);
+    const height = buf.readUInt32BE(20);
+    assert.strictEqual(width, 768, "Width must be 768");
+    assert.strictEqual(height, 540, "Height must be 540");
+});
+
+console.log("\n▶ Section 2: Zero Animation & Completely Static Verification...");
+
+const forbiddenKeyframes = [
+    'floatBubble',
+    'phoneMicroSway',
+    'girlHeadTurn',
+    'girlEyePhoneGaze',
+    'girlBlinkLoop',
+    'girlEyeCowGaze',
+    'girlMouthNeutral',
+    'girlMouthSmile',
+    'cowHeadInteraction',
+    'cowRestingState',
+    'cowAwakeState',
+    'cowEarLeftTwitch',
+    'cowEarRightTwitch'
 ];
 
-requiredAssets.forEach(asset => {
-    it(`Asset ${asset.name} exists and meets minimum valid size`, () => {
-        const fullPath = path.join(assetsDir, asset.name);
-        assert.ok(fs.existsSync(fullPath), `Missing file: ${asset.name}`);
-        const stat = fs.statSync(fullPath);
-        assert.ok(stat.size >= asset.minSize, `Asset ${asset.name} size ${stat.size} is smaller than expected ${asset.minSize}`);
+forbiddenKeyframes.forEach(kf => {
+    it(`Keyframe @keyframes ${kf} is completely removed from CSS`, () => {
+        assert.ok(!cssContent.includes(`@keyframes ${kf}`), `CSS still contains forbidden animation ${kf}`);
     });
 });
 
-console.log("\n▶ Testing Section 2: Storyboard Keyframe Animations & Eye-Contact Sequence...");
-
-it("CSS implements 8-second synchronized storyboard animation loop for character interaction", () => {
-    assert.ok(cssContent.includes("8s ease-in-out infinite"), "Missing 8s animation timeline");
+it("Static illustration image explicitly disables animation and transitions", () => {
+    assert.ok(cssContent.includes('.offline-static-illustration'), "Missing .offline-static-illustration class");
+    assert.ok(cssContent.includes('animation: none !important;'), "Missing animation: none !important");
+    assert.ok(cssContent.includes('transition: none !important;'), "Missing transition: none !important");
 });
 
-it("Girl head has turning animation toward cow", () => {
-    assert.ok(cssContent.includes("@keyframes girlHeadTurn"), "Missing girlHeadTurn keyframes");
-    assert.ok(cssContent.includes("rotate(2.4deg)"), "Missing girl head tilt toward cow");
+it("Scene structure uses a single unified image, not multi-layered split divs", () => {
+    assert.ok(!jsContent.includes('offline-eyes-container'), "Must not use offline-eyes-container");
+    assert.ok(!jsContent.includes('offline-mouth-container'), "Must not use offline-mouth-container");
+    assert.ok(!jsContent.includes('offline-cow-head'), "Must not use separate offline-cow-head");
+    assert.ok(!jsContent.includes('offline-wifi-bubble'), "Must not use floating offline-wifi-bubble");
+    assert.ok(jsContent.includes('offline-static-illustration'), "Must use offline-static-illustration");
 });
 
-it("Girl has natural blinking animation (girlBlinkLoop)", () => {
-    assert.ok(cssContent.includes("@keyframes girlBlinkLoop"), "Missing girlBlinkLoop keyframes");
+console.log("\n▶ Section 3: Wi-Fi Visual Artifact & Broken Shape Elimination...");
+
+it("No drop-shadow filters applied to cropped sub-elements", () => {
+    assert.ok(!cssContent.includes('filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.07))'), "Drop-shadow filter on wifi layer removed");
 });
 
-it("Girl has eye contact gaze shift animation (girlEyeCowGaze)", () => {
-    assert.ok(cssContent.includes("@keyframes girlEyeCowGaze"), "Missing girlEyeCowGaze keyframes");
+it("Wi-Fi icon is part of the clean, seamless reference illustration", () => {
+    assert.ok(jsContent.includes('no_internet_anime.png'), "References the master static artwork");
 });
 
-it("Girl has sweet subtle smile animation (girlMouthSmile)", () => {
-    assert.ok(cssContent.includes("@keyframes girlMouthSmile"), "Missing girlMouthSmile keyframes");
-    assert.ok(cssContent.includes("scale(1.02)"), "Missing smile scale bloom");
+console.log("\n▶ Section 4: Connection Status States & Stalling Elimination...");
+
+it("Status text does not remain permanently stuck on 'Checking server status...'", () => {
+    assert.ok(!jsContent.includes("'Checking server status...'"), "Outdated stuck string removed");
 });
 
-it("Cow head turns toward girl and tilts curiously (cowHeadInteraction)", () => {
-    assert.ok(cssContent.includes("@keyframes cowHeadInteraction"), "Missing cowHeadInteraction keyframes");
-    assert.ok(cssContent.includes("rotate(-4.5deg)"), "Missing cow head turn toward girl");
-    assert.ok(cssContent.includes("rotate(-1.5deg)"), "Missing cow curious tilt");
+it("Implements proper OFFLINE state: 'No internet connection'", () => {
+    assert.ok(jsContent.includes("'No internet connection'"), "Missing offline status text");
 });
 
-it("Cow has independent ear twitch animations", () => {
-    assert.ok(cssContent.includes("@keyframes cowEarLeftTwitch"), "Missing cowEarLeftTwitch");
-    assert.ok(cssContent.includes("@keyframes cowEarRightTwitch"), "Missing cowEarRightTwitch");
+it("Implements proper CHECKING state: 'Checking connection...'", () => {
+    assert.ok(jsContent.includes("'Checking connection...'"), "Missing checking status text");
 });
 
-it("Cow wakes up with cute anime gaze during eye contact (cowAwakeState)", () => {
-    assert.ok(cssContent.includes("@keyframes cowAwakeState"), "Missing cowAwakeState keyframes");
+it("Implements proper SERVER_UNAVAILABLE state: 'Unable to reach Thulirva servers'", () => {
+    assert.ok(jsContent.includes("'Unable to reach Thulirva servers'"), "Missing server down status text");
 });
 
-it("Floating Wi-Fi speech bubble animation is smooth and bobbing", () => {
-    assert.ok(cssContent.includes("@keyframes floatBubble"), "Missing floatBubble keyframes");
-    assert.ok(cssContent.includes("translateY(-8px)"), "Missing bubble vertical float");
+it("Implements proper RECONNECTING state: 'Reconnecting...'", () => {
+    assert.ok(jsContent.includes("'Reconnecting...'"), "Missing reconnecting status text");
 });
 
-console.log("\n▶ Testing Section 3: Responsiveness, Layout Hierarchy & Accessibility...");
-
-it("Scene wrapper maintains fixed 768:540 aspect ratio for responsive scaling", () => {
-    assert.ok(cssContent.includes("aspect-ratio: 768 / 540"), "Missing 768/540 aspect ratio");
+it("Implements proper SUCCESS state that restores website automatically", () => {
+    assert.ok(jsContent.includes("'Connection restored! Returning to store...'"), "Missing success status text");
+    assert.ok(jsContent.includes('hideOffline'), "Missing automatic restoration call");
 });
 
-it("Offline screen uses Thulirva cream theme and forest green branding", () => {
-    assert.ok(cssContent.includes("--thulirva-cream: #FAF8EF"), "Missing Thulirva cream variable");
-    assert.ok(cssContent.includes("--thulirva-forest: #123F2B"), "Missing Thulirva forest variable");
+console.log("\n▶ Section 5: Retry Button Functionality & Debouncing...");
+
+it("Retry button prevents duplicate requests during active check (debouncing)", () => {
+    assert.ok(jsContent.includes('if (this.isChecking) return;'), "Missing isChecking guard");
+    assert.ok(jsContent.includes('btn.disabled = true'), "Button disabled during check");
 });
 
-it("Supports prefers-reduced-motion for motion sensitivity", () => {
-    assert.ok(cssContent.includes("@media (prefers-reduced-motion: reduce)"), "Missing prefers-reduced-motion query");
-    assert.ok(cssContent.includes("animation: none !important"), "Missing animation: none in reduced motion");
+it("Shows loading spinner in button while checking", () => {
+    assert.ok(jsContent.includes('offline-btn-spinner'), "Missing button loading spinner");
+    assert.ok(cssContent.includes('@keyframes retrySpin'), "Missing spinner keyframes");
 });
 
-it("Responsive media queries support compact mobile devices (<=600px and <=380px)", () => {
-    assert.ok(cssContent.includes("@media (max-width: 600px)"), "Missing 600px media query");
-    assert.ok(cssContent.includes("@media (max-width: 380px)"), "Missing 380px media query");
+it("Restores button to normal state after a failed attempt", () => {
+    assert.ok(jsContent.includes("setButtonState('error')"), "Missing error button state");
+    assert.ok(jsContent.includes("btn.disabled = false"), "Button re-enabled after attempt");
 });
 
-console.log("\n▶ Testing Section 4: Real Connectivity & Backend Health Detection (connectivity.js)...");
+console.log("\n▶ Section 6: Mobile Responsiveness & Layout Improvements...");
 
-it("Checks real backend health via /api/health", () => {
-    assert.ok(jsContent.includes("'/api/health'"), "Missing /api/health endpoint in connectivity.js");
+it("Scene wrapper maintains responsive 768:540 aspect ratio", () => {
+    assert.ok(cssContent.includes('aspect-ratio: 768 / 540'), "Missing aspect ratio 768 / 540");
 });
 
-it("Does not rely solely on navigator.onLine", () => {
-    assert.ok(jsContent.includes("navigator.onLine"), "Must check navigator.onLine");
-    assert.ok(jsContent.includes("pingBackend"), "Must perform active backend ping");
+it("Mobile media queries reduce vertical padding to prevent overflow", () => {
+    assert.ok(cssContent.includes('@media (max-width: 600px)'), "Missing mobile query <=600px");
+    assert.ok(cssContent.includes('@media (max-width: 380px)'), "Missing mobile query <=380px");
+    assert.ok(cssContent.includes('max-height: 260px'), "Constrains illustration max-height on mobile");
 });
 
-it("Handles online and offline browser window events", () => {
-    assert.ok(jsContent.includes("window.addEventListener('online'"), "Missing online event listener");
-    assert.ok(jsContent.includes("window.addEventListener('offline'"), "Missing offline event listener");
+it("Overlay enables smooth vertical scrolling if device height is ultra-compact", () => {
+    assert.ok(cssContent.includes('overflow-y: auto'), "Overlay must allow vertical scrolling");
+    assert.ok(cssContent.includes('overflow-x: hidden'), "Overlay must forbid horizontal overflow");
 });
 
-it("Implements Retry button states: Retry -> Checking Connection -> Connected", () => {
-    assert.ok(jsContent.includes("Checking Connection..."), "Missing Checking Connection state");
-    assert.ok(jsContent.includes("Connected!"), "Missing Connected success state");
-    assert.ok(jsContent.includes("Try Again"), "Missing Try Again button label");
-});
+console.log("\n▶ Section 7: Network & Backend Reliability (/api/health)...");
 
-it("Provides automatic background reconnection polling (every 8s)", () => {
-    assert.ok(jsContent.includes("startAutoRetryPoll"), "Missing startAutoRetryPoll");
-    assert.ok(jsContent.includes("8000"), "Missing 8000ms poll interval");
-});
-
-it("Smoothly restores website without full page reload and dispatches restoration event", () => {
-    assert.ok(jsContent.includes("thulirva:connection-restored"), "Missing thulirva:connection-restored event");
-    assert.ok(jsContent.includes("finishRestore"), "Missing finishRestore method");
+it("Uses AbortController timeout to guarantee user is never stuck in checking state", () => {
+    assert.ok(jsContent.includes('AbortController'), "Missing AbortController");
+    assert.ok(jsContent.includes('clearTimeout'), "Missing clearTimeout on network response");
 });
 
 it("Global style.css imports offline.css", () => {
-    assert.ok(styleContent.includes("@import url('offline.css')") || styleContent.includes('@import url("offline.css")'), "style.css must import offline.css");
+    assert.ok(styleContent.includes("offline.css"), "style.css does not import offline.css");
 });
 
 console.log("\n==================================================================");
-console.log(`🎉 ALL ${passCount} OF ${passCount + failCount} TESTS PASSED! (${failCount === 0 ? "100% SUCCESS" : "FAILURES DETECTED"})`);
+console.log(`TEST SUMMARY: ${passCount} Passed, ${failCount} Failed`);
 console.log("==================================================================");
 
-if (failCount > 0) process.exit(1);
+if (failCount > 0) {
+    process.exit(1);
+}

@@ -1,6 +1,7 @@
 /* ==========================================================================
-   THULIRVA ANIMATED OFFLINE SCREEN STYLES & STORYBOARD KEYFRAMES
-   Pixel-perfect match to reference artwork with synchronized 8-second loop
+   THULIRVA STATIC OFFLINE SCREEN STYLES
+   100% Static Reference Artwork Preservation — Zero Animation on Illustration
+   Clean, Responsive, Accessible, and Production-Ready
    ========================================================================== */
 
 :root {
@@ -10,7 +11,11 @@
   --thulirva-forest-light: #1D5A3F;
   --thulirva-gold: #C2A649;
   --thulirva-text-muted: #4B6354;
-  --thulirva-border: rgba(226, 220, 208, 0.9);
+  --thulirva-border: rgba(226, 220, 208, 0.85);
+  --thulirva-error: #D32F2F;
+  --thulirva-info: #1565C0;
+  --thulirva-success: #2E7D32;
+  --thulirva-warning: #E65100;
 }
 
 /* Master Fixed Overlay */
@@ -24,13 +29,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px 16px;
+  padding: 16px 14px;
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.38s cubic-bezier(0.4, 0, 0.2, 1),
-              visibility 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .thulirva-offline-screen.hidden {
@@ -39,435 +45,178 @@
   pointer-events: none;
 }
 
-/* Container */
+/* Master Centered Container */
 .thulirva-offline-container {
   width: 100%;
-  max-width: 580px;
+  max-width: 500px;
   margin: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   position: relative;
-  animation: offlineCardPop 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  box-sizing: border-box;
 }
 
-@keyframes offlineCardPop {
-  0% { transform: translateY(16px) scale(0.98); opacity: 0; }
-  100% { transform: translateY(0) scale(1); opacity: 1; }
-}
-
-/* Top Mini Brand Bar */
+/* Brand Top Header */
 .offline-brand-header {
-  margin-bottom: 12px;
+  margin: 0 0 10px 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .offline-logo {
-  height: 40px;
+  height: 38px;
   width: auto;
   max-width: 170px;
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(18, 63, 43, 0.08));
 }
 
-/* The Animated Character Scene Wrapper */
+/* Completely Static Scene Wrapper — 100% Artifact-Free */
 .offline-scene-wrapper {
   width: 100%;
-  max-width: 520px;
+  max-width: 480px;
   aspect-ratio: 768 / 540;
   position: relative;
-  border-radius: 20px;
+  border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 16px 40px rgba(18, 63, 43, 0.09), 0 2px 6px rgba(0, 0, 0, 0.04);
-  background-color: #FAF8EF;
-  border: 1px solid rgba(226, 220, 208, 0.8);
-  margin-bottom: 22px;
+  box-shadow: 0 12px 32px rgba(18, 63, 43, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03);
+  background-color: var(--thulirva-cream);
+  border: 1px solid var(--thulirva-border);
+  margin-bottom: 14px;
+  box-sizing: border-box;
 }
 
 .offline-scene {
   width: 100%;
   height: 100%;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Static Master Illustration: Girl, Cow, Wi-Fi Bubble, Landscape in One Unified Image */
+.offline-static-illustration {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
   user-select: none;
   -webkit-user-select: none;
-}
-
-/* Layers Base Positioning */
-.offline-layer {
-  position: absolute;
   pointer-events: none;
+  /* Strictly Static: Zero animation, zero transitions, zero transforms */
+  animation: none !important;
+  transform: none !important;
+  transition: none !important;
 }
 
-/* Base Inpainted Scene */
-.offline-bg {
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* Layer 1: Wi-Fi Speech Bubble with Red Cross */
-.offline-wifi-bubble {
-  left: 55.990%;
-  top: 11.111%;
-  width: 23.438%;
-  height: 28.704%;
-  transform-origin: 20% 90%;
-  animation: floatBubble 3.6s ease-in-out infinite;
-}
-
-.offline-wifi-bubble img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.07));
-}
-
-@keyframes floatBubble {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-8px) rotate(1.8deg);
-  }
-}
-
-/* Layer 2: Girl's Hand and Phone */
-.offline-girl-phone {
-  left: 45.573%;
-  top: 37.037%;
-  width: 18.229%;
-  height: 27.778%;
-  transform-origin: 20% 80%;
-  animation: phoneMicroSway 4s ease-in-out infinite;
-}
-
-.offline-girl-phone img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-}
-
-@keyframes phoneMicroSway {
-  0%, 100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  30% {
-    transform: translate(0.6px, -0.6px) rotate(0.6deg);
-  }
-  70% {
-    transform: translate(-0.6px, 0.4px) rotate(-0.4deg);
-  }
-}
-
-/* Layer 3: Girl's Head and Hair (8-second Storyboard Loop) */
-.offline-girl-head {
-  left: 35.156%;
-  top: 23.704%;
-  width: 13.672%;
-  height: 14.815%; /* Spans eyes and mouth */
-  transform-origin: 30% 95%;
-  animation: girlHeadTurn 8s ease-in-out infinite;
-}
-
-@keyframes girlHeadTurn {
-  0%, 36% {
-    transform: rotate(0deg) translate(0, 0); /* Looking down at phone */
-  }
-  42%, 66% {
-    transform: rotate(2.4deg) translate(1.5px, -1px); /* Tilted toward cow */
-  }
-  74%, 100% {
-    transform: rotate(0deg) translate(0, 0); /* Back to phone */
-  }
-}
-
-/* Girl's Eyes Container & States */
-.offline-eyes-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 50%;
-}
-
-.girl-eye-state {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transition: opacity 0.22s ease;
-}
-
-/* Base Eyes (Looking at Phone) */
-.eye-phone {
-  opacity: 1;
-  animation: girlEyePhoneGaze 8s ease-in-out infinite;
-}
-
-@keyframes girlEyePhoneGaze {
-  0%, 36% { opacity: 1; }
-  40%, 68% { opacity: 0; }
-  72%, 100% { opacity: 1; }
-}
-
-/* Natural Blinking Eyelid */
-.eye-blink {
-  opacity: 0;
-  animation: girlBlinkLoop 8s ease-in-out infinite;
-}
-
-@keyframes girlBlinkLoop {
-  0%, 12% { opacity: 0; }
-  13%, 15% { opacity: 1; } /* Blink 1 */
-  16%, 69% { opacity: 0; }
-  70%, 72% { opacity: 1; } /* Blink 2 */
-  73%, 100% { opacity: 0; }
-}
-
-/* Eyes Shifted (Looking Directly at Cow) */
-.eye-cow {
-  opacity: 0;
-  animation: girlEyeCowGaze 8s ease-in-out infinite;
-}
-
-@keyframes girlEyeCowGaze {
-  0%, 38% { opacity: 0; }
-  42%, 66% { opacity: 1; }
-  70%, 100% { opacity: 0; }
-}
-
-/* Girl's Mouth Container & States */
-.offline-mouth-container {
-  position: absolute;
-  bottom: 0;
-  left: 23.8%;
-  width: 52.4%;
-  height: 50%;
-}
-
-.girl-mouth-state {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-.mouth-neutral {
-  opacity: 1;
-  animation: girlMouthNeutral 8s ease-in-out infinite;
-}
-
-@keyframes girlMouthNeutral {
-  0%, 42% { opacity: 1; }
-  46%, 62% { opacity: 0; }
-  66%, 100% { opacity: 1; }
-}
-
-/* Sweet Subtle Smile */
-.mouth-smile {
-  opacity: 0;
-  animation: girlMouthSmile 8s ease-in-out infinite;
-}
-
-@keyframes girlMouthSmile {
-  0%, 43% { opacity: 0; transform: scale(0.96); }
-  48%, 61% { opacity: 1; transform: scale(1.02); }
-  66%, 100% { opacity: 0; transform: scale(0.96); }
-}
-
-/* Layer 4: Cow's Head & Ears */
-.offline-cow-head {
-  left: 61.849%;
-  top: 28.704%;
-  width: 31.250%;
-  height: 38.889%;
-  transform-origin: 50% 90%;
-  animation: cowHeadInteraction 8s ease-in-out infinite;
-}
-
-@keyframes cowHeadInteraction {
-  0%, 26% {
-    transform: rotate(0deg) translate(0, 0); /* Resting pose */
-  }
-  32%, 46% {
-    transform: rotate(-4.5deg) translate(-2.5px, -2px); /* Turns toward girl */
-  }
-  50%, 65% {
-    transform: rotate(-1.5deg) translate(-1px, -3px); /* Curious head tilt during eye contact */
-  }
-  73%, 100% {
-    transform: rotate(0deg) translate(0, 0); /* Back to rest */
-  }
-}
-
-.cow-head-state {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transition: opacity 0.25s ease;
-}
-
-.cow-resting {
-  opacity: 1;
-  animation: cowRestingState 8s ease-in-out infinite;
-}
-
-@keyframes cowRestingState {
-  0%, 28% { opacity: 1; }
-  32%, 67% { opacity: 0; }
-  71%, 100% { opacity: 1; }
-}
-
-.cow-awake {
-  opacity: 0;
-  animation: cowAwakeState 8s ease-in-out infinite;
-}
-
-@keyframes cowAwakeState {
-  0%, 29% { opacity: 0; }
-  33%, 66% { opacity: 1; }
-  70%, 100% { opacity: 0; }
-}
-
-/* Independent Twitching Ears */
-.cow-ear {
-  position: absolute;
-  object-fit: contain;
-  pointer-events: none;
-}
-
-.ear-left {
-  top: 11.9%;
-  left: 2.1%;
-  width: 29.2%;
-  height: 33.3%;
-  transform-origin: 90% 80%;
-  animation: cowEarLeftTwitch 8s ease-in-out infinite;
-}
-
-@keyframes cowEarLeftTwitch {
-  0%, 20% { transform: rotate(0deg); }
-  22% { transform: rotate(-9deg); }
-  24% { transform: rotate(5deg); }
-  26% { transform: rotate(-5deg); }
-  28%, 100% { transform: rotate(0deg); }
-}
-
-.ear-right {
-  top: 16.7%;
-  right: 2.1%;
-  width: 29.2%;
-  height: 33.3%;
-  transform-origin: 10% 80%;
-  animation: cowEarRightTwitch 8s ease-in-out infinite;
-}
-
-@keyframes cowEarRightTwitch {
-  0%, 21% { transform: rotate(0deg); }
-  23% { transform: rotate(9deg); }
-  25% { transform: rotate(-5deg); }
-  27% { transform: rotate(6deg); }
-  29%, 100% { transform: rotate(0deg); }
-}
-
-/* Offline Typography & UI Text */
+/* Typography & Content Layout */
 .offline-content {
   width: 100%;
-  max-width: 460px;
+  max-width: 440px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-sizing: border-box;
+  padding: 0 4px;
 }
 
 .offline-title {
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 800;
   color: var(--thulirva-forest);
-  margin: 0 0 10px 0;
+  margin: 0 0 6px 0;
   line-height: 1.25;
   letter-spacing: -0.3px;
 }
 
 .offline-desc {
-  font-size: 14.5px;
+  font-size: 14px;
   color: var(--thulirva-text-muted);
-  line-height: 1.6;
-  margin: 0 0 24px 0;
-  max-width: 420px;
+  line-height: 1.5;
+  margin: 0 0 16px 0;
+  max-width: 400px;
   font-weight: 500;
 }
 
-/* Rounded Pill Button */
+/* Actions & Rounded Pill Retry Button */
 .offline-actions {
   display: flex;
   justify-content: center;
   width: 100%;
+  margin-bottom: 4px;
 }
 
 .offline-btn-retry {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   background-color: var(--thulirva-forest);
   color: #FFFFFF;
   border: none;
   border-radius: 28px;
-  padding: 13px 36px;
-  font-size: 15px;
+  padding: 12px 32px;
+  font-size: 14.5px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 6px 18px rgba(18, 63, 43, 0.22);
-  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 5px 16px rgba(18, 63, 43, 0.2);
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
   outline: none;
-  min-width: 170px;
-  height: 48px;
+  min-width: 160px;
+  height: 46px;
+  box-sizing: border-box;
 }
 
-.offline-btn-retry:hover {
+.offline-btn-retry:hover:not(:disabled) {
   background-color: var(--thulirva-forest-light);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(18, 63, 43, 0.3);
+  transform: translateY(-1.5px);
+  box-shadow: 0 7px 20px rgba(18, 63, 43, 0.28);
 }
 
-.offline-btn-retry:active {
+.offline-btn-retry:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: 0 3px 10px rgba(18, 63, 43, 0.18);
+  box-shadow: 0 3px 8px rgba(18, 63, 43, 0.16);
 }
 
-.offline-btn-retry.loading {
+.offline-btn-retry:disabled,
+.offline-btn-retry.is-loading {
   background-color: var(--thulirva-forest-light);
-  cursor: wait;
+  cursor: not-allowed;
+  opacity: 0.88;
+  pointer-events: none;
 }
 
-.offline-btn-retry.loading .btn-retry-icon {
+.offline-btn-retry.is-success {
+  background-color: var(--thulirva-success);
+  pointer-events: none;
+}
+
+.offline-btn-retry.is-error {
+  animation: shakeBtn 0.4s ease-in-out;
+}
+
+.btn-retry-icon {
+  font-size: 16px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Button Loading Spinner */
+.offline-btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #FFFFFF;
+  border-radius: 50%;
+  animation: retrySpin 0.8s linear infinite;
   display: inline-block;
-  animation: retrySpin 0.9s linear infinite;
-}
-
-.offline-btn-retry.success {
-  background-color: #2E7D32;
-}
-
-.offline-btn-retry.error-shake {
-  animation: shakeBtn 0.45s ease-in-out;
 }
 
 @keyframes retrySpin {
@@ -476,92 +225,105 @@
 
 @keyframes shakeBtn {
   0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-6px); }
-  40%, 80% { transform: translateX(6px); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
 }
 
-.btn-retry-icon {
-  font-size: 16px;
-  line-height: 1;
-}
-
-/* Status Banner / Feedback */
+/* Connection Status Message Banner */
 .offline-status-msg {
-  margin-top: 14px;
+  margin-top: 10px;
   font-size: 13px;
   font-weight: 600;
   min-height: 20px;
-  transition: all 0.2s ease;
+  line-height: 1.4;
+  box-sizing: border-box;
 }
 
-.offline-status-msg.error {
-  color: #C62828;
+.offline-status-msg.status-offline {
+  color: var(--thulirva-error);
 }
 
-.offline-status-msg.info {
-  color: #1565C0;
+.offline-status-msg.status-checking {
+  color: var(--thulirva-info);
 }
 
-.offline-status-msg.success {
-  color: #2E7D32;
+.offline-status-msg.status-server-down {
+  color: var(--thulirva-warning);
 }
 
-/* Accessibility: Support prefers-reduced-motion */
-@media (prefers-reduced-motion: reduce) {
-  .offline-wifi-bubble,
-  .offline-girl-phone,
-  .offline-girl-head,
-  .offline-cow-head,
-  .ear-left,
-  .ear-right,
-  .eye-phone,
-  .eye-blink,
-  .eye-cow,
-  .mouth-neutral,
-  .mouth-smile,
-  .cow-resting,
-  .cow-awake,
-  .offline-btn-retry.loading .btn-retry-icon {
-    animation: none !important;
-    transform: none !important;
-  }
-  
-  .eye-phone, .mouth-neutral, .cow-resting {
-    opacity: 1 !important;
-  }
-
-  .eye-blink, .eye-cow, .mouth-smile, .cow-awake {
-    opacity: 0 !important;
-  }
+.offline-status-msg.status-reconnecting {
+  color: var(--thulirva-forest-light);
 }
 
-/* Responsive Breakpoints */
+.offline-status-msg.status-success {
+  color: var(--thulirva-success);
+}
+
+/* ==========================================================================
+   MOBILE & RESPONSIVE IMPROVEMENTS
+   Eliminates excessive vertical spacing, prevents overflow, perfect fit
+   ========================================================================== */
+
 @media (max-width: 600px) {
+  .thulirva-offline-screen {
+    padding: 12px 12px;
+    justify-content: center;
+  }
+
+  .offline-brand-header {
+    margin: 0 0 8px 0;
+  }
+
+  .offline-logo {
+    height: 34px;
+    max-width: 140px;
+  }
+
   .offline-scene-wrapper {
-    border-radius: 16px;
-    margin-bottom: 18px;
+    max-width: 100%;
+    max-height: 260px;
+    border-radius: 14px;
+    margin-bottom: 12px;
   }
 
   .offline-title {
-    font-size: 22px;
+    font-size: 21px;
+    margin-bottom: 5px;
   }
 
   .offline-desc {
-    font-size: 13.5px;
-    margin-bottom: 20px;
+    font-size: 13px;
+    line-height: 1.45;
+    margin-bottom: 14px;
+    padding: 0 6px;
   }
 
   .offline-btn-retry {
-    padding: 12px 30px;
-    font-size: 14.5px;
     height: 44px;
-    border-radius: 24px;
+    min-width: 150px;
+    padding: 10px 28px;
+    font-size: 14px;
+  }
+
+  .offline-status-msg {
+    margin-top: 8px;
+    font-size: 12.5px;
   }
 }
 
 @media (max-width: 380px) {
   .thulirva-offline-screen {
-    padding: 14px 10px;
+    padding: 10px 8px;
+  }
+
+  .offline-logo {
+    height: 30px;
+  }
+
+  .offline-scene-wrapper {
+    max-height: 210px;
+    border-radius: 12px;
+    margin-bottom: 10px;
   }
 
   .offline-title {
@@ -569,13 +331,35 @@
   }
 
   .offline-desc {
-    font-size: 12.5px;
-    margin-bottom: 16px;
+    font-size: 12px;
+    margin-bottom: 12px;
   }
 
   .offline-btn-retry {
-    padding: 10px 24px;
-    font-size: 13.5px;
     height: 42px;
+    min-width: 140px;
+    padding: 8px 24px;
+    font-size: 13px;
+  }
+}
+
+/* Ultra-Compact Height Devices (e.g., Landscape Mobile) */
+@media (max-height: 540px) {
+  .thulirva-offline-screen {
+    padding: 8px 10px;
+    justify-content: flex-start;
+  }
+
+  .offline-brand-header {
+    margin-bottom: 4px;
+  }
+
+  .offline-scene-wrapper {
+    max-height: 160px;
+    margin-bottom: 8px;
+  }
+
+  .offline-desc {
+    margin-bottom: 10px;
   }
 }

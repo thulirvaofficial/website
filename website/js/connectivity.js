@@ -1,7 +1,7 @@
 /**
- * THULIRVA Agro & Dairy — Global Connectivity & Animated Offline Manager
- * Features real internet & backend health verification, state preservation,
- * and seamless background reconnection without page reloads.
+ * THULIRVA Agro & Dairy — Global Connectivity & Static Offline Screen Manager
+ * Features reliable network & backend health verification, debounced retry,
+ * zero illustration animation, artifact-free visual presentation, and seamless restoration.
  */
 
 (function (window, document) {
@@ -11,14 +11,13 @@
         isOnline: true,
         isChecking: false,
         pollTimer: null,
-        countdownTimer: null,
-        countdownSec: 8,
         healthEndpoint: '/api/health',
-        timeoutMs: 4500,
+        timeoutMs: 4000,
         assetPrefix: '',
+        currentState: 'ONLINE', // OFFLINE | CHECKING | SERVER_UNAVAILABLE | RECONNECTING | SUCCESS
 
         init() {
-            // Determine relative asset prefix for root vs /pages/
+            // Determine relative asset prefix for root vs nested /pages/
             const isPagesDir = window.location.pathname.includes('/pages/');
             this.assetPrefix = isPagesDir ? '../' : '';
 
@@ -35,9 +34,9 @@
             this.bindEvents();
             this.hookFetch();
 
-            // Initial silent connectivity check
+            // Initial connectivity check
             if (!navigator.onLine) {
-                this.showOffline('no-internet');
+                this.showOffline('OFFLINE');
             } else {
                 this.checkConnection({ silent: true });
             }
@@ -47,6 +46,9 @@
             if (document.getElementById('thulirvaOfflineOverlay')) return;
 
             const logoSrc = `${this.assetPrefix}assets/images/thulirva_brand_logo.png`;
+            const staticImgSrc = `${this.assetPrefix}assets/images/no_internet_anime.png`;
+            const fallbackImgSrc = `${this.assetPrefix}assets/offline/no_internet_static.png`;
+
             const overlay = document.createElement('div');
             overlay.id = 'thulirvaOfflineOverlay';
             overlay.className = 'thulirva-offline-screen hidden';
@@ -62,50 +64,19 @@
                         <img src="${logoSrc}" alt="THULIRVA Agro & Dairy" class="offline-logo" onerror="this.style.display='none';">
                     </div>
 
-                    <!-- Animated Scene with 100% Reference Art Characters -->
+                    <!-- 100% Static Reference Artwork (Girl, Cow, Clean Wi-Fi Bubble, Farm) -->
                     <div class="offline-scene-wrapper">
                         <div class="offline-scene" id="thulirvaOfflineScene">
-                            <!-- Base Inpainted Landscape & Resting Characters -->
-                            <img src="${this.assetPrefix}assets/offline/bg_base.png" alt="Thulirva Farm Scene" class="offline-layer offline-bg">
-
-                            <!-- Layer 1: Animated Wi-Fi Cloud Bubble -->
-                            <div class="offline-layer offline-wifi-bubble">
-                                <img src="${this.assetPrefix}assets/offline/wifi_bubble.png" alt="No Connection Signal">
-                            </div>
-
-                            <!-- Layer 2: Girl's Hand and Smartphone (Micro-sway) -->
-                            <div class="offline-layer offline-girl-phone">
-                                <img src="${this.assetPrefix}assets/offline/phone_crop.png" alt="Phone">
-                            </div>
-
-                            <!-- Layer 3: Girl's Head and Hair (Tilt & Gaze Interaction) -->
-                            <div class="offline-layer offline-girl-head">
-                                <!-- Eyes Container -->
-                                <div class="offline-eyes-container">
-                                    <img src="${this.assetPrefix}assets/offline/girl_eyes_orig.png" alt="" class="girl-eye-state eye-phone">
-                                    <img src="${this.assetPrefix}assets/offline/girl_eyes_blink.png" alt="" class="girl-eye-state eye-blink">
-                                    <img src="${this.assetPrefix}assets/offline/girl_eyes_look_cow.png" alt="" class="girl-eye-state eye-cow">
-                                </div>
-                                <!-- Mouth Container -->
-                                <div class="offline-mouth-container">
-                                    <img src="${this.assetPrefix}assets/offline/girl_mouth_neutral.png" alt="" class="girl-mouth-state mouth-neutral">
-                                    <img src="${this.assetPrefix}assets/offline/girl_mouth_smile.png" alt="" class="girl-mouth-state mouth-smile">
-                                </div>
-                            </div>
-
-                            <!-- Layer 4: Cow's Head & Ears (Turn, Tilt, Awake & Twitch) -->
-                            <div class="offline-layer offline-cow-head">
-                                <img src="${this.assetPrefix}assets/offline/cow_head.png" alt="" class="cow-head-state cow-resting">
-                                <img src="${this.assetPrefix}assets/offline/cow_head_awake.png" alt="" class="cow-head-state cow-awake">
-                                
-                                <!-- Twitching Ears -->
-                                <img src="${this.assetPrefix}assets/offline/cow_ear_left.png" alt="" class="cow-ear ear-left">
-                                <img src="${this.assetPrefix}assets/offline/cow_ear_right.png" alt="" class="cow-ear ear-right">
-                            </div>
+                            <img src="${staticImgSrc}" 
+                                 alt="No Internet Connection - Thulirva" 
+                                 class="offline-static-illustration" 
+                                 loading="eager"
+                                 decoding="async"
+                                 onerror="this.onerror=null; this.src='${fallbackImgSrc}';">
                         </div>
                     </div>
 
-                    <!-- Offline UI Text & Action -->
+                    <!-- Offline Text Content & Dynamic Status -->
                     <div class="offline-content">
                         <h2 id="offlineTitle" class="offline-title">No Internet Connection</h2>
                         <p id="offlineDesc" class="offline-desc">
@@ -114,8 +85,8 @@
 
                         <div class="offline-actions">
                             <button id="offlineRetryBtn" class="offline-btn-retry" type="button" aria-label="Retry connection">
-                                <span class="btn-retry-icon">⟳</span>
-                                <span class="btn-retry-text">Try Again</span>
+                                <span class="btn-retry-icon" id="offlineRetryIcon">⟳</span>
+                                <span class="btn-retry-text" id="offlineRetryText">Try Again</span>
                             </button>
                         </div>
 
@@ -126,12 +97,14 @@
 
             document.body.appendChild(overlay);
 
-            // Bind Retry Button click
+            // Bind Retry Button click with duplicate request prevention
             const retryBtn = document.getElementById('offlineRetryBtn');
             if (retryBtn) {
                 retryBtn.addEventListener('click', (e) => {
                     e.preventDefault();
-                    this.retryManual();
+                    if (!this.isChecking) {
+                        this.retryManual();
+                    }
                 });
             }
         },
@@ -142,12 +115,11 @@
             });
 
             window.addEventListener('offline', () => {
-                this.showOffline('no-internet');
+                this.showOffline('OFFLINE');
             });
         },
 
         hookFetch() {
-            // Wrap global fetch to automatically catch server unavailability / network drops
             if (window._thulirvaFetchHooked) return;
             window._thulirvaFetchHooked = true;
 
@@ -160,15 +132,13 @@
 
                 try {
                     const response = await originalFetch.apply(this, args);
-                    // If API endpoint returns 502/503/504 Bad Gateway, trigger health probe
                     if (isApiRequest && (response.status === 502 || response.status === 503 || response.status === 504)) {
-                        self.checkConnection();
+                        self.checkConnection({ silent: true });
                     }
                     return response;
                 } catch (error) {
                     if (isApiRequest && !url.includes('/api/health')) {
-                        // Network error or timeout on an essential API route
-                        self.checkConnection();
+                        self.checkConnection({ silent: true });
                     }
                     throw error;
                 }
@@ -182,44 +152,162 @@
                 const res = await fetch(`${this.healthEndpoint}?_t=${Date.now()}`, {
                     method: 'GET',
                     cache: 'no-store',
+                    headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
                     signal: controller.signal
                 });
                 clearTimeout(timer);
                 return res.ok;
-            } catch (err) {
+            } catch (_) {
                 clearTimeout(timer);
-                return false;
+                // Fallback check to root API status
+                try {
+                    const fallbackController = new AbortController();
+                    const fbTimer = setTimeout(() => fallbackController.abort(), 2000);
+                    const fbRes = await fetch(`/api?_t=${Date.now()}`, {
+                        method: 'GET',
+                        cache: 'no-store',
+                        signal: fallbackController.signal
+                    });
+                    clearTimeout(fbTimer);
+                    return fbRes.ok;
+                } catch (__) {
+                    return false;
+                }
+            }
+        },
+
+        updateStateUI(stateName) {
+            this.currentState = stateName;
+            const titleEl = document.getElementById('offlineTitle');
+            const descEl = document.getElementById('offlineDesc');
+            const statusEl = document.getElementById('offlineStatusMsg');
+
+            if (!titleEl || !descEl || !statusEl) return;
+
+            switch (stateName) {
+                case 'CHECKING':
+                    statusEl.className = 'offline-status-msg status-checking';
+                    statusEl.textContent = 'Checking connection...';
+                    break;
+
+                case 'RECONNECTING':
+                    statusEl.className = 'offline-status-msg status-reconnecting';
+                    statusEl.textContent = 'Reconnecting...';
+                    break;
+
+                case 'SERVER_UNAVAILABLE':
+                    titleEl.textContent = 'Server Unavailable';
+                    descEl.textContent = 'Your internet is active, but we are unable to reach Thulirva servers. Please try again shortly.';
+                    statusEl.className = 'offline-status-msg status-server-down';
+                    statusEl.textContent = 'Unable to reach Thulirva servers';
+                    break;
+
+                case 'SUCCESS':
+                    titleEl.textContent = 'Connected!';
+                    descEl.textContent = 'Connection restored! Returning to store...';
+                    statusEl.className = 'offline-status-msg status-success';
+                    statusEl.textContent = 'Connection restored! Returning to store...';
+                    break;
+
+                case 'OFFLINE':
+                default:
+                    titleEl.textContent = 'No Internet Connection';
+                    descEl.textContent = "We couldn't reach the server. Please check your internet connection and try again.";
+                    statusEl.className = 'offline-status-msg status-offline';
+                    statusEl.textContent = 'No internet connection';
+                    break;
+            }
+        },
+
+        setButtonState(mode) {
+            const btn = document.getElementById('offlineRetryBtn');
+            const icon = document.getElementById('offlineRetryIcon');
+            const text = document.getElementById('offlineRetryText');
+
+            if (!btn || !icon || !text) return;
+
+            if (mode === 'loading') {
+                btn.disabled = true;
+                btn.className = 'offline-btn-retry is-loading';
+                icon.innerHTML = '<span class="offline-btn-spinner"></span>';
+                text.textContent = 'Checking...';
+            } else if (mode === 'success') {
+                btn.disabled = true;
+                btn.className = 'offline-btn-retry is-success';
+                icon.innerHTML = '✓';
+                text.textContent = 'Connected!';
+            } else if (mode === 'error') {
+                btn.disabled = false;
+                btn.className = 'offline-btn-retry is-error';
+                icon.innerHTML = '⟳';
+                text.textContent = 'Try Again';
+                setTimeout(() => {
+                    btn.classList.remove('is-error');
+                }, 400);
+            } else {
+                btn.disabled = false;
+                btn.className = 'offline-btn-retry';
+                icon.innerHTML = '⟳';
+                text.textContent = 'Try Again';
             }
         },
 
         async checkConnection(options = {}) {
-            if (this.isChecking) return;
+            if (this.isChecking) return false;
             this.isChecking = true;
 
-            const browserOnline = navigator.onLine;
+            const isManual = !!options.isManual;
+            const isAutoPoll = !!options.isAutoPoll;
 
+            if (isManual) {
+                this.updateStateUI('CHECKING');
+                this.setButtonState('loading');
+            } else if (isAutoPoll) {
+                this.updateStateUI('RECONNECTING');
+            }
+
+            // 1. Verify browser hardware network status
+            const browserOnline = navigator.onLine;
             if (!browserOnline) {
                 this.isChecking = false;
-                this.showOffline('no-internet');
+                this.showOffline('OFFLINE');
+                if (isManual) {
+                    this.setButtonState('error');
+                }
                 return false;
             }
 
-            const backendHealthy = await this.pingBackend();
+            // 2. Verify backend availability
+            let backendHealthy = false;
+            try {
+                backendHealthy = await this.pingBackend();
+            } catch (_) {
+                backendHealthy = false;
+            }
 
             this.isChecking = false;
 
             if (backendHealthy) {
-                if (!this.isOnline) {
-                    this.hideOffline(options.isManual);
+                this.updateStateUI('SUCCESS');
+                if (isManual) {
+                    this.setButtonState('success');
+                    setTimeout(() => {
+                        this.hideOffline();
+                    }, 500);
+                } else {
+                    this.hideOffline();
                 }
                 return true;
             } else {
-                this.showOffline('server-unreachable');
+                this.showOffline('SERVER_UNAVAILABLE');
+                if (isManual) {
+                    this.setButtonState('error');
+                }
                 return false;
             }
         },
 
-        showOffline(reason) {
+        showOffline(stateReason = 'OFFLINE') {
             this.isOnline = false;
 
             const overlay = document.getElementById('thulirvaOfflineOverlay');
@@ -228,66 +316,25 @@
                 overlay.setAttribute('aria-hidden', 'false');
             }
 
-            const title = document.getElementById('offlineTitle');
-            const desc = document.getElementById('offlineDesc');
-
-            if (title && desc) {
-                if (reason === 'server-unreachable') {
-                    title.textContent = "Server Unavailable";
-                    desc.textContent = "We couldn't reach our farm servers. Please check your connection or try again in a few moments.";
-                } else {
-                    title.textContent = "No Internet Connection";
-                    desc.textContent = "We couldn't reach the server. Please check your internet connection and try again.";
-                }
-            }
-
+            this.updateStateUI(stateReason);
             this.startAutoRetryPoll();
         },
 
-        hideOffline(isManual) {
+        hideOffline() {
             this.isOnline = true;
             this.stopAutoRetryPoll();
 
             const overlay = document.getElementById('thulirvaOfflineOverlay');
-            const retryBtn = document.getElementById('offlineRetryBtn');
-            const statusMsg = document.getElementById('offlineStatusMsg');
-
-            if (isManual && retryBtn) {
-                retryBtn.className = 'offline-btn-retry success';
-                retryBtn.innerHTML = '<span class="btn-retry-icon">✓</span><span class="btn-retry-text">Connected!</span>';
-                if (statusMsg) {
-                    statusMsg.className = 'offline-status-msg success';
-                    statusMsg.textContent = 'Connection restored! Returning to store...';
-                }
-
-                setTimeout(() => {
-                    this.finishRestore(overlay, retryBtn, statusMsg);
-                }, 500);
-            } else {
-                this.finishRestore(overlay, retryBtn, statusMsg);
-            }
-        },
-
-        finishRestore(overlay, retryBtn, statusMsg) {
             if (overlay) {
                 overlay.classList.add('hidden');
                 overlay.setAttribute('aria-hidden', 'true');
             }
 
-            if (retryBtn) {
-                retryBtn.className = 'offline-btn-retry';
-                retryBtn.innerHTML = '<span class="btn-retry-icon">⟳</span><span class="btn-retry-text">Try Again</span>';
-            }
+            this.setButtonState('normal');
 
-            if (statusMsg) {
-                statusMsg.textContent = '';
-                statusMsg.className = 'offline-status-msg';
-            }
-
-            // Dispatch custom connection restored event for pages to refresh active grids without reload
+            // Dispatch global restoration event for shop/catalog views to re-sync
             window.dispatchEvent(new CustomEvent('thulirva:connection-restored'));
 
-            // If on shop page or home page with product grid, trigger gentle re-fetch
             if (typeof window.loadShopProducts === 'function') {
                 window.loadShopProducts();
             }
@@ -297,42 +344,14 @@
         },
 
         async retryManual() {
-            const retryBtn = document.getElementById('offlineRetryBtn');
-            const statusMsg = document.getElementById('offlineStatusMsg');
-
-            if (!retryBtn || retryBtn.classList.contains('loading')) return;
-
-            retryBtn.className = 'offline-btn-retry loading';
-            retryBtn.innerHTML = '<span class="btn-retry-icon">⟳</span><span class="btn-retry-text">Checking Connection...</span>';
-
-            if (statusMsg) {
-                statusMsg.className = 'offline-status-msg info';
-                statusMsg.textContent = 'Verifying connection to Thulirva servers...';
-            }
-
-            // Small natural delay so user sees feedback
-            await new Promise(r => setTimeout(r, 450));
-
-            const success = await this.checkConnection({ isManual: true });
-
-            if (!success) {
-                retryBtn.className = 'offline-btn-retry error-shake';
-                retryBtn.innerHTML = '<span class="btn-retry-icon">⟳</span><span class="btn-retry-text">Try Again</span>';
-
-                if (statusMsg) {
-                    statusMsg.className = 'offline-status-msg error';
-                    statusMsg.textContent = 'Still unable to reach the server. Retrying automatically...';
-                }
-
-                setTimeout(() => {
-                    retryBtn.classList.remove('error-shake');
-                }, 500);
-            }
+            // Prevent duplicate requests during active check
+            if (this.isChecking) return;
+            // Give user immediate UI feedback
+            await this.checkConnection({ isManual: true });
         },
 
         startAutoRetryPoll() {
             this.stopAutoRetryPoll();
-            this.countdownSec = 8;
 
             this.pollTimer = setInterval(async () => {
                 if (this.isOnline) {
@@ -340,15 +359,9 @@
                     return;
                 }
 
-                const statusMsg = document.getElementById('offlineStatusMsg');
-                if (statusMsg && !document.getElementById('offlineRetryBtn')?.classList.contains('loading')) {
-                    statusMsg.className = 'offline-status-msg info';
-                    statusMsg.textContent = 'Checking server status...';
-                }
-
-                const ok = await this.checkConnection();
-                if (ok && statusMsg) {
-                    statusMsg.textContent = '';
+                // If user is not currently in the middle of a manual check, run background poll
+                if (!this.isChecking) {
+                    await this.checkConnection({ isAutoPoll: true });
                 }
             }, 8000);
         },

@@ -320,15 +320,22 @@
             <span id="loginErrorText">Invalid credentials or unauthorized access.</span>
         </div>
 
-        <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+        <form id="adminLoginForm" autocomplete="off" onsubmit="handleAdminLogin(event)" data-bitwarden-watching="false" data-lpignore="true">
+            <!-- Hidden decoy fields to capture aggressive browser autofill -->
+            <input type="text" name="decoy_username" id="decoy_username" tabindex="-1" aria-hidden="true" autocomplete="off" style="position:fixed;top:-9999px;left:-9999px;opacity:0;pointer-events:none;width:1px;height:1px;">
+            <input type="password" name="decoy_password" id="decoy_password" tabindex="-1" aria-hidden="true" autocomplete="new-password" style="position:fixed;top:-9999px;left:-9999px;opacity:0;pointer-events:none;width:1px;height:1px;">
+
             <div class="form-group">
                 <label class="form-label" for="email">Administrator Email</label>
                 <div class="input-icon-wrap">
                     <span class="input-icon-left">
                         <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     </span>
-                    <input type="email" id="email" class="form-control-enterprise" value="admin@thulirva.com"
-                        placeholder="admin@thulirva.com" required autocomplete="username">
+                    <input type="email" id="email" name="admin_login_identity" class="form-control-enterprise" value=""
+                        placeholder="admin@thulirva.com" required autocomplete="new-password"
+                        autocorrect="off" autocapitalize="off" spellcheck="false"
+                        data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other"
+                        readonly onfocus="this.removeAttribute('readonly');" ontouchstart="this.removeAttribute('readonly');">
                 </div>
             </div>
 
@@ -338,8 +345,11 @@
                     <span class="input-icon-left">
                         <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     </span>
-                    <input type="password" id="password" class="form-control-enterprise" style="padding-right: 44px;"
-                        value="admin123" placeholder="••••••••" required autocomplete="current-password">
+                    <input type="password" id="password" name="admin_login_secret" class="form-control-enterprise" style="padding-right: 44px;"
+                        value="" placeholder="••••••••" required autocomplete="new-password"
+                        autocorrect="off" autocapitalize="off" spellcheck="false"
+                        data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other"
+                        readonly onfocus="this.removeAttribute('readonly');" ontouchstart="this.removeAttribute('readonly');">
                     <button type="button" class="btn-toggle-pw" id="btnTogglePassword" onclick="togglePasswordVisibility()" title="Show/Hide Password">
                         <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
@@ -347,10 +357,10 @@
             </div>
 
             <div class="form-options-row">
-                <label class="remember-checkbox-label">
-                    <input type="checkbox" id="rememberMe" checked>
-                    <span>Remember this console</span>
-                </label>
+                <span class="security-indicator" style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:#047857;font-weight:600;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <span>Secure Isolated Session</span>
+                </span>
                 <a href="javascript:void(0)" onclick="promptSupportHelp()" style="color:var(--brand-forest); font-weight:600; text-decoration:none;">Support Help</a>
             </div>
 
@@ -404,13 +414,45 @@
             }
         })();
 
-        // Restore remembered email if present
-        document.addEventListener("DOMContentLoaded", () => {
-            const rememberedEmail = localStorage.getItem("thulirva_remembered_email");
-            if (rememberedEmail) {
-                document.getElementById("email").value = rememberedEmail;
+        // Aggressively eliminate browser and password manager autofill
+        function enforceSecureBlankCredentials() {
+            try {
+                localStorage.removeItem("thulirva_remembered_email");
+            } catch (_) {}
+
+            const emailInput = document.getElementById("email");
+            const passwordInput = document.getElementById("password");
+            const decoyUser = document.getElementById("decoy_username");
+            const decoyPass = document.getElementById("decoy_password");
+
+            if (decoyUser) decoyUser.value = "";
+            if (decoyPass) decoyPass.value = "";
+
+            if (emailInput && document.activeElement !== emailInput) {
+                emailInput.value = "";
+                emailInput.setAttribute("readonly", "readonly");
+                const unlockEmail = () => emailInput.removeAttribute("readonly");
+                emailInput.addEventListener("focus", unlockEmail, { once: true });
+                emailInput.addEventListener("click", unlockEmail, { once: true });
             }
-        });
+            if (passwordInput && document.activeElement !== passwordInput) {
+                passwordInput.value = "";
+                passwordInput.setAttribute("readonly", "readonly");
+                const unlockPass = () => passwordInput.removeAttribute("readonly");
+                passwordInput.addEventListener("focus", unlockPass, { once: true });
+                passwordInput.addEventListener("click", unlockPass, { once: true });
+            }
+        }
+
+        // Multi-stage blank credential enforcement across all lifecycle hooks
+        enforceSecureBlankCredentials();
+        document.addEventListener("DOMContentLoaded", enforceSecureBlankCredentials);
+        window.addEventListener("pageshow", enforceSecureBlankCredentials);
+        window.addEventListener("load", enforceSecureBlankCredentials);
+        setTimeout(enforceSecureBlankCredentials, 50);
+        setTimeout(enforceSecureBlankCredentials, 150);
+        setTimeout(enforceSecureBlankCredentials, 350);
+        setTimeout(enforceSecureBlankCredentials, 750);
 
         // Toggle password show/hide
         function togglePasswordVisibility() {
@@ -426,14 +468,15 @@
         }
 
         function promptSupportHelp() {
-            alert("THULIRVA Operations Support:\n\nDefault administrator credentials:\nEmail: admin@thulirva.com\nPassword: admin123\n\nContact backend systems engineer if credentials need rotation.");
+            alert("THULIRVA Operations & Security Support:\n\nFor enterprise administrative access inquiries or account unlock requests, please contact your System Administrator or IT Security Team at security@thulirva.com.");
         }
 
         async function handleAdminLogin(event) {
             event.preventDefault();
-            const email = document.getElementById("email").value.trim();
-            const password = document.getElementById("password").value;
-            const rememberMe = document.getElementById("rememberMe").checked;
+            const emailInput = document.getElementById("email");
+            const passwordInput = document.getElementById("password");
+            const email = (emailInput ? emailInput.value : "").trim();
+            const password = passwordInput ? passwordInput.value : "";
             const errorEl = document.getElementById("loginError");
             const errorText = document.getElementById("loginErrorText");
             const btn = document.getElementById("btnLoginSubmit");
@@ -445,11 +488,9 @@
             spinner.style.display = "inline-block";
             btnText.textContent = "Authenticating...";
 
-            if (rememberMe) {
-                localStorage.setItem("thulirva_remembered_email", email);
-            } else {
+            try {
                 localStorage.removeItem("thulirva_remembered_email");
-            }
+            } catch (_) {}
 
             try {
                 const response = await fetch(getApiBaseUrl() + "/api/auth/login", {
@@ -479,6 +520,7 @@
                     localStorage.removeItem("thulirva_admin_token");
                     localStorage.removeItem("thulirva_admin_user");
                     localStorage.removeItem("admin");
+                    if (passwordInput) passwordInput.value = "";
                     errorText.textContent = data.message || "Access Denied: Customer accounts are not authorized to sign in to the Administrative Portal.";
                     errorEl.style.display = "flex";
                 }
