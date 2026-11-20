@@ -300,7 +300,7 @@ function buildProductCard(product, isShop = false) {
         imgSrc = isPagesDir && !imgSrc.startsWith('../') ? '../' + imgSrc : imgSrc;
     }
     if (imgSrc && !imgSrc.startsWith('data:')) {
-        const v = product.updated_at ? new Date(product.updated_at).getTime() : '';
+        const v = product.updated_at ? new Date(product.updated_at).getTime() : (product.id ? `p${product.id}` : '');
         if (v && !imgSrc.includes('?')) {
             imgSrc = `${imgSrc}?v=${v}`;
         }
@@ -311,34 +311,44 @@ function buildProductCard(product, isShop = false) {
     card.className = "product-card";
     card.dataset.category = product.category || "";
 
+    const isMilkSub = (product.category === 'Milk' || (product.name && product.name.toLowerCase().includes('milk')));
+    const subHref = isPagesDir ? 'subscriptions.html' : 'pages/subscriptions.html';
+
     card.innerHTML = `
         ${product.badge ? `<div class="product-badge fresh">${product.badge}</div>` : ""}
-        <button class="product-wishlist" title="Add to Wishlist" onclick="toggleWishlist(this)">♡</button>
+        <button class="product-wishlist" title="Add to Wishlist" onclick="toggleWishlist(this)" type="button">♡</button>
         <a href="${productHref}" class="product-image">
             ${imgSrc
                 ? `<img src="${imgSrc}" alt="${product.name}" loading="lazy" onerror="this.onerror=null;this.src='${defaultFallback}';">`
                 : `<div class="product-emoji">${emoji}</div>`}
         </a>
         <div class="product-info">
-            <div class="product-category">${product.category || ""}</div>
-            <h3 class="product-name">
-                <a href="${productHref}" style="color:inherit">${product.name}</a>
+            <h3 class="product-name" title="${product.name}">
+                <a href="${productHref}">${product.name}</a>
             </h3>
-            <div class="product-weight">${product.weight || ""}</div>
+            <div class="product-weight">${product.weight || "Standard Pack"}</div>
             <div class="product-price-row">
-                <div class="product-price">₹${product.price}</div>
-                ${product.mrp ? `<div class="product-old-price">₹${product.mrp}</div>` : ""}
+                <span class="product-price">₹${product.price}</span>
+                ${product.mrp ? `<span class="product-old-price">₹${product.mrp}</span>` : ""}
             </div>
-            <button class="add-to-cart" id="btn-${product.id}">Add to Cart</button>
-            ${(product.category === 'Milk' || product.name.toLowerCase().includes('milk')) ? `
-                <a href="${isPagesDir ? 'subscriptions.html' : 'pages/subscriptions.html'}" class="btn btn-outline btn-sm sub-card-btn" style="width:100%; justify-content:center; margin-top:6px; font-size:11.5px; padding:6px 0; border:1px solid var(--forest-green); color:var(--forest-green); font-weight:700; text-decoration:none;">
-                    🥛 Daily Morning Subscription
-                </a>
-            ` : ''}
+            <div class="product-actions">
+                <button class="add-to-cart" id="btn-${product.id}" type="button">Add to Cart</button>
+                ${isMilkSub ? `
+                    <a href="${subHref}" class="sub-card-btn" title="Subscribe daily morning">
+                        🥛 Daily Morning Subscription
+                    </a>
+                ` : `
+                    <div class="sub-card-tag">
+                        <span class="sub-card-tag-icon">🌿</span> Farm Fresh Direct
+                    </div>
+                `}
+            </div>
         </div>
     `;
 
-    card.querySelector(".add-to-cart").addEventListener("click", function() {
+    card.querySelector(".add-to-cart").addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         addToCart(product);
         this.textContent = "✓ Added!";
         this.classList.add("added");
