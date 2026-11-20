@@ -1335,7 +1335,14 @@ function renderUserSubscriptions() {
         const weight = s.weight || (pName.includes("1 Litre") ? "1 Litre" : "500 ml");
         const slot = s.timeSlot || s.delivery_slot || "6:00 AM - 7:00 AM";
         const freq = s.frequency || s.time_period || "Daily";
-        const start = s.startDate || s.start_date || "Active";
+        const start = (s.startDate || s.start_date || "Active").slice(0, 10);
+        const end = (s.endDate || s.end_date || s.expiry_date || "—").slice(0, 10);
+        const totalDuration = s.total_duration || s.duration_days || s.total_days || 30;
+        const elapsedDays = s.elapsed_days !== undefined ? s.elapsed_days : 0;
+        const remainingDays = s.remaining_days !== undefined ? s.remaining_days : Math.max(0, totalDuration - elapsedDays);
+        const completedDeliveries = s.completed_deliveries || 0;
+        const totalDeliveries = s.total_deliveries || s.total_scheduled_deliveries || 30;
+        const remainingDeliveries = s.remaining_deliveries !== undefined ? s.remaining_deliveries : Math.max(0, totalDeliveries - completedDeliveries);
         const unitPrice = s.pricePerUnit || s.price_per_delivery || (s.total_price ? Math.round(s.total_price / 30) : 44);
 
         return `
@@ -1356,6 +1363,9 @@ function renderUserSubscriptions() {
                 <div><span style="color:var(--text-muted);">Delivery Slot:</span> <strong>${slot}</strong></div>
                 <div><span style="color:var(--text-muted);">Frequency:</span> <strong>${freq}</strong></div>
                 <div><span style="color:var(--text-muted);">Start Date:</span> <strong>${start}</strong></div>
+                <div><span style="color:var(--text-muted);">End Date:</span> <strong>${end}</strong></div>
+                <div><span style="color:var(--text-muted);">Timeline Progress:</span> <strong>${remainingDays} / ${totalDuration} days left</strong> <small style="color:var(--text-muted);">(${elapsedDays} elapsed)</small></div>
+                <div><span style="color:var(--text-muted);">Deliveries:</span> <strong>${completedDeliveries} / ${totalDeliveries} done</strong> <small style="color:var(--text-muted);">(${remainingDeliveries} scheduled)</small></div>
             </div>
             <div style="font-size:12.5px; color:var(--text-mid); background:#f9faf8; padding:10px 14px; border-radius:8px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                 <div>📍 <strong>Delivery Address:</strong> ${s.address}</div>

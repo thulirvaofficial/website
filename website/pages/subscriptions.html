@@ -1054,45 +1054,100 @@ async function handleSubPurchase(e) {
         }
         if (data.subscription && data.subscription.id) {
             subId = data.subscription.id;
+            latestSubscriptionData = {
+                ...data.subscription,
+                id: data.subscription.id,
+                user_id: savedUser.id || null,
+                userId: savedUser.id || null,
+                product_name: data.subscription.product_name || selectedPlan.product_name,
+                productName: data.subscription.product_name || selectedPlan.product_name,
+                product_image: data.subscription.product_image || selectedPlan.product_image,
+                productImage: data.subscription.product_image || selectedPlan.product_image,
+                customer_name: data.subscription.customer_name || custName,
+                customerName: data.subscription.customer_name || custName,
+                customer_phone: data.subscription.customer_phone || custPhone,
+                customerPhone: data.subscription.customer_phone || custPhone,
+                customer_email: savedUser.email || "",
+                customerEmail: savedUser.email || "",
+                time_period: data.subscription.time_period || selectedPlan.time_period,
+                timePeriod: data.subscription.time_period || selectedPlan.time_period,
+                frequency: data.subscription.frequency || selectedPlan.frequency,
+                quantity: data.subscription.quantity || currentSubQuantity,
+                delivery_slot: data.subscription.delivery_slot || slot,
+                deliverySlot: data.subscription.delivery_slot || slot,
+                start_date: data.subscription.start_date || startDate,
+                startDate: data.subscription.start_date || startDate,
+                end_date: data.subscription.end_date || data.subscription.expiry_date,
+                endDate: data.subscription.end_date || data.subscription.expiry_date,
+                expiry_date: data.subscription.expiry_date || data.subscription.end_date,
+                expiryDate: data.subscription.expiry_date || data.subscription.end_date,
+                total_duration: data.subscription.total_duration || deliveriesCount,
+                remaining_days: data.subscription.remaining_days !== undefined ? data.subscription.remaining_days : deliveriesCount,
+                elapsed_days: data.subscription.elapsed_days !== undefined ? data.subscription.elapsed_days : 0,
+                completed_deliveries: data.subscription.completed_deliveries || 0,
+                total_deliveries: data.subscription.total_deliveries || deliveriesCount,
+                remaining_deliveries: data.subscription.remaining_deliveries !== undefined ? data.subscription.remaining_deliveries : deliveriesCount,
+                address: `${fullDeliveryAddress} - ${pincode}`,
+                delivery_location: locName,
+                total_price: finalTotal,
+                totalPrice: finalTotal,
+                total: finalTotal,
+                transaction_id: transactionId,
+                transactionId: transactionId,
+                payment_proof: currentProofBase64,
+                paymentProof: currentProofBase64,
+                status: data.subscription.status || "Active",
+                createdAt: new Date().toLocaleDateString('en-IN')
+            };
         }
     } catch {
         // offline fallback
     }
 
-    latestSubscriptionData = {
-        id: subId,
-        user_id: savedUser.id || null,
-        userId: savedUser.id || null,
-        product_name: selectedPlan.product_name,
-        productName: selectedPlan.product_name,
-        product_image: selectedPlan.product_image,
-        productImage: selectedPlan.product_image,
-        customer_name: custName,
-        customerName: custName,
-        customer_phone: custPhone,
-        customerPhone: custPhone,
-        customer_email: savedUser.email || "",
-        customerEmail: savedUser.email || "",
-        time_period: selectedPlan.time_period,
-        timePeriod: selectedPlan.time_period,
-        frequency: selectedPlan.frequency,
-        quantity: currentSubQuantity,
-        delivery_slot: slot,
-        deliverySlot: slot,
-        start_date: startDate,
-        startDate: startDate,
-        address: `${fullDeliveryAddress} - ${pincode}`,
-        delivery_location: locName,
-        total_price: finalTotal,
-        totalPrice: finalTotal,
-        total: finalTotal,
-        transaction_id: transactionId,
-        transactionId: transactionId,
-        payment_proof: currentProofBase64,
-        paymentProof: currentProofBase64,
-        status: "Active",
-        createdAt: new Date().toLocaleDateString('en-IN')
-    };
+    if (!latestSubscriptionData) {
+        latestSubscriptionData = {
+            id: subId,
+            user_id: savedUser.id || null,
+            userId: savedUser.id || null,
+            product_name: selectedPlan.product_name,
+            productName: selectedPlan.product_name,
+            product_image: selectedPlan.product_image,
+            productImage: selectedPlan.product_image,
+            customer_name: custName,
+            customerName: custName,
+            customer_phone: custPhone,
+            customerPhone: custPhone,
+            customer_email: savedUser.email || "",
+            customerEmail: savedUser.email || "",
+            time_period: selectedPlan.time_period,
+            timePeriod: selectedPlan.time_period,
+            frequency: selectedPlan.frequency,
+            quantity: currentSubQuantity,
+            delivery_slot: slot,
+            deliverySlot: slot,
+            start_date: startDate,
+            startDate: startDate,
+            end_date: startDate,
+            expiry_date: startDate,
+            total_duration: deliveriesCount,
+            remaining_days: deliveriesCount,
+            elapsed_days: 0,
+            completed_deliveries: 0,
+            total_deliveries: deliveriesCount,
+            remaining_deliveries: deliveriesCount,
+            address: `${fullDeliveryAddress} - ${pincode}`,
+            delivery_location: locName,
+            total_price: finalTotal,
+            totalPrice: finalTotal,
+            total: finalTotal,
+            transaction_id: transactionId,
+            transactionId: transactionId,
+            payment_proof: currentProofBase64,
+            paymentProof: currentProofBase64,
+            status: "Active",
+            createdAt: new Date().toLocaleDateString('en-IN')
+        };
+    }
 
     // Save to user's localStorage subscriptions
     const existingSubs = JSON.parse(localStorage.getItem("thulirva_subscriptions") || "[]");
@@ -1104,15 +1159,18 @@ async function handleSubPurchase(e) {
     submitBtn.innerHTML = "🥛 Confirm &amp; Activate Subscription &rarr;";
 
     // Populate confirmation modal
+    const sEndDate = latestSubscriptionData.end_date || latestSubscriptionData.expiry_date || "Calculated";
+    const sRemDays = latestSubscriptionData.remaining_days !== undefined ? latestSubscriptionData.remaining_days : deliveriesCount;
     document.getElementById("confirmModalDetails").innerHTML = `
         <div><strong>Subscription ID:</strong> #${subId}</div>
         <div><strong>Plan:</strong> ${selectedPlan.product_name}</div>
-        <div><strong>Time Period:</strong> ${selectedPlan.time_period}</div>
-        <div><strong>Morning Slot:</strong> ${slot}</div>
-        <div><strong>Starts On:</strong> ${startDate}</div>
+        <div><strong>Time Period:</strong> ${selectedPlan.time_period} (${latestSubscriptionData.total_duration || deliveriesCount} Days)</div>
+        <div><strong>Slot:</strong> ${slot}</div>
+        <div><strong>Timeline:</strong> ${startDate} &rarr; <strong>${sEndDate}</strong> (${sRemDays} days left)</div>
+        <div><strong>Deliveries:</strong> ${latestSubscriptionData.total_deliveries || deliveriesCount} Scheduled (${latestSubscriptionData.completed_deliveries || 0} Delivered)</div>
         <div><strong>Delivery Address:</strong> ${addr} (${pincode})</div>
         <div><strong>UPI Transaction ID (UTR):</strong> <span style="font-family:monospace; color:#1a4a2e; font-weight:700;">${transactionId}</span></div>
-        <div style="font-weight:700; color:var(--forest-green); font-size:15px; margin-top:6px;"><strong>Amount Paid:</strong> ₹${selectedPlan.price.toLocaleString()}</div>
+        <div style="font-weight:700; color:var(--forest-green); font-size:15px; margin-top:6px;"><strong>Amount Paid:</strong> ₹${finalTotal.toLocaleString()}</div>
     `;
 
     document.getElementById("confirmSubModal").classList.add("active");

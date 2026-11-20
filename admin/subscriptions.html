@@ -97,12 +97,13 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px;">
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
                         <input type="text" id="subSearch" placeholder="Search customer, plan, address..." onkeyup="filterSubs()" class="form-control" style="width:260px;">
-                        <select id="subStatusFilter" onchange="filterSubs()" class="form-select" style="width:160px;">
-                            <option value="">All Statuses</option>
+                        <select id="subStatusFilter" onchange="filterSubs()" class="form-select" style="width:190px;">
+                            <option value="">All Subscriptions</option>
                             <option value="active">Active</option>
+                            <option value="pending">Pending Verification</option>
                             <option value="paused">Paused</option>
-                            <option value="pending">Pending Approval</option>
-                            <option value="completed">Completed</option>
+                            <option value="expired">Expired</option>
+                            <option value="cancelled">Cancelled</option>
                         </select>
                     </div>
                     <div style="font-size:12px; color:var(--thulirva-text-muted);">
@@ -115,14 +116,15 @@
                         <thead>
                             <tr>
                                 <th>Sub ID</th>
-                                <th>Customer Details</th>
-                                <th>Product &amp; Plan</th>
-                                <th>Delivery Slot</th>
-                                <th>Start / End Date</th>
-                                <th>Progress / Remaining</th>
+                                <th>Customer Name &amp; Phone</th>
+                                <th>Product &amp; Qty</th>
+                                <th>Frequency &amp; Slot</th>
+                                <th>Start &amp; End Date</th>
+                                <th>Duration &amp; Days</th>
+                                <th>Deliveries</th>
                                 <th>Payment</th>
                                 <th>Status</th>
-                                <th style="text-align: right;">Action</th>
+                                <th style="text-align: right; min-width: 140px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="subscriptionsTable">
@@ -603,28 +605,56 @@ async function loadSubscriptions() {
 }
 
 function calculateSubMetrics() {
-    document.getElementById("activeSubsMetric").textContent = allSubscriptions.length;
+    const active = allSubscriptions.filter(s => {
+        const st = (s.status || '').toLowerCase();
+        return (st === 'active' || st === 'approved') && !s.is_expired;
+    }).length;
+    document.getElementById("activeSubsMetric").textContent = active;
     document.getElementById("subsTabCount").textContent = allSubscriptions.length;
-    const paused = allSubscriptions.filter(s => s.status === 'paused' || s.status === 'on_hold').length;
+    const paused = allSubscriptions.filter(s => {
+        const st = (s.status || '').toLowerCase();
+        return st === 'paused' || st === 'on_hold';
+    }).length;
     document.getElementById("pausedSubsMetric").textContent = paused;
-    document.getElementById("dueTodayMetric").textContent = allSubscriptions.filter(s => s.status !== 'completed' && s.status !== 'paused').length;
+    document.getElementById("dueTodayMetric").textContent = active;
 
-    const runRate = allSubscriptions.reduce((acc, s) => acc + (Number(s.total_price || s.price || 1500)), 0);
+    const runRate = allSubscriptions.reduce((acc, s) => acc + (Number(s.total_price || s.price || 0)), 0);
     document.getElementById("subRunRateMetric").textContent = "₹" + runRate.toLocaleString();
 }
 
 function filterSubs() {
     const q = (document.getElementById("subSearch").value || "").trim().toLowerCase();
-    const st = document.getElementById("subStatusFilter").value.toLowerCase();
+    const st = (document.getElementById("subStatusFilter").value || "").trim().toLowerCase();
 
     filteredSubscriptions = allSubscriptions.filter(s => {
         const idMatch = String(s.id || s.subscription_id || "").toLowerCase().includes(q);
         const nameMatch = (s.customer_name || s.customerName || "").toLowerCase().includes(q);
+        const phoneMatch = (s.customer_phone || s.phone || "").toLowerCase().includes(q);
         const prodMatch = (s.product_name || s.plan_name || "").toLowerCase().includes(q);
         const addrMatch = (s.address || "").toLowerCase().includes(q);
-        const matchesQ = !q || idMatch || nameMatch || prodMatch || addrMatch;
+        const matchesQ = !q || idMatch || nameMatch || phoneMatch || prodMatch || addrMatch;
 
-        const matchesStatus = !st || (s.status || "active").toLowerCase() === st;
+        if (!st) return matchesQ;
+
+        const subStatus = (s.status || "active").toLowerCase();
+        const payStatus = (s.payment_status || "verified").toLowerCase();
+        const isExp = s.is_expired === true || subStatus === 'expired' || (s.remaining_days !== undefined && s.remaining_days <= 0 && subStatus !== 'active');
+
+        let matchesStatus = false;
+        if (st === 'active') {
+            matchesStatus = (subStatus === 'active' || subStatus === 'approved') && !isExp;
+        } else if (st === 'pending') {
+            matchesStatus = subStatus === 'pending' || payStatus === 'pending' || payStatus === 'unpaid' || payStatus === 'awaiting_verification';
+        } else if (st === 'paused') {
+            matchesStatus = subStatus === 'paused' || subStatus === 'on_hold';
+        } else if (st === 'expired') {
+            matchesStatus = subStatus === 'expired' || isExp;
+        } else if (st === 'cancelled') {
+            matchesStatus = subStatus === 'cancelled' || subStatus === 'rejected';
+        } else {
+            matchesStatus = subStatus === st;
+        }
+
         return matchesQ && matchesStatus;
     });
 
@@ -639,49 +669,89 @@ function renderSubsTable() {
     if (!filteredSubscriptions.length) {
         renderEmptyState(table, {
             icon: SVG_ICONS["calendar-clock"] || "🔄",
-            title: "No Subscriptions Active",
-            message: "No daily milk or dairy subscriptions are currently active. Active subscriptions will appear here automatically as customers subscribe on the mobile app or website."
+            title: "No Subscriptions Found",
+            message: "No matching subscriptions found for the selected filter or search term. Subscriptions will appear here automatically as customers subscribe."
         });
         return;
     }
 
     filteredSubscriptions.forEach(s => {
         const row = document.createElement("tr");
-        const status = s.status || "active";
-        const badgeClass = status === 'active' || status === 'approved' ? 'badge-active' : (status === 'paused' ? 'badge-pending' : 'badge-neutral');
+        const status = (s.status || "active").toLowerCase();
+        const payStatus = (s.payment_status || "verified").toLowerCase();
         const sId = s.subscription_id || s.id || "SUB-001";
         const prod = s.product_name || s.plan_name || "Daily Farm Fresh Milk (1L)";
+
+        let badgeClass = 'badge-neutral';
+        if (status === 'active' || status === 'approved') badgeClass = 'badge-active';
+        else if (status === 'paused') badgeClass = 'badge-pending';
+        else if (status === 'cancelled' || status === 'rejected') badgeClass = 'badge-danger';
+        else if (status === 'expired') badgeClass = 'badge-neutral';
+        else if (status === 'pending') badgeClass = 'badge-pending';
+
+        let payBadgeClass = 'badge-neutral';
+        if (payStatus === 'verified' || payStatus === 'paid') payBadgeClass = 'badge-active';
+        else if (payStatus === 'pending' || payStatus === 'unpaid' || payStatus === 'awaiting_verification') payBadgeClass = 'badge-pending';
+        else if (payStatus === 'rejected') payBadgeClass = 'badge-danger';
+
+        const isPaymentPending = payStatus === 'pending' || payStatus === 'unpaid' || payStatus === 'awaiting_verification';
+        const isCancelled = status === 'cancelled' || status === 'rejected';
+
+        const startDateStr = (s.start_date || s.created_at || "").slice(0, 10);
+        const endDateStr = (s.end_date || s.expiry_date || "").slice(0, 10);
+        const totalDuration = s.total_duration || s.duration_days || s.total_days || 30;
+        const elapsedDays = s.elapsed_days !== undefined ? s.elapsed_days : 0;
+        const remainingDays = s.remaining_days !== undefined ? s.remaining_days : Math.max(0, totalDuration - elapsedDays);
+        const completedDeliveries = s.completed_deliveries || 0;
+        const totalDeliveries = s.total_deliveries || s.total_scheduled_deliveries || 30;
+        const remainingDeliveries = s.remaining_deliveries !== undefined ? s.remaining_deliveries : Math.max(0, totalDeliveries - completedDeliveries);
 
         row.innerHTML = `
             <td><strong class="font-mono">#${sId}</strong></td>
             <td>
-                <div style="font-weight:700; color:var(--thulirva-forest);">${s.customer_name || "Customer"}</div>
-                <small style="color:var(--thulirva-text-muted);">${s.customer_phone || ""}</small>
+                <div style="font-weight:700; color:var(--thulirva-forest);">${s.customer_name || s.customerName || "Customer"}</div>
+                <small style="color:var(--thulirva-text-muted); font-size:11.5px;">📞 ${s.customer_phone || s.phone || "—"}</small>
             </td>
             <td>
-                <div style="font-weight:600;">${prod}</div>
-                <small style="color:var(--thulirva-text-muted);">${s.frequency || "Daily"}</small>
+                <div style="font-weight:600; color:var(--thulirva-forest-deep);">${prod}</div>
+                <span class="badge badge-neutral" style="font-size:11px; margin-top:3px; padding:2px 6px;">${s.quantity || s.qty || 1} ${s.unit || 'Packet'}/delivery</span>
             </td>
             <td>
-                <span style="font-size:12px; font-weight:600;">${s.delivery_slot || "06:00 - 07:30 AM"}</span>
+                <div style="font-weight:600; font-size:12px;">${s.frequency || "Daily"}</div>
+                <small style="color:var(--thulirva-text-muted); font-size:11px;">⏰ ${s.delivery_slot || s.time_slot || "06:00 - 07:30 AM"}</small>
             </td>
             <td>
-                <div style="font-size:12px;">${(s.start_date || s.created_at || "2026-11-01").slice(0, 10)}</div>
-                <small style="color:var(--thulirva-text-muted);">to ${(s.end_date || "2026-12-01").slice(0, 10)}</small>
+                <div style="font-size:12px; font-weight:600; color:var(--thulirva-forest);">${startDateStr}</div>
+                <small style="color:var(--thulirva-text-muted); font-size:11px;">to <strong>${endDateStr}</strong></small>
             </td>
             <td>
-                <div><strong>${s.remaining_days !== undefined ? s.remaining_days : 24}</strong> / ${s.total_days || 30} days</div>
+                <div style="font-size:12.5px;"><strong>${remainingDays}</strong> / ${totalDuration} days left</div>
+                <small style="color:var(--thulirva-text-muted); font-size:11px;">(${elapsedDays} days elapsed)</small>
             </td>
             <td>
-                <span class="badge ${s.payment_status === 'verified' || s.payment_status === 'paid' ? 'badge-active' : 'badge-pending'}">
-                    ${s.payment_status || 'Verified'}
-                </span>
+                <div style="font-size:12.5px;"><strong>${completedDeliveries}</strong> / ${totalDeliveries} done</div>
+                <small style="color:var(--thulirva-text-muted); font-size:11px;">${remainingDeliveries} scheduled</small>
+            </td>
+            <td>
+                <span class="badge ${payBadgeClass}">${s.payment_status || 'Verified'}</span>
             </td>
             <td><span class="badge ${badgeClass}">${status}</span></td>
             <td style="text-align:right;">
-                <button class="btn btn-secondary btn-sm" onclick="toggleSubPause('${sId}', '${status}')">
-                    ${status === 'paused' ? '▶ Resume' : '⏸ Pause'}
-                </button>
+                <div style="display:inline-flex; gap:6px; align-items:center;">
+                    ${isPaymentPending ? `
+                        <button class="btn btn-sm" style="background:#10B981; color:white; padding:4px 8px; font-size:11px; border:none; border-radius:4px; font-weight:600;" onclick="approveSubPayment('${sId}')" title="Approve Payment">
+                            ✓ Approve
+                        </button>
+                    ` : ''}
+                    ${!isCancelled ? `
+                        <button class="btn btn-secondary btn-sm" style="padding:4px 8px; font-size:11px;" onclick="toggleSubPause('${sId}', '${status}')">
+                            ${status === 'paused' ? '▶ Resume' : '⏸ Pause'}
+                        </button>
+                        <button class="btn btn-sm" style="background:#FEE2E2; color:#DC2626; border:1px solid #FCA5A5; padding:4px 8px; font-size:11px; border-radius:4px;" onclick="cancelSubscription('${sId}')" title="Cancel Subscription">
+                            ✕
+                        </button>
+                    ` : '<span style="font-size:11px; color:var(--thulirva-text-muted);">Cancelled</span>'}
+                </div>
             </td>
         `;
         table.appendChild(row);
@@ -702,9 +772,56 @@ async function toggleSubPause(subId, currentStatus) {
         const data = await res.json();
         if (data.success) {
             showToast(`Subscription #${subId} is now ${next}.`);
-            loadSubscriptions();
+            await loadSubscriptions();
         } else {
             showToast(data.message || "Failed to update status", "error");
+        }
+    } catch (e) {
+        showToast("Error: " + e.message, "error");
+    }
+}
+
+async function approveSubPayment(subId) {
+    if (!confirm(`Approve payment and verify subscription #${subId}?`)) return;
+    try {
+        const res = await fetch(`/api/subscriptions/${subId}/verify-payment`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ verified_by: "Admin" })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Payment approved for subscription #${subId}!`);
+            await loadSubscriptions();
+        } else {
+            showToast(data.message || "Failed to approve payment", "error");
+        }
+    } catch (e) {
+        showToast("Error: " + e.message, "error");
+    }
+}
+
+async function cancelSubscription(subId) {
+    const reason = prompt(`Please enter cancellation reason for subscription #${subId}:`, "Cancelled by admin request");
+    if (reason === null) return;
+    try {
+        const res = await fetch(`/api/subscriptions/${subId}/cancel`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ reason })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Subscription #${subId} has been cancelled.`);
+            await loadSubscriptions();
+        } else {
+            showToast(data.message || "Failed to cancel subscription", "error");
         }
     } catch (e) {
         showToast("Error: " + e.message, "error");
@@ -720,17 +837,20 @@ async function loadPlans() {
         });
         if (res.ok) {
             const data = await res.json();
-            allPlans = data.plans || [];
+            allPlans = Array.isArray(data) ? data : (data.plans || []);
         } else {
             const pubRes = await fetch(`/api/subscriptions/plans?_t=${Date.now()}`);
             const data = await pubRes.json();
-            allPlans = data.plans || [];
+            allPlans = Array.isArray(data) ? data : (data.plans || []);
         }
     } catch (_) {
         allPlans = [];
     }
 
-    document.getElementById("plansTabCount").textContent = allPlans.length;
+    const plansCountEl = document.getElementById("plansTabCount");
+    if (plansCountEl) plansCountEl.textContent = allPlans.length;
+    renderPlans();
+}
     renderPlans();
 }
 
