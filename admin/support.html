@@ -9,7 +9,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THULIRVA Admin — Customer Care &amp; Support Tickets</title>
+    <title>THULIRVA Admin — Customer Care, Partner Support &amp; COD Risk Desk</title>
     <link rel="stylesheet" href="css/admin.css">
     <style>
         .ticket-id-pill {
@@ -35,6 +35,31 @@
         .user-type-customer { background: #E0F2FE; color: #0369A1; }
         .user-type-partner { background: #FEF3C7; color: #92400E; }
         
+        .main-tab-btn {
+            padding: 8px 16px;
+            font-size: 13.5px;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 1px solid #D1D5DB;
+            background: #FFFFFF;
+            color: #4B5563;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+        .main-tab-btn:hover {
+            background: #F3F4F6;
+            color: #111827;
+        }
+        .main-tab-btn.active {
+            background: #1B4332;
+            color: #FFFFFF;
+            border-color: #1B4332;
+            box-shadow: 0 2px 4px rgba(27, 67, 50, 0.15);
+        }
+
         /* Drawer Styles */
         .drawer-overlay {
             position: fixed;
@@ -101,192 +126,297 @@
             background: #FFFBEB;
             border: 1px dashed #F59E0B;
             color: #92400E;
-            font-size: 12.5px;
+            font-size: 13px;
         }
         .bubble-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            margin-bottom: 4px;
             font-size: 11px;
-            opacity: 0.85;
+            opacity: 0.75;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
         }
-        
+
         .tab-btn {
-            padding: 10px 18px;
-            font-size: 13px;
+            flex: 1;
+            padding: 12px;
+            text-align: center;
             font-weight: 600;
-            border-bottom: 2px solid transparent;
+            font-size: 13px;
+            border: none;
+            background: #F3F4F6;
             color: #6B7280;
-            background: none;
-            border-top: none;
-            border-left: none;
-            border-right: none;
             cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s;
         }
         .tab-btn.active {
+            background: #FFFFFF;
             color: #1B4332;
             border-bottom-color: #1B4332;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+            z-index: 1050;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-card {
+            background: #FFFFFF;
+            border-radius: 14px;
+            width: 100%;
+            max-width: 540px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: modalPop 0.2s ease-out;
+        }
+        @keyframes modalPop {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
     </style>
 </head>
 <body>
 
-<div class="admin-layout">
+<div class="admin-wrapper">
     <aside class="sidebar" id="adminSidebar"></aside>
 
-    <div class="admin-container">
-        <header class="topbar" id="adminTopbar">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-
-    <meta name="robots" content="noindex, nofollow">
-</header>
+    <div class="main-content">
+        <header class="topbar" id="adminTopbar"></header>
 
         <main class="admin-main">
             <!-- Header -->
             <div class="page-header">
                 <div>
-                    <h1 class="page-title">Customer Care &amp; Support Tickets</h1>
-                    <p class="page-subtitle">Omnichannel resolution desk for customer orders, partner deliveries, payments, quality claims, and escalations.</p>
+                    <h1 class="page-title" id="pageTitleText">Customer Care &amp; Support Tickets</h1>
+                    <p class="page-subtitle" id="pageSubtitleText">Omnichannel resolution desk for customer orders, partner deliveries, payments, quality claims, and escalations.</p>
                 </div>
                 <div class="header-actions">
-                    <button class="btn btn-secondary" onclick="exportTicketsCSV()">
-                        📥 Export Tickets CSV
+                    <button class="btn btn-secondary" onclick="exportDataCSV()">
+                        📥 Export CSV
                     </button>
-                    <button class="btn btn-primary" onclick="loadTickets(true)">
-                        🔄 Refresh Tickets
+                    <button class="btn btn-primary" onclick="refreshCurrentView()">
+                        🔄 Refresh Data
                     </button>
                 </div>
             </div>
 
-            <!-- Summary Metrics Cards -->
-            <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin-bottom: 20px;">
-                <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('ALL')">
-                    <div class="stat-label">Total Tickets</div>
-                    <div class="stat-value" id="statTotalTickets">—</div>
-                    <div class="stat-sub">All submissions</div>
+            <!-- Main Navigation View Tabs -->
+            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom: 20px; border-bottom: 1px solid #E5E7EB; padding-bottom: 12px;">
+                <button id="viewTabCustomer" class="main-tab-btn active" onclick="switchMainView('customer')">
+                    👥 Customer Care Tickets
+                </button>
+                <button id="viewTabPartner" class="main-tab-btn" onclick="switchMainView('partner')">
+                    🛵 Delivery Partner Care
+                </button>
+                <button id="viewTabCod" class="main-tab-btn" onclick="switchMainView('cod')">
+                    🛡️ COD Risk Management &amp; Abuse Prevention
+                </button>
+            </div>
+
+            <!-- ==========================================
+                 SECTION 1 & 2: TICKETS MODULE (Customer & Partner)
+                 ========================================== -->
+            <div id="ticketsModuleContainer">
+                <!-- Summary Metrics Cards -->
+                <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin-bottom: 20px;">
+                    <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('ALL')">
+                        <div class="stat-label">Total Tickets</div>
+                        <div class="stat-value" id="statTotalTickets">—</div>
+                        <div class="stat-sub">All submissions</div>
+                    </div>
+                    <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('NEW')">
+                        <div class="stat-label">New / Unread</div>
+                        <div class="stat-value text-gold" id="statNewTickets">—</div>
+                        <div class="stat-sub">Needs response</div>
+                    </div>
+                    <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('OPEN')">
+                        <div class="stat-label">Open / In Progress</div>
+                        <div class="stat-value text-info" id="statOpenTickets">—</div>
+                        <div class="stat-sub">Active thread</div>
+                    </div>
+                    <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('WAITING_FOR_CUSTOMER')">
+                        <div class="stat-label">Waiting on User</div>
+                        <div class="stat-value text-muted" id="statWaitingTickets">—</div>
+                        <div class="stat-sub">Reply sent</div>
+                    </div>
+                    <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('RESOLVED')">
+                        <div class="stat-label">Resolved</div>
+                        <div class="stat-value text-success" id="statResolvedTickets">—</div>
+                        <div class="stat-sub">Solution provided</div>
+                    </div>
+                    <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('CLOSED')">
+                        <div class="stat-label">Closed</div>
+                        <div class="stat-value" id="statClosedTickets">—</div>
+                        <div class="stat-sub">Archived</div>
+                    </div>
+                    <div class="stat-card" style="cursor: pointer;" onclick="setFilterPriority('URGENT')">
+                        <div class="stat-label">Urgent Priority</div>
+                        <div class="stat-value text-danger" id="statUrgentTickets">—</div>
+                        <div class="stat-sub">Critical SLA</div>
+                    </div>
                 </div>
-                <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('NEW')">
-                    <div class="stat-label">New / Unread</div>
-                    <div class="stat-value text-gold" id="statNewTickets">—</div>
-                    <div class="stat-sub">Needs response</div>
+
+                <!-- Filters Section -->
+                <div class="filter-card mb-4" style="background:#FFFFFF; padding:16px 20px; border-radius:12px; border:1px solid var(--thulirva-border); box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                    <div class="row g-3" style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+                        <div style="flex: 2; min-width: 220px;">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Search by Ticket ID, Name, Phone, Subject, Order..." oninput="applyFilters()" style="width:100%; padding:9px 14px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px;">
+                        </div>
+                        <div style="flex: 1; min-width: 140px;">
+                            <select id="filterStatus" class="form-select" onchange="applyFilters()" style="width:100%; padding:9px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px;">
+                                <option value="ALL">All Statuses</option>
+                                <option value="NEW">New</option>
+                                <option value="OPEN">Open</option>
+                                <option value="IN_PROGRESS">In Progress</option>
+                                <option value="WAITING_FOR_CUSTOMER">Waiting on User</option>
+                                <option value="RESOLVED">Resolved</option>
+                                <option value="CLOSED">Closed</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1; min-width: 130px;">
+                            <select id="filterPriority" class="form-select" onchange="applyFilters()" style="width:100%; padding:9px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px;">
+                                <option value="ALL">All Priorities</option>
+                                <option value="URGENT">🔴 Urgent</option>
+                                <option value="HIGH">🟠 High</option>
+                                <option value="NORMAL">🟡 Normal</option>
+                                <option value="LOW">🟢 Low</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <select id="filterCategory" class="form-select" onchange="applyFilters()" style="width:100%; padding:9px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px;">
+                                <option value="ALL">All Categories</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('OPEN')">
-                    <div class="stat-label">Open / In Progress</div>
-                    <div class="stat-value text-info" id="statOpenTickets">—</div>
-                    <div class="stat-sub">Under investigation</div>
-                </div>
-                <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('WAITING_FOR_CUSTOMER')">
-                    <div class="stat-label">Waiting for User</div>
-                    <div class="stat-value text-muted" id="statWaitingTickets">—</div>
-                    <div class="stat-sub">Reply sent</div>
-                </div>
-                <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('RESOLVED')">
-                    <div class="stat-label">Resolved</div>
-                    <div class="stat-value text-success" id="statResolvedTickets">—</div>
-                    <div class="stat-sub">Resolution provided</div>
-                </div>
-                <div class="stat-card" style="cursor: pointer;" onclick="setFilterStatus('CLOSED')">
-                    <div class="stat-label">Closed</div>
-                    <div class="stat-value" id="statClosedTickets">—</div>
-                    <div class="stat-sub">Archived</div>
-                </div>
-                <div class="stat-card" style="cursor: pointer;" onclick="setFilterPriority('URGENT')">
-                    <div class="stat-label">Urgent Priority</div>
-                    <div class="stat-value text-danger" id="statUrgentTickets">—</div>
-                    <div class="stat-sub">Critical SLA</div>
+
+                <!-- Tickets Table -->
+                <div class="card" style="background:#FFFFFF; border-radius:12px; border:1px solid var(--thulirva-border); overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                    <div class="table-responsive">
+                        <table class="table" style="width:100%; border-collapse:collapse;">
+                            <thead style="background:#F8FAF8; border-bottom:1px solid #E5E7EB;">
+                                <tr>
+                                    <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Ticket ID</th>
+                                    <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Requester</th>
+                                    <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Subject &amp; Category</th>
+                                    <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Reference</th>
+                                    <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Status</th>
+                                    <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Priority</th>
+                                    <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Assigned To</th>
+                                    <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Activity</th>
+                                    <th style="padding:12px 16px; text-align:right; font-size:12px; font-weight:700; color:#4B5563;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ticketsTableBody">
+                                <tr>
+                                    <td colspan="9" class="text-center py-5" style="text-align:center; padding:40px 0;">
+                                        <div class="spinner"></div>
+                                        <div class="mt-2 text-muted" style="font-size:13px; font-weight:500;">Loading tickets...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="card-footer flex-between p-3 border-top" style="display:flex; justify-content:space-between; align-items:center; padding:12px 20px; border-top:1px solid #E5E7EB; background:#FDFDFD;">
+                        <div class="text-xs text-muted" id="ticketsPageInfo" style="font-size:12px; color:#6B7280;">Showing tickets...</div>
+                        <div class="flex-center gap-2" style="display:flex; gap:8px; align-items:center;">
+                            <button class="btn btn-secondary btn-sm" id="btnPrevPage" onclick="changePage(-1)">‹ Prev</button>
+                            <span class="text-xs font-bold text-dark px-2" id="currentPageNum" style="font-size:12px; font-weight:700;">Page 1 of 1</span>
+                            <button class="btn btn-secondary btn-sm" id="btnNextPage" onclick="changePage(1)">Next ›</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Filters Section -->
-            <div class="filter-card mb-4" style="background:#FFFFFF; padding:16px 20px; border-radius:12px; border:1px solid var(--thulirva-border); box-shadow:0 1px 3px rgba(0,0,0,0.04);">
-                <div class="row g-3" style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
-                    <div style="flex: 2; min-width: 220px;">
-                        <input type="text" id="searchInput" class="form-control" placeholder="Search by Ticket ID, Customer, Phone, Subject..." oninput="applyFilters()" style="width:100%; padding:9px 14px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px;">
+            <!-- ==========================================
+                 SECTION 3: COD RISK MANAGEMENT MODULE
+                 ========================================== -->
+            <div id="codRiskModuleContainer" style="display:none;">
+                <!-- COD Metrics -->
+                <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 20px;">
+                    <div class="stat-card" style="cursor: pointer;" onclick="setCodFilter('ALL')">
+                        <div class="stat-label">Total Customers</div>
+                        <div class="stat-value" id="statCodTotal">—</div>
+                        <div class="stat-sub">Registered buyers</div>
                     </div>
-                    <div style="flex: 1; min-width: 140px;">
-                        <select id="filterStatus" class="form-select" onchange="applyFilters()" style="width:100%; padding:9px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px;">
-                            <option value="ALL">All Statuses</option>
-                            <option value="NEW">New</option>
-                            <option value="OPEN">Open</option>
-                            <option value="IN_PROGRESS">In Progress</option>
-                            <option value="WAITING_FOR_CUSTOMER">Waiting on Customer</option>
-                            <option value="WAITING_FOR_PARTNER">Waiting on Partner</option>
-                            <option value="RESOLVED">Resolved</option>
-                            <option value="CLOSED">Closed</option>
-                        </select>
+                    <div class="stat-card" style="cursor: pointer; border-left: 4px solid #DC2626;" onclick="setCodFilter('RESTRICTED')">
+                        <div class="stat-label">COD Restricted</div>
+                        <div class="stat-value text-danger" id="statCodRestricted">—</div>
+                        <div class="stat-sub">≥2 Doorstep Refusals</div>
                     </div>
-                    <div style="flex: 1; min-width: 130px;">
-                        <select id="filterPriority" class="form-select" onchange="applyFilters()" style="width:100%; padding:9px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px;">
-                            <option value="ALL">All Priorities</option>
-                            <option value="URGENT">🔴 Urgent</option>
-                            <option value="HIGH">🟠 High</option>
-                            <option value="NORMAL">🟡 Normal</option>
-                            <option value="LOW">🟢 Low</option>
-                        </select>
+                    <div class="stat-card" style="cursor: pointer; border-left: 4px solid #F59E0B;" onclick="setCodFilter('WARNED')">
+                        <div class="stat-label">At-Risk Customers</div>
+                        <div class="stat-value text-gold" id="statCodWarned">—</div>
+                        <div class="stat-sub">1 Doorstep Refusal (Warning)</div>
                     </div>
-                    <div style="flex: 1; min-width: 130px;">
-                        <select id="filterUserType" class="form-select" onchange="applyFilters()" style="width:100%; padding:9px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px;">
-                            <option value="ALL">All Requesters</option>
-                            <option value="CUSTOMER">Customers Only</option>
-                            <option value="DELIVERY_PARTNER">Delivery Partners</option>
-                        </select>
-                    </div>
-                    <div style="flex: 1; min-width: 140px;">
-                        <select id="filterCategory" class="form-select" onchange="applyFilters()" style="width:100%; padding:9px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px;">
-                            <option value="ALL">All Categories</option>
-                            <option value="ORDER_DELAY">Order Delay</option>
-                            <option value="QUALITY_ISSUE">Quality Issue</option>
-                            <option value="PAYMENT_REFUND">Payment / Refund</option>
-                            <option value="DAMAGED_ITEMS">Damaged Items</option>
-                            <option value="SUBSCRIPTION_QUERY">Subscription</option>
-                            <option value="PARTNER_PAYOUT">Partner Payout</option>
-                            <option value="COD_REMITTANCE">COD Remittance</option>
-                            <option value="APP_ISSUE">App Issue</option>
-                            <option value="OTHER">Other Query</option>
-                        </select>
+                    <div class="stat-card" style="cursor: pointer; border-left: 4px solid #16A34A;" onclick="setCodFilter('ELIGIBLE')">
+                        <div class="stat-label">Clean COD History</div>
+                        <div class="stat-value text-success" id="statCodHealthy">—</div>
+                        <div class="stat-sub">Eligible for COD</div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Tickets Table -->
-            <div class="card" style="background:#FFFFFF; border-radius:12px; border:1px solid var(--thulirva-border); overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
-                <div class="table-responsive">
-                    <table class="table" style="width:100%; border-collapse:collapse;">
-                        <thead style="background:#F8FAF8; border-bottom:1px solid #E5E7EB;">
-                            <tr>
-                                <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Ticket ID</th>
-                                <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Requester</th>
-                                <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Subject &amp; Category</th>
-                                <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Order / Ref</th>
-                                <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Status</th>
-                                <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Priority</th>
-                                <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Assigned To</th>
-                                <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Activity</th>
-                                <th style="padding:12px 16px; text-align:right; font-size:12px; font-weight:700; color:#4B5563;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ticketsTableBody">
-                            <tr>
-                                <td colspan="9" class="text-center py-5" style="text-align:center; padding:40px 0;">
-                                    <div class="spinner"></div>
-                                    <div class="mt-2 text-muted" style="font-size:13px; font-weight:500;">Loading customer &amp; partner tickets...</div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- COD Filter Card -->
+                <div class="filter-card mb-4" style="background:#FFFFFF; padding:16px 20px; border-radius:12px; border:1px solid var(--thulirva-border); box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                    <div class="row g-3" style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+                        <div style="flex: 2; min-width: 240px;">
+                            <input type="text" id="codSearchInput" class="form-control" placeholder="Search customer by name, phone, email, or order ID..." oninput="applyCodFilters()" style="width:100%; padding:9px 14px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px;">
+                        </div>
+                        <div style="flex: 1; min-width: 160px;">
+                            <select id="codFilterStatus" class="form-select" onchange="applyCodFilters()" style="width:100%; padding:9px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px;">
+                                <option value="ALL">All Customers</option>
+                                <option value="RESTRICTED">🚫 Restricted Only</option>
+                                <option value="WARNED">⚠️ 1 Refusal (Warning)</option>
+                                <option value="ELIGIBLE">✅ COD Eligible</option>
+                            </select>
+                        </div>
+                        <div style="margin-left:auto;">
+                            <button class="btn btn-secondary" onclick="openCodAuditLogModal()">
+                                📜 View COD Audit Logs
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Pagination -->
-                <div class="card-footer flex-between p-3 border-top" style="display:flex; justify-content:space-between; align-items:center; padding:12px 20px; border-top:1px solid #E5E7EB; background:#FDFDFD;">
-                    <div class="text-xs text-muted" id="ticketsPageInfo" style="font-size:12px; color:#6B7280;">Showing tickets...</div>
-                    <div class="flex-center gap-2" style="display:flex; gap:8px; align-items:center;">
-                        <button class="btn btn-secondary btn-sm" id="btnPrevPage" onclick="changePage(-1)">‹ Prev</button>
-                        <span class="text-xs font-bold text-dark px-2" id="currentPageNum" style="font-size:12px; font-weight:700;">Page 1 of 1</span>
-                        <button class="btn btn-secondary btn-sm" id="btnNextPage" onclick="changePage(1)">Next ›</button>
+                <!-- COD Table -->
+                <div class="card" style="background:#FFFFFF; border-radius:12px; border:1px solid var(--thulirva-border); overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                    <div class="table-responsive">
+                        <table class="table" style="width:100%; border-collapse:collapse;">
+                            <thead style="background:#F8FAF8; border-bottom:1px solid #E5E7EB;">
+                                <tr>
+                                    <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Customer</th>
+                                    <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Contact Info</th>
+                                    <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Refusal Count</th>
+                                    <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Refused Order IDs</th>
+                                    <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">COD Eligibility</th>
+                                    <th style="padding:12px 16px; text-align:left; font-size:12px; font-weight:700; color:#4B5563;">Restriction Reason</th>
+                                    <th style="padding:12px 16px; text-align:right; font-size:12px; font-weight:700; color:#4B5563;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="codTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center py-5" style="text-align:center; padding:40px 0;">
+                                        <div class="spinner"></div>
+                                        <div class="mt-2 text-muted" style="font-size:13px; font-weight:500;">Loading monitored customers...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -294,7 +424,9 @@
     </div>
 </div>
 
-<!-- TICKET DETAIL DRAWER -->
+<!-- ==========================================
+     TICKET DETAIL DRAWER (Inspect & Reply)
+     ========================================== -->
 <div class="drawer-overlay" id="ticketDrawerOverlay" onclick="closeDrawerOnOutside(event)">
     <div class="drawer-content" id="ticketDrawerContent">
         <!-- Drawer Header -->
@@ -318,8 +450,7 @@
                     <option value="NEW">New</option>
                     <option value="OPEN">Open</option>
                     <option value="IN_PROGRESS">In Progress</option>
-                    <option value="WAITING_FOR_CUSTOMER">Waiting on Customer</option>
-                    <option value="WAITING_FOR_PARTNER">Waiting on Partner</option>
+                    <option value="WAITING_FOR_CUSTOMER">Waiting on User</option>
                     <option value="RESOLVED">Resolved</option>
                     <option value="CLOSED">Closed</option>
                 </select>
@@ -335,11 +466,14 @@
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
                 <label style="font-weight:600; color:#4B5563;">Assignee:</label>
-                <input type="text" id="drawerAssigneeInput" placeholder="Agent Name..." style="padding:4px 8px; border-radius:6px; border:1px solid #D1D5DB; font-size:12px; width:120px;" onblur="updateDrawerAssignee(this.value)">
+                <input type="text" id="drawerAssigneeInput" placeholder="Agent Name..." style="padding:4px 8px; border-radius:6px; border:1px solid #D1D5DB; font-size:12px; width:130px;" onblur="updateDrawerAssignee(this.value)">
             </div>
-            <div id="drawerOrderLink" style="margin-left:auto; font-size:12px;">
-                <!-- Order link if present -->
+            <div id="drawerReopenBtnContainer" style="display:none;">
+                <button class="btn btn-secondary btn-sm" onclick="reopenActiveTicket()" style="padding:4px 10px; font-size:11px; font-weight:700; color:#1B4332; border-color:#1B4332;">
+                    ↺ Reopen Ticket
+                </button>
             </div>
+            <div id="drawerOrderLink" style="margin-left:auto; font-size:12px;"></div>
         </div>
 
         <!-- Tabs: Chat Thread vs Internal Staff Notes -->
@@ -348,57 +482,122 @@
                 💬 Conversation (<span id="drawerMsgCount">0</span>)
             </button>
             <button class="tab-btn" id="tabBtnNotes" onclick="switchDrawerTab('notes')">
-                🔒 Private Internal Notes (<span id="drawerNotesCount">0</span>)
+                🔒 Private Staff Notes (<span id="drawerNotesCount">0</span>)
             </button>
         </div>
 
-        <!-- Chat Stream (Conversation Tab) -->
-        <div class="chat-stream" id="drawerChatStream">
-            <div style="text-align:center; padding:20px; color:#9CA3AF; font-size:12px;">Loading messages...</div>
-        </div>
+        <!-- Conversation Stream -->
+        <div class="chat-stream" id="drawerChatStream"></div>
 
-        <!-- Internal Notes Stream (Notes Tab) -->
-        <div class="chat-stream" id="drawerNotesStream" style="display:none; background:#FFFDF7;">
-            <div style="text-align:center; padding:20px; color:#9CA3AF; font-size:12px;">No internal notes added yet.</div>
-        </div>
+        <!-- Internal Notes Stream -->
+        <div class="chat-stream" id="drawerNotesStream" style="display:none;"></div>
 
-        <!-- Action / Reply Footer -->
-        <div style="padding:14px 20px; border-top:1px solid #E5E7EB; background:#FFFFFF;">
-            <!-- Thread Reply Box -->
-            <div id="drawerReplyBox">
-                <div style="display:flex; gap:8px; margin-bottom:8px;">
-                    <select id="quickCannedResponses" onchange="insertCannedResponse(this.value)" style="font-size:11.5px; padding:4px 8px; border-radius:6px; border:1px solid #D1D5DB; color:#4B5563;">
-                        <option value="">⚡ Quick Response Template...</option>
-                        <option value="Hello! We are currently investigating your request and contacting our hub supervisor.">Investigating with Hub</option>
-                        <option value="Good news! Your refund has been initiated and should reflect in your source account within 24-48 hours.">Refund Processed</option>
-                        <option value="A fresh replacement batch has been dispatched for tomorrow morning doorstep delivery.">Replacement Scheduled</option>
-                        <option value="We have verified your delivery partner remittance, and your wallet ledger is now fully reconciled.">Partner Remittance Verified</option>
-                    </select>
-                </div>
-                <div style="display:flex; gap:8px;">
-                    <textarea id="replyMessageText" placeholder="Type a response to the user (visible in their mobile app / portal)..." rows="2" style="flex:1; padding:10px; border-radius:8px; border:1px solid #D1D5DB; font-size:13px; resize:none;"></textarea>
-                    <button class="btn btn-primary" id="btnSendReply" onclick="sendTicketReply()" style="align-self:flex-end; padding:10px 16px; font-weight:600;">
-                        Send Reply &rarr;
-                    </button>
-                </div>
+        <!-- Reply Input Box -->
+        <div id="drawerReplyBox" style="padding:14px 20px; border-top:1px solid #E5E7EB; background:#FFFFFF;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px; align-items:center;">
+                <label style="font-size:12px; font-weight:600; color:#4B5563;">Direct Response to Requester</label>
+                <select onchange="insertCannedResponse(this.value)" style="font-size:11.5px; padding:3px 6px; border-radius:4px; border:1px solid #D1D5DB; color:#4B5563;">
+                    <option value="">⚡ Quick Canned Responses...</option>
+                    <option value="Hello! We are looking into your query right away and will update you shortly.">Acknowledged &amp; Investigating</option>
+                    <option value="We have confirmed your request. The issue has been resolved successfully.">Issue Resolved</option>
+                    <option value="Could you please provide a few additional details or photos so we can assist you?">Request More Details</option>
+                    <option value="Refund has been initiated to your source account. It will reflect within 24 hours.">Refund Initiated</option>
+                </select>
             </div>
+            <textarea id="replyMessageText" rows="3" placeholder="Type message to user (visible in mobile app)..." style="width:100%; padding:10px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px; resize:none;"></textarea>
+            <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+                <button class="btn btn-primary" id="btnSendReply" onclick="sendTicketReply()" style="padding:8px 18px; font-weight:700;">
+                    Send Reply &rarr;
+                </button>
+            </div>
+        </div>
 
-            <!-- Internal Note Box (when on notes tab) -->
-            <div id="drawerNoteBox" style="display:none;">
-                <div style="display:flex; gap:8px;">
-                    <textarea id="noteMessageText" placeholder="Add a private internal note (visible ONLY to admin team)..." rows="2" style="flex:1; padding:10px; border-radius:8px; border:1px solid #F59E0B; font-size:13px; resize:none; background:#FFFBEB;"></textarea>
-                    <button class="btn btn-secondary" id="btnAddNote" onclick="addInternalNote()" style="align-self:flex-end; padding:10px 16px; font-weight:600; background:#F59E0B; color:#FFFFFF; border:none;">
-                        Save Private Note
-                    </button>
-                </div>
+        <!-- Staff Note Input Box -->
+        <div id="drawerNoteBox" style="padding:14px 20px; border-top:1px solid #E5E7EB; background:#FFFBEB; display:none;">
+            <div style="font-size:12px; font-weight:700; color:#B45309; margin-bottom:6px;">
+                🔒 Add Private Staff Note (Never visible to Customer or Delivery Partner)
+            </div>
+            <textarea id="noteMessageText" rows="3" placeholder="Add confidential internal note, supervisor investigation notes..." style="width:100%; padding:10px 12px; border:1px solid #FCD34D; border-radius:8px; font-size:13px; resize:none; background:#FFFFFF;"></textarea>
+            <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+                <button class="btn btn-secondary" id="btnAddNote" onclick="addInternalNote()" style="padding:8px 18px; font-weight:700; background:#D97706; color:#FFFFFF; border:none;">
+                    Save Private Note
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-<script src="js/api-client.js?v=20261118b"></script>
-<script src="js/admin-shell.js?v=20261118b"></script>
+<!-- ==========================================
+     MODAL: COD RESTORE / RESTRICT OVERRIDE
+     ========================================== -->
+<div class="modal-overlay" id="codActionModal">
+    <div class="modal-card">
+        <div style="padding:16px 20px; border-bottom:1px solid #E5E7EB; display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; font-size:16px; font-weight:700; color:#111827;" id="codModalTitle">Manage COD Eligibility</h3>
+            <button onclick="closeCodActionModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:#9CA3AF;">&times;</button>
+        </div>
+        <div style="padding:20px;">
+            <div style="background:#F9FAF8; padding:12px; border-radius:8px; margin-bottom:16px; font-size:13px;">
+                <div><strong>Customer:</strong> <span id="codModalCustName">—</span></div>
+                <div style="margin-top:4px;"><strong>Phone:</strong> <span id="codModalCustPhone">—</span></div>
+                <div style="margin-top:4px;"><strong>Current Doorstep Refusals:</strong> <span id="codModalRefusalCount" style="font-weight:700; color:#DC2626;">0</span></div>
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:8px;">Desired Action:</label>
+                <div style="display:flex; gap:16px;">
+                    <label style="font-size:13px; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                        <input type="radio" name="codActionChoice" value="RESTORE" id="codChoiceRestore" checked>
+                        <span style="font-weight:600; color:#166534;">✅ Restore COD Eligibility</span>
+                    </label>
+                    <label style="font-size:13px; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                        <input type="radio" name="codActionChoice" value="RESTRICT" id="codChoiceRestrict">
+                        <span style="font-weight:600; color:#991B1B;">🚫 Restrict COD</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="codResetCountRow" style="margin-bottom:16px;">
+                <label style="font-size:12.5px; display:inline-flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="codResetCountCheckbox" checked>
+                    <span>Reset doorstep refusal counter back to 0</span>
+                </label>
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:6px;">Admin Justification / Reason (Mandatory):</label>
+                <textarea id="codActionReason" rows="3" placeholder="Provide reason for audit trail (e.g. Customer verified address via phone call, genuine delivery misunderstanding)..." style="width:100%; padding:10px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:13px; resize:none;"></textarea>
+            </div>
+        </div>
+        <div style="padding:14px 20px; background:#F9FAF8; border-top:1px solid #E5E7EB; display:flex; justify-content:flex-end; gap:10px;">
+            <button class="btn btn-secondary" onclick="closeCodActionModal()">Cancel</button>
+            <button class="btn btn-primary" id="btnSaveCodAction" onclick="submitCodAction()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     MODAL: COD AUDIT HISTORY VIEWER
+     ========================================== -->
+<div class="modal-overlay" id="codAuditModal">
+    <div class="modal-card" style="max-width:680px; max-height:85vh;">
+        <div style="padding:16px 20px; border-bottom:1px solid #E5E7EB; display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; font-size:16px; font-weight:700; color:#111827;">COD Risk Audit Trail</h3>
+            <button onclick="closeCodAuditModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:#9CA3AF;">&times;</button>
+        </div>
+        <div style="padding:20px; overflow-y:auto; flex:1;" id="codAuditListContainer">
+            <div style="text-align:center; padding:30px;"><div class="spinner"></div></div>
+        </div>
+        <div style="padding:12px 20px; background:#F9FAF8; border-top:1px solid #E5E7EB; text-align:right;">
+            <button class="btn btn-secondary" onclick="closeCodAuditModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPT LOGIC -->
+<script src="js/admin-shell.js?v=20261118c"></script>
 <script>
+let currentView = "customer"; // 'customer' | 'partner' | 'cod'
 let allTickets = [];
 let displayedTickets = [];
 let currentPage = 1;
@@ -407,17 +606,31 @@ const token = localStorage.getItem("thulirva_admin_token") || "";
 let activeTicket = null;
 let currentTab = "thread";
 
+// COD Monitored Customers State
+let codCustomers = [];
+let codSummary = {};
+let activeCodCustomer = null;
+
 function initSupportPage() {
     initAdminShell({
         activePage: "support",
         breadcrumbs: [
             { label: "Overview", url: "dashboard.html" },
             { label: "Support & Care", url: "support.html" },
-            { label: "Customer Care & Tickets", url: "support.html" }
+            { label: "Resolution & COD Desk", url: "support.html" }
         ]
     });
 
-    loadTickets(true);
+    // Check query params for initial view
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewParam = (urlParams.get("view") || "").toLowerCase();
+    if (viewParam === "partner" || viewParam === "delivery") {
+        switchMainView("partner");
+    } else if (viewParam === "cod" || viewParam === "risk") {
+        switchMainView("cod");
+    } else {
+        switchMainView("customer");
+    }
 }
 
 if (document.readyState === "loading") {
@@ -427,8 +640,76 @@ if (document.readyState === "loading") {
 }
 
 /**
- * Load all support tickets from the centralized backend
+ * Switch Main View Tabs
  */
+function switchMainView(view) {
+    currentView = view;
+    document.getElementById("viewTabCustomer").classList.toggle("active", view === "customer");
+    document.getElementById("viewTabPartner").classList.toggle("active", view === "partner");
+    document.getElementById("viewTabCod").classList.toggle("active", view === "cod");
+
+    const ticketsCont = document.getElementById("ticketsModuleContainer");
+    const codCont = document.getElementById("codRiskModuleContainer");
+
+    const titleEl = document.getElementById("pageTitleText");
+    const subtitleEl = document.getElementById("pageSubtitleText");
+    const catSelect = document.getElementById("filterCategory");
+
+    if (view === "cod") {
+        ticketsCont.style.display = "none";
+        codCont.style.display = "block";
+        titleEl.textContent = "Cash on Delivery (COD) Risk Management";
+        subtitleEl.textContent = "Strict 2-doorstep refusal protection, customer risk assessment, manual eligibility restoration and full audit tracking.";
+        loadCodCustomers();
+    } else {
+        codCont.style.display = "none";
+        ticketsCont.style.display = "block";
+
+        if (view === "customer") {
+            titleEl.textContent = "Customer Care & Support Tickets";
+            subtitleEl.textContent = "Omnichannel resolution desk for customer orders, freshness enquiries, payment claims, and refunds.";
+            catSelect.innerHTML = `
+                <option value="ALL">All Categories</option>
+                <option value="Order Issues">Order Issues</option>
+                <option value="Delivery Delay">Delivery Delay</option>
+                <option value="Product Quality">Product Quality</option>
+                <option value="Payment/Refund">Payment / Refund</option>
+                <option value="Subscription Enquiry">Subscription Enquiry</option>
+                <option value="Other">Other Query</option>
+            `;
+        } else {
+            titleEl.textContent = "Delivery Partner Care & Support";
+            subtitleEl.textContent = "Dedicated support portal for rider payouts, doorstep disputes, vehicle/GPS road reports, and cash handover.";
+            catSelect.innerHTML = `
+                <option value="ALL">All Categories</option>
+                <option value="Payment and Payout Issues">Payment and Payout Issues</option>
+                <option value="Delivery Assignment Issues">Delivery Assignment Issues</option>
+                <option value="Order Problem">Order Problem</option>
+                <option value="Customer Dispute">Customer Dispute</option>
+                <option value="Cash Handover Problem">Cash Handover Problem</option>
+                <option value="App Technical Problem">App Technical Problem</option>
+                <option value="Account and Profile Problem">Account and Profile Problem</option>
+                <option value="GPS and Location Problem">GPS and Location Problem</option>
+                <option value="Other Support Queries">Other Support Queries</option>
+            `;
+        }
+
+        loadTickets(true);
+    }
+}
+
+function refreshCurrentView() {
+    if (currentView === "cod") {
+        loadCodCustomers();
+    } else {
+        loadTickets(true);
+    }
+}
+
+/* =========================================================================
+   TICKETS MODULE LOGIC (Customer & Delivery Partner)
+   ========================================================================= */
+
 async function loadTickets(showLoading = false) {
     const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
     const tbody = document.getElementById("ticketsTableBody");
@@ -438,7 +719,7 @@ async function loadTickets(showLoading = false) {
             <tr>
                 <td colspan="9" class="text-center py-5" style="text-align:center; padding:40px 0;">
                     <div class="spinner"></div>
-                    <div class="mt-2 text-muted" style="font-size:13px; font-weight:500;">Loading customer &amp; partner tickets...</div>
+                    <div class="mt-2 text-muted" style="font-size:13px; font-weight:500;">Loading tickets...</div>
                 </td>
             </tr>
         `;
@@ -446,16 +727,19 @@ async function loadTickets(showLoading = false) {
 
     try {
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        // 1. Try canonical Admin Support API
         let res = await fetch(apiBase + "/api/admin/support/tickets", { headers });
         if (!res.ok) {
-            // 2. Failover to general support API
             res = await fetch(apiBase + "/api/support/tickets", { headers });
         }
         
         if (res.ok) {
             const data = await res.json();
-            allTickets = Array.isArray(data.tickets) ? data.tickets : [];
+            const raw = Array.isArray(data.tickets) ? data.tickets : [];
+            allTickets = raw.map(t => {
+                t.ticket_id = t.ticket_id || t.ticket_number || String(t.id);
+                t.ticket_number = t.ticket_number || t.ticket_id;
+                return t;
+            });
             renderMetrics();
             applyFilters();
             return;
@@ -478,14 +762,22 @@ async function loadTickets(showLoading = false) {
     }
 }
 
+function getScopedTickets() {
+    return allTickets.filter(t => {
+        const isPartner = (t.user_type || "").toUpperCase().includes("PARTNER");
+        return currentView === "partner" ? isPartner : !isPartner;
+    });
+}
+
 function renderMetrics() {
-    const total = allTickets.length;
-    const newT = allTickets.filter(t => t.status === "NEW").length;
-    const openT = allTickets.filter(t => t.status === "OPEN" || t.status === "IN_PROGRESS").length;
-    const waitT = allTickets.filter(t => t.status === "WAITING_FOR_CUSTOMER" || t.status === "WAITING_FOR_PARTNER").length;
-    const resT = allTickets.filter(t => t.status === "RESOLVED").length;
-    const closedT = allTickets.filter(t => t.status === "CLOSED").length;
-    const urgentT = allTickets.filter(t => t.priority === "URGENT").length;
+    const scoped = getScopedTickets();
+    const total = scoped.length;
+    const newT = scoped.filter(t => t.status === "NEW" || t.status === "OPEN").length;
+    const openT = scoped.filter(t => t.status === "IN_PROGRESS").length;
+    const waitT = scoped.filter(t => t.status === "WAITING_FOR_CUSTOMER" || t.status === "WAITING_FOR_PARTNER").length;
+    const resT = scoped.filter(t => t.status === "RESOLVED").length;
+    const closedT = scoped.filter(t => t.status === "CLOSED").length;
+    const urgentT = scoped.filter(t => t.priority === "URGENT" && t.status !== "CLOSED").length;
 
     const elTotal = document.getElementById("statTotalTickets");
     if (elTotal) elTotal.textContent = total;
@@ -519,12 +811,14 @@ function applyFilters() {
     const q = (document.getElementById("searchInput")?.value || "").toLowerCase().trim();
     const status = document.getElementById("filterStatus")?.value || "ALL";
     const priority = document.getElementById("filterPriority")?.value || "ALL";
-    const userType = document.getElementById("filterUserType")?.value || "ALL";
     const category = document.getElementById("filterCategory")?.value || "ALL";
 
-    displayedTickets = allTickets.filter(t => {
+    const scoped = getScopedTickets();
+
+    displayedTickets = scoped.filter(t => {
+        const tId = (t.ticket_id || t.ticket_number || String(t.id) || "").toLowerCase();
         const matchesQ = !q ||
-            (t.ticket_id || "").toLowerCase().includes(q) ||
+            tId.includes(q) ||
             (t.subject || "").toLowerCase().includes(q) ||
             (t.user_name || "").toLowerCase().includes(q) ||
             (t.user_phone || "").includes(q) ||
@@ -533,19 +827,16 @@ function applyFilters() {
 
         const matchesStatus = status === "ALL" || t.status === status;
         const matchesPriority = priority === "ALL" || t.priority === priority;
-        const matchesUserType = userType === "ALL" || (t.user_type || "CUSTOMER") === userType;
         const matchesCategory = category === "ALL" || t.category === category;
 
-        return matchesQ && matchesStatus && matchesPriority && matchesUserType && matchesCategory;
+        return matchesQ && matchesStatus && matchesPriority && matchesCategory;
     });
 
-    // Default sorting: New and Urgent first, then by latest update
+    // Default sorting: Urgent first, then by latest update
     displayedTickets.sort((a, b) => {
         if (a.priority === "URGENT" && b.priority !== "URGENT") return -1;
         if (b.priority === "URGENT" && a.priority !== "URGENT") return 1;
-        if (a.status === "NEW" && b.status !== "NEW") return -1;
-        if (b.status === "NEW" && a.status !== "NEW") return 1;
-        return new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at);
+        return new Date(b.updated_at || b.created_at || Date.now()) - new Date(a.updated_at || a.created_at || Date.now());
     });
 
     currentPage = 1;
@@ -603,7 +894,7 @@ function renderTable(list) {
     }
 
     tbody.innerHTML = list.map(t => {
-        const isPartner = t.user_type === "DELIVERY_PARTNER";
+        const isPartner = (t.user_type || "").toUpperCase().includes("PARTNER");
         const userBadge = isPartner
             ? `<span class="user-type-badge user-type-partner">Delivery Partner</span>`
             : `<span class="user-type-badge user-type-customer">Customer</span>`;
@@ -622,11 +913,13 @@ function renderTable(list) {
         else if (t.priority === "LOW") priorityBadge = `<span class="badge" style="background:#F3F4F6; color:#6B7280;">Low</span>`;
 
         const timeStr = formatTimeAgo(t.updated_at || t.created_at);
+        const resolvedId = t.ticket_id || t.ticket_number || String(t.id);
+        const assignedDisplay = t.assigned_agent || t.assigned_admin_name || "";
 
         return `
             <tr style="border-bottom:1px solid #E5E7EB; transition:background 0.15s;" onmouseover="this.style.background='#F9FAF8'" onmouseout="this.style.background='transparent'">
                 <td style="padding:14px 16px;">
-                    <span class="ticket-id-pill">${t.ticket_id}</span>
+                    <span class="ticket-id-pill">${resolvedId}</span>
                 </td>
                 <td style="padding:14px 16px;">
                     <div style="font-weight:700; color:#111827; font-size:13.5px;">${t.user_name || "User"}</div>
@@ -643,13 +936,13 @@ function renderTable(list) {
                 <td style="padding:14px 16px;">${statusBadge}</td>
                 <td style="padding:14px 16px;">${priorityBadge}</td>
                 <td style="padding:14px 16px; font-size:12.5px; color:#374151;">
-                    ${t.assigned_agent ? `<strong>${t.assigned_agent}</strong>` : `<span style="color:#9CA3AF; font-style:italic;">Unassigned</span>`}
+                    ${assignedDisplay ? `<strong>${assignedDisplay}</strong>` : `<span style="color:#9CA3AF; font-style:italic;">Unassigned</span>`}
                 </td>
-                <td style="padding:14px 16px; font-size:11.5px; color:#6B7280;" title="${new Date(t.updated_at || t.created_at).toLocaleString()}">
+                <td style="padding:14px 16px; font-size:11.5px; color:#6B7280;" title="${new Date(t.updated_at || t.created_at || Date.now()).toLocaleString()}">
                     ${timeStr}
                 </td>
                 <td style="padding:14px 16px; text-align:right;">
-                    <button class="btn btn-secondary btn-sm" onclick="openTicketDrawer('${t.ticket_id}')" style="padding:6px 12px; font-weight:600; font-size:12px;">
+                    <button class="btn btn-secondary btn-sm" onclick="openTicketDrawer('${resolvedId}')" style="padding:6px 12px; font-weight:600; font-size:12px;">
                         Inspect &amp; Reply &rarr;
                     </button>
                 </td>
@@ -680,7 +973,6 @@ async function openTicketDrawer(ticketId) {
     const overlay = document.getElementById("ticketDrawerOverlay");
     if (overlay) overlay.classList.add("active");
 
-    // Clear fields
     document.getElementById("drawerTicketId").textContent = ticketId;
     document.getElementById("drawerSubject").textContent = "Loading...";
     document.getElementById("drawerCreatorInfo").textContent = "...";
@@ -696,8 +988,13 @@ async function openTicketDrawer(ticketId) {
 
         if (res.ok) {
             const data = await res.json();
-            activeTicket = data.ticket;
-            renderDrawerTicket(data.ticket);
+            const t = data.ticket || data;
+            t.ticket_id = t.ticket_id || t.ticket_number || String(t.id) || ticketId;
+            t.ticket_number = t.ticket_number || t.ticket_id;
+            t.messages = data.messages || t.messages || [];
+            t.internal_notes = data.internal_notes || t.internal_notes || [];
+            activeTicket = t;
+            renderDrawerTicket(t);
             return;
         }
     } catch (err) {
@@ -709,13 +1006,15 @@ async function openTicketDrawer(ticketId) {
 function renderDrawerTicket(ticket) {
     if (!ticket) return;
 
-    document.getElementById("drawerTicketId").textContent = ticket.ticket_id;
-    document.getElementById("drawerSubject").textContent = ticket.subject;
-    document.getElementById("drawerCreatorInfo").textContent = `by ${ticket.user_name || "User"} &bull; ${ticket.user_phone || ticket.user_email || "No contact"} &bull; ${new Date(ticket.created_at).toLocaleString()}`;
+    const tId = ticket.ticket_id || ticket.ticket_number || String(ticket.id);
+    document.getElementById("drawerTicketId").textContent = tId;
+    document.getElementById("drawerSubject").textContent = ticket.subject || "(No Subject)";
+    document.getElementById("drawerCreatorInfo").textContent = `by ${ticket.user_name || "User"} &bull; ${ticket.user_phone || ticket.user_email || "No contact"} &bull; ${new Date(ticket.created_at || Date.now()).toLocaleString()}`;
 
+    const isPartner = (ticket.user_type || "").toUpperCase().includes("PARTNER");
     const userBadge = document.getElementById("drawerUserBadge");
     if (userBadge) {
-        if (ticket.user_type === "DELIVERY_PARTNER") {
+        if (isPartner) {
             userBadge.className = "user-type-badge user-type-partner";
             userBadge.textContent = "Delivery Partner";
         } else {
@@ -731,7 +1030,12 @@ function renderDrawerTicket(ticket) {
     if (prioSel) prioSel.value = ticket.priority;
 
     const assignInput = document.getElementById("drawerAssigneeInput");
-    if (assignInput) assignInput.value = ticket.assigned_agent || "";
+    if (assignInput) assignInput.value = ticket.assigned_agent || ticket.assigned_admin_name || "";
+
+    const reopenBtnRow = document.getElementById("drawerReopenBtnContainer");
+    if (reopenBtnRow) {
+        reopenBtnRow.style.display = (ticket.status === "RESOLVED" || ticket.status === "CLOSED") ? "block" : "none";
+    }
 
     const orderLink = document.getElementById("drawerOrderLink");
     if (orderLink) {
@@ -753,8 +1057,6 @@ function renderDrawerTicket(ticket) {
         stream.innerHTML = msgs.map(m => {
             const isAdmin = m.sender_role === "admin" || m.sender_role === "support_agent";
             const roleClass = isAdmin ? "admin-msg" : "user-msg";
-            const roleBadge = isAdmin ? "Operations Support" : (ticket.user_type === "DELIVERY_PARTNER" ? "Delivery Partner" : "Customer");
-
             let attachmentHtml = "";
             if (m.attachment_url) {
                 attachmentHtml = `
@@ -812,7 +1114,6 @@ function switchDrawerTab(tab) {
     const notesStream = document.getElementById("drawerNotesStream");
     const replyBox = document.getElementById("drawerReplyBox");
     const noteBox = document.getElementById("drawerNoteBox");
-
     const btnThread = document.getElementById("tabBtnThread");
     const btnNotes = document.getElementById("tabBtnNotes");
 
@@ -854,9 +1155,6 @@ function insertCannedResponse(val) {
     }
 }
 
-/**
- * Send Admin Reply to Customer/Partner
- */
 async function sendTicketReply() {
     if (!activeTicket) return;
     const txt = document.getElementById("replyMessageText");
@@ -866,13 +1164,14 @@ async function sendTicketReply() {
         return;
     }
 
+    const tId = activeTicket.ticket_id || activeTicket.ticket_number || activeTicket.id;
     const btn = document.getElementById("btnSendReply");
     btn.disabled = true;
     btn.textContent = "Sending...";
 
     const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
     try {
-        const res = await fetch(`${apiBase}/api/admin/support/tickets/${activeTicket.ticket_id}/reply`, {
+        const res = await fetch(`${apiBase}/api/admin/support/tickets/${tId}/reply`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -884,8 +1183,7 @@ async function sendTicketReply() {
         if (data.success) {
             showToast("Reply delivered successfully!", "success");
             txt.value = "";
-            // Re-fetch ticket to update chat stream
-            await openTicketDrawer(activeTicket.ticket_id);
+            await openTicketDrawer(tId);
             loadTickets(false);
         } else {
             showToast(data.message || "Failed to deliver reply", "danger");
@@ -898,9 +1196,6 @@ async function sendTicketReply() {
     }
 }
 
-/**
- * Add Private Staff Note
- */
 async function addInternalNote() {
     if (!activeTicket) return;
     const txt = document.getElementById("noteMessageText");
@@ -910,13 +1205,14 @@ async function addInternalNote() {
         return;
     }
 
+    const tId = activeTicket.ticket_id || activeTicket.ticket_number || activeTicket.id;
     const btn = document.getElementById("btnAddNote");
     btn.disabled = true;
     btn.textContent = "Saving...";
 
     const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
     try {
-        const res = await fetch(`${apiBase}/api/admin/support/tickets/${activeTicket.ticket_id}/internal-notes`, {
+        const res = await fetch(`${apiBase}/api/admin/support/tickets/${tId}/internal-notes`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -928,7 +1224,7 @@ async function addInternalNote() {
         if (data.success) {
             showToast("Private note saved", "success");
             txt.value = "";
-            await openTicketDrawer(activeTicket.ticket_id);
+            await openTicketDrawer(tId);
         } else {
             showToast(data.message || "Failed to save note", "danger");
         }
@@ -940,14 +1236,12 @@ async function addInternalNote() {
     }
 }
 
-/**
- * Update Status
- */
 async function updateDrawerStatus(newStatus) {
     if (!activeTicket) return;
+    const tId = activeTicket.ticket_id || activeTicket.ticket_number || activeTicket.id;
     const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
     try {
-        const res = await fetch(`${apiBase}/api/admin/support/tickets/${activeTicket.ticket_id}/status`, {
+        const res = await fetch(`${apiBase}/api/admin/support/tickets/${tId}/status`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
@@ -967,14 +1261,12 @@ async function updateDrawerStatus(newStatus) {
     }
 }
 
-/**
- * Update Priority
- */
 async function updateDrawerPriority(newPriority) {
     if (!activeTicket) return;
+    const tId = activeTicket.ticket_id || activeTicket.ticket_number || activeTicket.id;
     const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
     try {
-        const res = await fetch(`${apiBase}/api/admin/support/tickets/${activeTicket.ticket_id}/priority`, {
+        const res = await fetch(`${apiBase}/api/admin/support/tickets/${tId}/priority`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
@@ -994,20 +1286,18 @@ async function updateDrawerPriority(newPriority) {
     }
 }
 
-/**
- * Update Assignee
- */
 async function updateDrawerAssignee(assignedAgent) {
     if (!activeTicket) return;
+    const tId = activeTicket.ticket_id || activeTicket.ticket_number || activeTicket.id;
     const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
     try {
-        const res = await fetch(`${apiBase}/api/admin/support/tickets/${activeTicket.ticket_id}/assign`, {
+        const res = await fetch(`${apiBase}/api/admin/support/tickets/${tId}/assign`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`
             },
-            body: JSON.stringify({ assigned_agent: assignedAgent })
+            body: JSON.stringify({ assigned_agent: assignedAgent, admin_name: assignedAgent })
         });
         const data = await res.json();
         if (data.success) {
@@ -1019,15 +1309,356 @@ async function updateDrawerAssignee(assignedAgent) {
     }
 }
 
+async function reopenActiveTicket() {
+    if (!activeTicket) return;
+    const tId = activeTicket.ticket_id || activeTicket.ticket_number || activeTicket.id;
+    const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
+    try {
+        const res = await fetch(`${apiBase}/api/admin/support/tickets/${tId}/reopen`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ reason: "Reopened by Admin from resolution desk" })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Ticket reopened successfully", "success");
+            await openTicketDrawer(tId);
+            loadTickets(false);
+        } else {
+            showToast(data.message || "Failed to reopen ticket", "danger");
+        }
+    } catch (err) {
+        showToast("Error: " + err.message, "danger");
+    }
+}
+
+/* =========================================================================
+   COD RISK MANAGEMENT MODULE LOGIC
+   ========================================================================= */
+
+async function loadCodCustomers() {
+    const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
+    const tbody = document.getElementById("codTableBody");
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="7" class="text-center py-5" style="text-align:center; padding:40px 0;">
+                <div class="spinner"></div>
+                <div class="mt-2 text-muted" style="font-size:13px; font-weight:500;">Loading customer COD risk data...</div>
+            </td>
+        </tr>
+    `;
+
+    try {
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const res = await fetch(`${apiBase}/api/admin/cod-restrictions`, { headers });
+        if (res.ok) {
+            const data = await res.json();
+            codCustomers = Array.isArray(data.customers) ? data.customers : [];
+            codSummary = data.summary || {};
+            renderCodMetrics();
+            applyCodFilters();
+            return;
+        }
+    } catch (err) {
+        console.warn("COD load error:", err);
+    }
+
+    tbody.innerHTML = `
+        <tr><td colspan="7" class="text-center py-5 text-danger" style="text-align:center; padding:40px 0; color:#DC2626;">
+            <div style="font-weight:600; font-size:15px; margin-bottom:6px;">Unable to load COD risk records</div>
+            <button class="btn btn-secondary btn-sm" onclick="loadCodCustomers()">Retry</button>
+        </td></tr>
+    `;
+}
+
+function renderCodMetrics() {
+    document.getElementById("statCodTotal").textContent = codSummary.total_customers || codCustomers.length;
+    document.getElementById("statCodRestricted").textContent = codSummary.cod_restricted || codCustomers.filter(c => c.cod_eligible === false).length;
+    document.getElementById("statCodWarned").textContent = codSummary.at_risk_warned || codCustomers.filter(c => c.cod_refusal_count === 1 && c.cod_eligible !== false).length;
+    document.getElementById("statCodHealthy").textContent = codSummary.healthy_cod || codCustomers.filter(c => (c.cod_refusal_count || 0) === 0 && c.cod_eligible !== false).length;
+}
+
+function setCodFilter(st) {
+    const el = document.getElementById("codFilterStatus");
+    if (el) el.value = st;
+    applyCodFilters();
+}
+
+function applyCodFilters() {
+    const q = (document.getElementById("codSearchInput")?.value || "").toLowerCase().trim();
+    const st = document.getElementById("codFilterStatus")?.value || "ALL";
+
+    let list = codCustomers.filter(c => {
+        const matchesQ = !q ||
+            String(c.id).toLowerCase().includes(q) ||
+            (c.name || "").toLowerCase().includes(q) ||
+            (c.phone || "").includes(q) ||
+            (c.email || "").toLowerCase().includes(q) ||
+            (c.cod_restriction_order_ids || []).some(o => o.toLowerCase().includes(q));
+
+        let matchesSt = true;
+        if (st === "RESTRICTED") matchesSt = c.cod_eligible === false;
+        else if (st === "WARNED") matchesSt = c.cod_eligible !== false && c.cod_refusal_count === 1;
+        else if (st === "ELIGIBLE") matchesSt = c.cod_eligible !== false && (c.cod_refusal_count || 0) === 0;
+
+        return matchesQ && matchesSt;
+    });
+
+    renderCodTable(list);
+}
+
+function renderCodTable(list) {
+    const tbody = document.getElementById("codTableBody");
+    if (!tbody) return;
+
+    if (!list.length) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-5 text-muted" style="text-align:center; padding:40px 0; color:#6B7280;">
+                    <div>No customers match the COD filter criteria.</div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = list.map(c => {
+        const isRestricted = c.cod_eligible === false;
+        const refusalCount = c.cod_refusal_count || 0;
+
+        let refusalBadge = `<span class="badge" style="background:#DCFCE7; color:#166534; font-weight:700;">0 Refusals (Clean)</span>`;
+        if (refusalCount >= 2) {
+            refusalBadge = `<span class="badge" style="background:#FEE2E2; color:#991B1B; font-weight:700;">🚫 ${refusalCount} Refusals (Restricted)</span>`;
+        } else if (refusalCount === 1) {
+            refusalBadge = `<span class="badge" style="background:#FEF3C7; color:#92400E; font-weight:700;">⚠️ 1 Refusal (Warning)</span>`;
+        }
+
+        let statusBadge = isRestricted
+            ? `<span class="badge" style="background:#FEE2E2; color:#991B1B; font-weight:700;">Disabled</span>`
+            : `<span class="badge" style="background:#DCFCE7; color:#166534; font-weight:700;">Active / Allowed</span>`;
+
+        const orderIds = (c.cod_restriction_order_ids || []).map(o => `<span style="font-family:monospace; background:#F3F4F6; padding:1px 5px; border-radius:4px; font-size:11px; margin-right:4px;">${o}</span>`).join("") || "—";
+
+        return `
+            <tr style="border-bottom:1px solid #E5E7EB; transition:background 0.15s;" onmouseover="this.style.background='#F9FAF8'" onmouseout="this.style.background='transparent'">
+                <td style="padding:14px 16px;">
+                    <div style="font-weight:700; color:#111827; font-size:13.5px;">${c.name || "Customer"}</div>
+                    <div style="font-size:11.5px; color:#6B7280; margin-top:2px;">ID: ${c.id}</div>
+                </td>
+                <td style="padding:14px 16px; font-size:12.5px;">
+                    <div><strong>${c.phone || "No Phone"}</strong></div>
+                    <div style="color:#6B7280; font-size:11.5px;">${c.email || "—"}</div>
+                </td>
+                <td style="padding:14px 16px;">${refusalBadge}</td>
+                <td style="padding:14px 16px; font-size:12px;">${orderIds}</td>
+                <td style="padding:14px 16px;">${statusBadge}</td>
+                <td style="padding:14px 16px; font-size:12px; color:#4B5563; max-width:240px;">
+                    ${c.cod_restriction_reason ? `<div style="text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="${c.cod_restriction_reason}">${c.cod_restriction_reason}</div>` : `<span style="color:#9CA3AF;">None</span>`}
+                    ${c.cod_restricted_at ? `<div style="font-size:11px; color:#9CA3AF; margin-top:2px;">${new Date(c.cod_restricted_at).toLocaleDateString()}</div>` : ""}
+                </td>
+                <td style="padding:14px 16px; text-align:right; white-space:nowrap;">
+                    <button class="btn btn-secondary btn-sm" onclick="openCodActionModalFor('${c.id}')" style="padding:6px 12px; font-weight:600; font-size:12px; margin-right:6px;">
+                        ${isRestricted ? "✅ Restore COD" : "⚙️ Modify COD"}
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="viewCustomerAuditHistory('${c.id}')" style="padding:6px 10px; font-size:12px;" title="Audit Log">
+                        📜
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+function openCodActionModalFor(customerId) {
+    const cust = codCustomers.find(c => String(c.id) === String(customerId));
+    if (!cust) return;
+
+    activeCodCustomer = cust;
+    document.getElementById("codModalCustName").textContent = cust.name || "Customer";
+    document.getElementById("codModalCustPhone").textContent = cust.phone || "—";
+    document.getElementById("codModalRefusalCount").textContent = cust.cod_refusal_count || 0;
+
+    const isRestricted = cust.cod_eligible === false;
+    if (isRestricted) {
+        document.getElementById("codChoiceRestore").checked = true;
+        document.getElementById("codModalTitle").textContent = "Restore Cash on Delivery (COD)";
+    } else {
+        document.getElementById("codChoiceRestrict").checked = true;
+        document.getElementById("codModalTitle").textContent = "Restrict Cash on Delivery (COD)";
+    }
+
+    document.getElementById("codActionReason").value = "";
+    document.getElementById("codResetCountCheckbox").checked = true;
+    document.getElementById("codActionModal").classList.add("active");
+}
+
+function closeCodActionModal() {
+    document.getElementById("codActionModal").classList.remove("active");
+    activeCodCustomer = null;
+}
+
+async function submitCodAction() {
+    if (!activeCodCustomer) return;
+    const isRestore = document.getElementById("codChoiceRestore").checked;
+    const resetCount = document.getElementById("codResetCountCheckbox").checked;
+    const reason = (document.getElementById("codActionReason")?.value || "").trim();
+
+    if (!reason) {
+        showToast("Please provide an admin justification reason for the audit trail.", "warning");
+        return;
+    }
+
+    const btn = document.getElementById("btnSaveCodAction");
+    btn.disabled = true;
+    btn.textContent = "Saving...";
+
+    const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
+    try {
+        const res = await fetch(`${apiBase}/api/admin/cod-restrictions/${activeCodCustomer.id}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                cod_eligible: isRestore,
+                reason,
+                reset_count: resetCount
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(isRestore ? "Cash on Delivery restored for customer" : "Cash on Delivery restricted for customer", "success");
+            closeCodActionModal();
+            loadCodCustomers();
+        } else {
+            showToast(data.message || "Failed to update COD status", "danger");
+        }
+    } catch (err) {
+        showToast("Error updating COD: " + err.message, "danger");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Save Changes";
+    }
+}
+
+async function openCodAuditLogModal() {
+    document.getElementById("codAuditModal").classList.add("active");
+    const container = document.getElementById("codAuditListContainer");
+    container.innerHTML = `<div style="text-align:center; padding:30px;"><div class="spinner"></div><div style="margin-top:8px;">Fetching system COD audit logs...</div></div>`;
+
+    const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
+    try {
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const res = await fetch(`${apiBase}/api/admin/cod-restrictions/audit-logs`, { headers });
+        if (res.ok) {
+            const data = await res.json();
+            renderAuditLogs(data.logs || []);
+            return;
+        }
+    } catch (_) {}
+    container.innerHTML = `<div style="text-align:center; color:#DC2626; padding:20px;">Failed to load audit logs.</div>`;
+}
+
+async function viewCustomerAuditHistory(customerId) {
+    document.getElementById("codAuditModal").classList.add("active");
+    const container = document.getElementById("codAuditListContainer");
+    container.innerHTML = `<div style="text-align:center; padding:30px;"><div class="spinner"></div><div style="margin-top:8px;">Fetching customer audit logs...</div></div>`;
+
+    const apiBase = typeof getApiBaseUrl === "function" ? getApiBaseUrl() : "";
+    try {
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const res = await fetch(`${apiBase}/api/admin/cod-restrictions/${customerId}`, { headers });
+        if (res.ok) {
+            const data = await res.json();
+            renderAuditLogs(data.audit_history || []);
+            return;
+        }
+    } catch (_) {}
+    container.innerHTML = `<div style="text-align:center; color:#DC2626; padding:20px;">Failed to load customer audit logs.</div>`;
+}
+
+function renderAuditLogs(logs) {
+    const container = document.getElementById("codAuditListContainer");
+    if (!logs.length) {
+        container.innerHTML = `<div style="text-align:center; padding:30px; color:#6B7280;">No COD eligibility audit logs recorded yet.</div>`;
+        return;
+    }
+
+    container.innerHTML = logs.map(l => {
+        let actionBadge = `<span class="badge" style="background:#E5E7EB; color:#374151;">${l.action}</span>`;
+        if (l.action === "AUTO_RESTRICTED") actionBadge = `<span class="badge" style="background:#FEE2E2; color:#991B1B; font-weight:700;">🚫 Auto Restricted (2 Refusals)</span>`;
+        else if (l.action === "ADMIN_RESTORED") actionBadge = `<span class="badge" style="background:#DCFCE7; color:#166534; font-weight:700;">✅ Admin Restored</span>`;
+        else if (l.action === "ADMIN_RESTRICTED") actionBadge = `<span class="badge" style="background:#FFEDD5; color:#9A3412; font-weight:700;">⚠️ Admin Restricted</span>`;
+        else if (l.action === "REFUSAL_RECORDED") actionBadge = `<span class="badge" style="background:#FEF3C7; color:#92400E; font-weight:700;">Doorstep Refusal Recorded</span>`;
+
+        return `
+            <div style="padding:14px; border:1px solid #E5E7EB; border-radius:10px; margin-bottom:12px; background:#FFFFFF;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                    <div>
+                        <strong style="color:#111827; font-size:13.5px;">Customer: ${l.customer_name || ("ID #" + l.customer_id)}</strong>
+                        <div style="margin-top:3px;">${actionBadge}</div>
+                    </div>
+                    <div style="font-size:11.5px; color:#6B7280;">${new Date(l.created_at).toLocaleString()}</div>
+                </div>
+                <div style="font-size:12.5px; color:#374151; margin-top:8px;">${escapeHtml(l.reason)}</div>
+                <div style="font-size:11.5px; color:#6B7280; margin-top:6px; display:flex; justify-content:space-between;">
+                    <span>Actor: <strong>${l.admin_name || "System"}</strong></span>
+                    ${(l.order_ids && l.order_ids.length) ? `<span>Orders: ${l.order_ids.join(", ")}</span>` : ""}
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+function closeCodAuditModal() {
+    document.getElementById("codAuditModal").classList.remove("active");
+}
+
+function exportDataCSV() {
+    if (currentView === "cod") {
+        if (!codCustomers.length) {
+            showToast("No COD records to export", "warning");
+            return;
+        }
+        const headers = ["Customer ID", "Name", "Phone", "Email", "Doorstep Refusals", "COD Eligible", "Restriction Date", "Reason", "Order IDs"];
+        const rows = codCustomers.map(c => [
+            c.id,
+            `"${(c.name || '').replace(/"/g, '""')}"`,
+            c.phone || "",
+            c.email || "",
+            c.cod_refusal_count || 0,
+            c.cod_eligible ? "YES" : "NO",
+            c.cod_restricted_at || "",
+            `"${(c.cod_restriction_reason || '').replace(/"/g, '""')}"`,
+            `"${(c.cod_restriction_order_ids || []).join(', ')}"`
+        ]);
+        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Thulirva_COD_Risk_Registers_${new Date().toISOString().split("T")[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } else {
+        exportTicketsCSV();
+    }
+}
+
 function exportTicketsCSV() {
-    if (!allTickets.length) {
+    const scoped = getScopedTickets();
+    if (!scoped.length) {
         showToast("No tickets available to export", "warning");
         return;
     }
 
     const headers = ["Ticket ID", "User Type", "Requester", "Phone", "Email", "Subject", "Category", "Order ID", "Status", "Priority", "Assigned Agent", "Created At", "Last Updated"];
-    const rows = allTickets.map(t => [
-        t.ticket_id,
+    const rows = scoped.map(t => [
+        t.ticket_id || t.ticket_number || t.id,
         t.user_type,
         `"${(t.user_name || '').replace(/"/g, '""')}"`,
         t.user_phone || "",
@@ -1037,7 +1668,7 @@ function exportTicketsCSV() {
         t.order_id || "",
         t.status,
         t.priority,
-        t.assigned_agent || "",
+        t.assigned_agent || t.assigned_admin_name || "",
         t.created_at,
         t.updated_at || ""
     ]);
@@ -1046,7 +1677,7 @@ function exportTicketsCSV() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Thulirva_Support_Tickets_${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute("download", `Thulirva_${currentView === "partner" ? "Partner" : "Customer"}_Tickets_${new Date().toISOString().split("T")[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

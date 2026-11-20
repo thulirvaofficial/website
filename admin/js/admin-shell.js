@@ -65,7 +65,9 @@ const NAV_GROUPS = [
     {
         title: "Support & Care",
         items: [
-            { key: "support", label: "Customer Care & Tickets", url: "support.html", icon: "life-buoy", badgeId: "badge-support" }
+            { key: "support", label: "Customer Care & Tickets", url: "support.html", icon: "life-buoy", badgeId: "badge-support" },
+            { key: "partner-care", label: "Delivery Partner Care", url: "support.html?view=partner", icon: "truck" },
+            { key: "cod-risk", label: "COD Risk Management", url: "support.html?view=cod", icon: "shield" }
         ]
     },
     {
