@@ -370,6 +370,40 @@
             </button>
         </form>
 
+        <!-- TWO-STEP VERIFICATION (2FA) FORM -->
+        <form id="admin2FAForm" autocomplete="off" onsubmit="handleVerify2FA(event)" style="display:none;">
+            <div style="text-align:center; margin-bottom:20px;">
+                <div style="width:52px; height:52px; border-radius:50%; background:rgba(23,63,45,0.08); border:2px solid #D4AF37; display:inline-flex; align-items:center; justify-content:center; margin-bottom:12px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#173F2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                </div>
+                <h3 style="font-size:18px; font-weight:800; color:var(--brand-forest); margin:0 0 6px;">Two-Step Verification</h3>
+                <p style="font-size:12.5px; color:#4B5563; line-height:1.5; margin:0;" id="twoFactorInstructions">
+                    A 6-digit security code has been dispatched to <strong style="color:var(--brand-forest);" id="twoFactorRecipient">admin@thulirva.com</strong>.
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="twoFactorOtp" style="text-align:center;">Enter 6-Digit Code</label>
+                <input type="text" id="twoFactorOtp" class="form-control-enterprise"
+                    style="text-align:center; font-size:24px; font-weight:800; letter-spacing:10px; padding:12px; font-family:'Courier New', monospace; background:#FFFFFF;"
+                    placeholder="••••••" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" required autocomplete="one-time-code">
+            </div>
+
+            <button type="submit" class="btn-login-submit" id="btnVerify2FASubmit" style="margin-top:12px;">
+                <span class="spinner-login" id="verify2FASpinner"></span>
+                <span id="btnVerify2FAText">Verify & Enter Console</span>
+            </button>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-top:20px; font-size:12.5px;">
+                <button type="button" id="btnResend2FA" onclick="handleResend2FA()" style="background:transparent; border:none; color:var(--brand-forest); font-weight:700; cursor:pointer; padding:0; text-decoration:underline;">
+                    Resend Code
+                </button>
+                <button type="button" onclick="cancel2FAStep()" style="background:transparent; border:none; color:#6B7280; font-weight:600; cursor:pointer; padding:0;">
+                    ← Back to Login
+                </button>
+            </div>
+        </form>
+
         <div class="login-footer-trust">
             <div class="trust-badge">
                 <span class="trust-badge-dot"></span>
@@ -467,8 +501,47 @@
             }
         }
 
+        let activeTwoFactorToken = null;
+        let resendTimerInterval = null;
+
         function promptSupportHelp() {
             alert("THULIRVA Operations & Security Support:\n\nFor enterprise administrative access inquiries or account unlock requests, please contact your System Administrator or IT Security Team at security@thulirva.com.");
+        }
+
+        function startResendCooldown(seconds = 30) {
+            const btn = document.getElementById("btnResend2FA");
+            if (!btn) return;
+            let remaining = seconds;
+            btn.disabled = true;
+            btn.style.opacity = "0.6";
+            btn.style.cursor = "not-allowed";
+            btn.style.textDecoration = "none";
+            btn.textContent = `Resend Code (${remaining}s)`;
+
+            if (resendTimerInterval) clearInterval(resendTimerInterval);
+            resendTimerInterval = setInterval(() => {
+                remaining -= 1;
+                if (remaining <= 0) {
+                    clearInterval(resendTimerInterval);
+                    btn.disabled = false;
+                    btn.style.opacity = "1";
+                    btn.style.cursor = "pointer";
+                    btn.style.textDecoration = "underline";
+                    btn.textContent = "Resend Code";
+                } else {
+                    btn.textContent = `Resend Code (${remaining}s)`;
+                }
+            }, 1000);
+        }
+
+        function cancel2FAStep() {
+            activeTwoFactorToken = null;
+            if (resendTimerInterval) clearInterval(resendTimerInterval);
+            document.getElementById("admin2FAForm").style.display = "none";
+            document.getElementById("adminLoginForm").style.display = "block";
+            document.getElementById("loginError").style.display = "none";
+            const pw = document.getElementById("password");
+            if (pw) pw.value = "";
         }
 
         async function handleAdminLogin(event) {
@@ -499,6 +572,24 @@
                     body: JSON.stringify({ email, password, admin_login: true, is_admin_portal: true })
                 });
                 const data = await response.json();
+
+                // 2-STEP VERIFICATION TRIGGERED
+                if (data.success && data.requires2FA && data.twoFactorToken) {
+                    activeTwoFactorToken = data.twoFactorToken;
+                    document.getElementById("adminLoginForm").style.display = "none";
+                    document.getElementById("admin2FAForm").style.display = "block";
+                    
+                    const recipientEl = document.getElementById("twoFactorRecipient");
+                    if (recipientEl) recipientEl.textContent = data.email || "admin@thulirva.com";
+                    
+                    const otpInput = document.getElementById("twoFactorOtp");
+                    if (otpInput) {
+                        otpInput.value = "";
+                        setTimeout(() => otpInput.focus(), 100);
+                    }
+                    startResendCooldown(30);
+                    return;
+                }
 
                 const role = (data.user?.role || data.admin?.role || "").toLowerCase();
                 const isAdmin = role === "admin" || role === "super_admin" || role === "super admin";
@@ -531,6 +622,91 @@
                 btn.disabled = false;
                 spinner.style.display = "none";
                 btnText.textContent = "Sign In to Dashboard";
+            }
+        }
+
+        async function handleVerify2FA(event) {
+            event.preventDefault();
+            if (!activeTwoFactorToken) {
+                cancel2FAStep();
+                return;
+            }
+
+            const otpInput = document.getElementById("twoFactorOtp");
+            const otp = (otpInput ? otpInput.value : "").trim();
+            const errorEl = document.getElementById("loginError");
+            const errorText = document.getElementById("loginErrorText");
+            const btn = document.getElementById("btnVerify2FASubmit");
+            const spinner = document.getElementById("verify2FASpinner");
+            const btnText = document.getElementById("btnVerify2FAText");
+
+            errorEl.style.display = "none";
+            btn.disabled = true;
+            spinner.style.display = "inline-block";
+            btnText.textContent = "Verifying Code...";
+
+            try {
+                const response = await fetch(getApiBaseUrl() + "/api/auth/verify-2fa", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ twoFactorToken: activeTwoFactorToken, otp })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.token) {
+                    localStorage.setItem("thulirva_admin_token", data.token);
+                    const adminUser = {
+                        id: data.admin?.id || data.user?.id || 1,
+                        name: data.admin?.name || data.user?.name || "Super Admin",
+                        admin_name: data.admin?.name || data.user?.name || "Super Admin",
+                        email: data.admin?.email || data.user?.email || "admin@thulirva.com",
+                        role: data.admin?.role || "Super Admin",
+                        profile_photo: data.admin?.profile_photo || data.user?.profile_photo || ""
+                    };
+                    localStorage.setItem("thulirva_admin_user", JSON.stringify(adminUser));
+                    localStorage.setItem("admin", JSON.stringify(adminUser));
+                    window.location.replace("dashboard.html");
+                } else {
+                    errorText.textContent = data.message || "Invalid two-step verification code. Please check your inbox and try again.";
+                    errorEl.style.display = "flex";
+                    if (otpInput) {
+                        otpInput.value = "";
+                        otpInput.focus();
+                    }
+                }
+            } catch (err) {
+                errorText.textContent = "Server communication failure. Please verify the backend service is running.";
+                errorEl.style.display = "flex";
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = "none";
+                btnText.textContent = "Verify & Enter Console";
+            }
+        }
+
+        async function handleResend2FA() {
+            if (!activeTwoFactorToken) return;
+            const errorEl = document.getElementById("loginError");
+            const errorText = document.getElementById("loginErrorText");
+
+            try {
+                const res = await fetch(getApiBaseUrl() + "/api/auth/resend-2fa", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ twoFactorToken: activeTwoFactorToken })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    startResendCooldown(30);
+                    alert("A fresh verification code has been dispatched to admin@thulirva.com.");
+                } else {
+                    errorText.textContent = data.message || "Failed to resend code.";
+                    errorEl.style.display = "flex";
+                }
+            } catch (err) {
+                errorText.textContent = "Unable to contact server to resend code.";
+                errorEl.style.display = "flex";
             }
         }
     </script>
