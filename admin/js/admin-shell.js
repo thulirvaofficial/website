@@ -63,6 +63,12 @@ const NAV_GROUPS = [
         ]
     },
     {
+        title: "App Distribution",
+        items: [
+            { key: "app-releases", label: "Customer App Releases", url: "app-releases.html", icon: "smartphone" }
+        ]
+    },
+    {
         title: "Support & Care",
         items: [
             { key: "support", label: "Customer Care & Tickets", url: "support.html", icon: "life-buoy", badgeId: "badge-support" },
@@ -81,6 +87,7 @@ const NAV_GROUPS = [
 
 // SVG Icon fallbacks for crisp rendering without external network dependency
 const SVG_ICONS = {
+    "smartphone": '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>',
     "layout-dashboard": '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>',
     "bar-chart-3": '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>',
     "shopping-bag": '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
@@ -866,6 +873,9 @@ async function executeOmniSearch(query) {
     }
 
     let extraJumps = '';
+    if ('app'.includes(q) || 'apk'.includes(q) || 'releases'.includes(q) || 'update'.includes(q) || 'ota'.includes(q)) {
+        extraJumps += `<a href="app-releases.html" class="dropdown-item" style="border-radius:6px; background:#E8F5E9; color:#1B4332; font-weight:700;">${getIcon("smartphone")} Jump to Customer App Releases</a>`;
+    }
     if ('announcements'.includes(q) || 'banners'.includes(q)) {
         extraJumps += `<a href="announcements.html" class="dropdown-item" style="border-radius:6px; background:#E8F5E9; color:#1B4332; font-weight:700;">${getIcon("megaphone")} Jump to Announcement Management</a>`;
     }

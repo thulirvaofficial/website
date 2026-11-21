@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Download THULIRVA Android App — Fresh Milk, Ghee & Agro Products</title>
+    <meta name="description" content="Download the official THULIRVA Android App APK directly to your phone. Daily fresh milk subscriptions, quick delivery tracking, instant coupons, and natural farm groceries.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://thulirva.com/pages/download-app.html">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#173F2D">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        .download-hero {
+            background: radial-gradient(circle at 80% 20%, rgba(230, 185, 67, 0.15) 0%, transparent 50%),
+                        linear-gradient(135deg, #173F2D 0%, #0a2518 100%);
+            color: #FFF9E9;
+            padding: 60px 0 80px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 40px;
+            align-items: center;
+        }
+        @media (max-width: 900px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+        .app-badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(230, 185, 67, 0.2);
+            border: 1px solid rgba(230, 185, 67, 0.4);
+            color: #F7D97B;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .app-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            color: #ffffff;
+        }
+        @media (max-width: 600px) {
+            .app-title { font-size: 32px; }
+        }
+        .app-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            line-height: 1.6;
+            margin-bottom: 28px;
+            max-width: 580px;
+        }
+        @media (max-width: 900px) {
+            .app-subtitle { margin: 0 auto 28px; }
+        }
+        .download-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+        }
+        .btn-download-apk {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #E6B943 0%, #D4A836 100%);
+            color: #173F2D;
+            font-weight: 800;
+            font-size: 17px;
+            padding: 16px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            box-shadow: 0 8px 24px rgba(230, 185, 67, 0.35);
+            transition: all 0.2s ease;
+            width: 100%;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-download-apk:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(230, 185, 67, 0.45);
+            color: #0a2518;
+        }
+        .spec-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+        }
+        .spec-label { opacity: 0.75; }
+        .spec-value { font-weight: 700; color: #FFF9E9; }
+
+        .qr-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 16px;
+            border-radius: 14px;
+            margin-top: 20px;
+        }
+        .qr-img {
+            width: 90px;
+            height: 90px;
+            background: #ffffff;
+            padding: 6px;
+            border-radius: 10px;
+        }
+        .step-card {
+            background: #ffffff;
+            border: 1px solid #dde8d5;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 16px rgba(23, 63, 45, 0.05);
+            transition: transform 0.2s;
+            position: relative;
+        }
+        .step-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(23, 63, 45, 0.1);
+        }
+        .step-num {
+            width: 36px;
+            height: 36px;
+            background: #173F2D;
+            color: #E6B943;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 16px;
+            margin-bottom: 14px;
+        }
+        .faq-item {
+            background: #FFFDF5;
+            border: 1px solid #dde8d5;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .faq-question {
+            padding: 16px 20px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #173F2D;
+        }
+        .faq-answer {
+            padding: 0 20px 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #3d4f32;
+            display: none;
+        }
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+        .faq-item.active .faq-chevron {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body>
+
+<header class="site-header">
+    <div class="container header-container">
+        <a href="../index.html" class="brand">
+            <div class="brand-logo-wrap">
+                <img src="../assets/images/thulirva-favicon-512.png" alt="THULIRVA" class="brand-logo-img" width="44" height="44">
+                <div class="brand-text">
+                    <span class="brand-name">THULIRVA</span>
+                    <span class="brand-tagline">ROOTED IN NATURE</span>
+                </div>
+            </div>
+        </a>
+        <nav class="main-navigation">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="shop.html" class="nav-link">Shop</a>
+            <a href="subscriptions.html" class="nav-link">Subscriptions</a>
+            <a href="about.html" class="nav-link">About Us</a>
+            <a href="farms.html" class="nav-link">Our Farms</a>
+            <a href="recipes.html" class="nav-link">Recipes</a>
+            <a href="contact.html" class="nav-link">Contact</a>
+            <a href="download-app.html" class="nav-link active" style="color:#E6B943; font-weight:700;">Get App 📲</a>
+        </nav>
+        <div class="header-actions">
+            <a href="cart.html" class="cart-button" title="Cart">
+                🛒<span class="cart-count" id="cartCount">0</span>
+            </a>
+            <button class="mobile-menu-button" id="mobileMenuButton">☰</button>
+        </div>
+    </div>
+    <nav class="mobile-navigation" id="mobileNavigation">
+        <a href="../index.html">Home</a>
+        <a href="shop.html">Shop</a>
+        <a href="subscriptions.html">Subscriptions</a>
+        <a href="about.html">About Us</a>
+        <a href="farms.html">Our Farms</a>
+        <a href="recipes.html">Recipes</a>
+        <a href="contact.html">Contact</a>
+        <a href="download-app.html" style="color:#E6B943; font-weight:700;">Get App 📲</a>
+    </nav>
+</header>
+
+<!-- Hero Section -->
+<section class="download-hero">
+    <div class="container">
+        <div class="hero-grid">
+            <div>
+                <div class="app-badge-pill">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Official Android Release • Direct & Safe Download
+                </div>
+                <h1 class="app-title">Fresh Morning Milk & Farm Produce at Your Fingertips</h1>
+                <p class="app-subtitle">
+                    Experience seamless doorstep milk subscriptions, order tracking, exclusive discounts, and tip your delivery partner with the official Thulirva Customer App.
+                </p>
+
+                <!-- What's new highlight -->
+                <div id="whatsNewBox" style="background: rgba(255,255,255,0.06); border-left: 3px solid #E6B943; padding: 14px 18px; border-radius: 8px; margin-bottom: 24px; display: none;">
+                    <div style="font-size: 13px; font-weight: 700; color: #F7D97B; margin-bottom: 4px;">What's New in this Release:</div>
+                    <div id="whatsNewText" style="font-size: 13px; opacity: 0.9; white-space: pre-wrap; line-height: 1.5;"></div>
+                </div>
+
+                <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
+                        <span style="color:#F7D97B;">✓</span> 100% Virus-Free & Safe
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
+                        <span style="color:#F7D97B;">✓</span> Fast Direct HTTPS Download
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
+                        <span style="color:#F7D97B;">✓</span> Android 8.0 to Android 15+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download CTA Card -->
+            <div>
+                <div class="download-card">
+                    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 20px;">
+                        <img src="../assets/images/thulirva-favicon-512.png" alt="THULIRVA App Icon" style="width: 58px; height: 58px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                        <div>
+                            <h3 style="font-size: 18px; font-weight: 800; color: #ffffff; margin-bottom: 2px;">THULIRVA Customer App</h3>
+                            <div style="font-size: 12px; color: #F7D97B;" id="releaseVersionBadge">Checking latest version...</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <div class="spec-item">
+                            <span class="spec-label">Version:</span>
+                            <span class="spec-value" id="specVersion">—</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">File Size:</span>
+                            <span class="spec-value" id="specSize">—</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Updated:</span>
+                            <span class="spec-value" id="specDate">—</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Package Name:</span>
+                            <span class="spec-value" style="font-family: monospace; font-size: 12px;">com.thulirva.thulirva_app</span>
+                        </div>
+                    </div>
+
+                    <a id="btnDownload" href="/api/app/releases/download" class="btn-download-apk">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download Android APK
+                    </a>
+
+                    <!-- Scan to Download QR Code -->
+                    <div class="qr-section">
+                        <img id="qrCodeImg" class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://thulirva.com/download-app.html" alt="Scan to download">
+                        <div>
+                            <div style="font-size: 13px; font-weight: 700; color: #FFF9E9;">Scan with Phone</div>
+                            <div style="font-size: 11px; opacity: 0.8; margin-top: 2px;">Point your camera or QR scanner to download directly to your mobile phone.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Step by Step Installation Guide -->
+<section style="padding: 70px 0; background: #FFFDF5;">
+    <div class="container">
+        <div style="text-align: center; max-width: 650px; margin: 0 auto 50px;">
+            <span style="color: #4a7c3f; font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">Simple 4-Step Setup</span>
+            <h2 style="font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 800; color: #173F2D; margin-top: 6px;">How to Install THULIRVA on Android</h2>
+            <p style="color: #627054; font-size: 15px; margin-top: 8px;">Installing directly via APK is fast, safe, and guarantees you receive official updates.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px;">
+            <div class="step-card">
+                <div class="step-num">1</div>
+                <h4 style="font-size: 17px; font-weight: 700; color: #173F2D; margin-bottom: 8px;">Download the APK</h4>
+                <p style="font-size: 14px; color: #627054; line-height: 1.5;">Tap the "Download Android APK" button above. The official installer will begin downloading to your phone.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">2</div>
+                <h4 style="font-size: 17px; font-weight: 700; color: #173F2D; margin-bottom: 8px;">Accept Download</h4>
+                <p style="font-size: 14px; color: #627054; line-height: 1.5;">If Chrome or Android warns "File might be harmful", tap <strong>Download anyway</strong>. Our app is verified and safe.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">3</div>
+                <h4 style="font-size: 17px; font-weight: 700; color: #173F2D; margin-bottom: 8px;">Enable Install Permission</h4>
+                <p style="font-size: 14px; color: #627054; line-height: 1.5;">Open the downloaded file. If prompted, allow your browser to "Install unknown apps" in Settings.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">4</div>
+                <h4 style="font-size: 17px; font-weight: 700; color: #173F2D; margin-bottom: 8px;">Install & Enjoy!</h4>
+                <p style="font-size: 14px; color: #627054; line-height: 1.5;">Tap <strong>Install</strong>. Once done, open THULIRVA to start your fresh morning milk subscription!</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Troubleshooting & FAQ Accordion -->
+<section style="padding: 60px 0 80px; background: #eaf2e4;">
+    <div class="container" style="max-width: 800px;">
+        <div style="text-align: center; margin-bottom: 40px;">
+            <h2 style="font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 800; color: #173F2D;">Frequently Asked Questions</h2>
+            <p style="color: #627054; font-size: 14px; margin-top: 6px;">Need help with Android installation? Check quick solutions below.</p>
+        </div>
+
+        <div class="faq-item active">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>Why does Android say "File might be harmful"?</span>
+                <span class="faq-chevron">▼</span>
+            </div>
+            <div class="faq-answer">
+                Android displays a standard cautionary message for any app downloaded directly outside of Google Play Store. The THULIRVA APK is built and signed directly by our engineering team, with strict SHA-256 integrity verification. It contains zero harmful code or ads.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>How will I get future app updates?</span>
+                <span class="faq-chevron">▼</span>
+            </div>
+            <div class="faq-answer">
+                The THULIRVA Customer App has a built-in Over-The-Air (OTA) update engine! Whenever a new version is published, the app will automatically alert you on startup and download the update in seconds without requiring manual reinstall.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>What are the minimum system requirements?</span>
+                <span class="faq-chevron">▼</span>
+            </div>
+            <div class="faq-answer">
+                THULIRVA runs smoothly on any Android smartphone running Android 8.0 (Oreo) or higher, including the newest Android 14 and 15 devices.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>Still facing issues?</span>
+                <span class="faq-chevron">▼</span>
+            </div>
+            <div class="faq-answer">
+                Our support team is always happy to assist you! Reach out via WhatsApp or call us directly at <strong>+91 93606 71533</strong> or email <strong>support@thulirva.com</strong>.
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer style="background: #0a2518; color: #FFF9E9; padding: 40px 0; text-align: center; font-size: 13px;">
+    <div class="container">
+        <div style="margin-bottom: 12px; font-weight: 700; color: #E6B943; font-size: 16px;">THULIRVA — Rooted in Nature</div>
+        <p style="opacity: 0.7; max-width: 500px; margin: 0 auto 16px;">Pure Cow Milk, Paneer, Cow Ghee, Curd & Cold-Pressed Natural Agro Products delivered fresh every morning.</p>
+        <div style="opacity: 0.5;">&copy; 2026 THULIRVA. All rights reserved.</div>
+    </div>
+</footer>
+
+<script>
+// Toggle FAQ
+function toggleFaq(el) {
+    const parent = el.closest(".faq-item");
+    parent.classList.toggle("active");
+}
+
+// Mobile navigation toggle
+const mobBtn = document.getElementById("mobileMenuButton");
+const mobNav = document.getElementById("mobileNavigation");
+if (mobBtn && mobNav) {
+    mobBtn.addEventListener("click", () => {
+        mobNav.classList.toggle("open");
+    });
+}
+
+// Fetch latest release details dynamically from backend
+async function fetchLatestRelease() {
+    try {
+        const res = await fetch("/api/app/releases/latest");
+        if (!res.ok) throw new Error("No active release");
+        const data = await res.json();
+
+        if (data.success && data.release) {
+            const rel = data.release;
+            document.getElementById("releaseVersionBadge").innerText = `Latest: v${rel.version} (Build ${rel.version_code})`;
+            document.getElementById("specVersion").innerText = `v${rel.version}`;
+            document.getElementById("specSize").innerText = rel.file_size || "40 MB";
+            document.getElementById("specDate").innerText = new Date(rel.release_date).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' });
+
+            if (rel.release_notes && rel.release_notes.trim()) {
+                document.getElementById("whatsNewBox").style.display = "block";
+                document.getElementById("whatsNewText").innerText = rel.release_notes;
+            }
+
+            // Update QR code to direct download URL
+            const fullDownloadUrl = window.location.origin + "/api/app/releases/download";
+            document.getElementById("qrCodeImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(fullDownloadUrl)}`;
+        }
+    } catch (e) {
+        console.warn("Could not fetch release info, using default fallback:", e);
+        document.getElementById("releaseVersionBadge").innerText = "Latest Android Edition";
+        document.getElementById("specVersion").innerText = "v1.0.0";
+        document.getElementById("specSize").innerText = "Approx. 40 MB";
+        document.getElementById("specDate").innerText = "Current";
+    }
+}
+
+fetchLatestRelease();
+</script>
+</body>
+</html>
+

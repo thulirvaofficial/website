@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <meta name="robots" content="noindex, nofollow">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>THULIRVA Admin — Customer App Releases & OTA Distribution</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <style>
+        .active-release-banner {
+            background: linear-gradient(135deg, #123F2B 0%, #1E5638 100%);
+            border-radius: 16px;
+            padding: 24px 28px;
+            color: #FAF7EE;
+            box-shadow: 0 10px 30px rgba(18, 63, 43, 0.2);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            margin-bottom: 24px;
+        }
+        .active-release-banner::before {
+            content: "";
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .checksum-code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 11px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 4px 8px;
+            border-radius: 6px;
+            color: #E5C97A;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .checksum-code:hover {
+            background: rgba(0, 0, 0, 0.45);
+            border-color: #E5C97A;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .status-badge.published {
+            background: #E8F5E9;
+            color: #1B5E20;
+            border: 1px solid #A5D6A7;
+        }
+        .status-badge.draft {
+            background: #FFF8E1;
+            color: #F57F17;
+            border: 1px solid #FFE082;
+        }
+        .status-badge.disabled {
+            background: #FFEBEE;
+            color: #C62828;
+            border: 1px solid #FFCDD2;
+        }
+        .status-badge.archived {
+            background: #ECEFF1;
+            color: #455A64;
+            border: 1px solid #CFD8DC;
+        }
+        .mandatory-pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .mandatory-pill.yes {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+        .mandatory-pill.no {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+        .drag-drop-zone {
+            border: 2px dashed #D4AF37;
+            border-radius: 12px;
+            background: #FAF7EE;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .drag-drop-zone:hover, .drag-drop-zone.dragover {
+            background: #F4EEDC;
+            border-color: #123F2B;
+        }
+        .progress-bar-container {
+            width: 100%;
+            height: 10px;
+            background: #E0E0E0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+            display: none;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #123F2B, #2E7D32);
+            width: 0%;
+            transition: width 0.2s;
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-layout">
+    <aside class="sidebar" id="adminSidebar"></aside>
+
+    <main class="main-content">
+        <header class="topbar" id="adminTopbar"></header>
+
+        <div class="page-container">
+            <!-- Header -->
+            <div class="page-header flex-between">
+                <div>
+                    <h1 class="page-title">Customer App Releases & OTA Updates</h1>
+                    <p class="page-subtitle">Manage customer Android APK releases, mandatory update enforcement, and over-the-air distribution</p>
+                </div>
+                <div class="flex-center gap-3">
+                    <a href="/download-app.html" target="_blank" class="btn btn-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        Public Download Page
+                    </a>
+                    <button class="btn btn-primary" onclick="openUploadModal()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        Upload New Version
+                    </button>
+                </div>
+            </div>
+
+            <!-- Metrics Overview -->
+            <div class="metrics-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Published Production Version</div>
+                    <div class="stat-value text-gold" id="statActiveVersion">—</div>
+                    <div class="stat-sub" id="statActiveSub">Live on Android Customer App</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total APK Downloads</div>
+                    <div class="stat-value text-success" id="statTotalDownloads">—</div>
+                    <div class="stat-sub">Direct OTA & Web installs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Latest Uploaded Version</div>
+                    <div class="stat-value" id="statLatestUpload">—</div>
+                    <div class="stat-sub" id="statLatestSub">Stored on server storage</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Mandatory Releases</div>
+                    <div class="stat-value text-danger" id="statMandatoryCount">—</div>
+                    <div class="stat-sub">Forced client upgrade policy</div>
+                </div>
+            </div>
+
+            <!-- Active Production Release Highlight -->
+            <div class="active-release-banner" id="activeReleaseCard" style="display:none;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                            <span class="status-badge published">● LIVE IN PRODUCTION</span>
+                            <span class="mandatory-pill" id="activeMandatoryPill">Optional Update</span>
+                        </div>
+                        <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 6px; color:#FAF7EE;" id="activeTitle">THULIRVA Customer App</h2>
+                        <div style="display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; opacity: 0.9; margin-bottom: 12px;">
+                            <div>Version: <strong id="activeVersionText" style="color:#E5C97A;">v1.0.0</strong></div>
+                            <div>Build Code: <strong id="activeCodeText">1</strong></div>
+                            <div>Size: <strong id="activeSizeText">0 MB</strong></div>
+                            <div>Published: <strong id="activeDateText">—</strong></div>
+                            <div>Downloads: <strong id="activeDownloadsText">0</strong></div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 12px;">
+                            <span>SHA-256 Checksum:</span>
+                            <span class="checksum-code" id="activeSha256" title="Click to copy SHA-256 hash" onclick="copyText(this.innerText)">—</span>
+                        </div>
+                        <div style="font-size: 13px; opacity: 0.9; max-width: 750px; line-height: 1.5; background: rgba(0,0,0,0.15); padding: 10px 14px; border-radius: 8px;" id="activeNotes">
+                            Release notes loading...
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 10px; align-self: center;">
+                        <a id="activeDownloadBtn" href="/api/app/releases/download" class="btn btn-primary" style="background:#E5C97A; color:#123F2B; font-weight:800; border:none; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Download Production APK
+                        </a>
+                        <button id="activeDisableBtn" class="btn btn-secondary" style="background:rgba(255,255,255,0.15); color:#FAF7EE; border-color:rgba(255,255,255,0.3);" onclick="disableActiveRelease()">
+                            Disable Current Release
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Card -->
+            <div class="card">
+                <div class="card-header flex-between" style="flex-wrap: wrap; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <h3 class="card-title">Release History & Version Management</h3>
+                        <span class="badge" id="totalReleasesBadge" style="background:#E8EDE6; color:#123F2B; font-weight:700;">0 Releases</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" id="searchInput" placeholder="Search version, title..." class="form-control" style="width: 220px;" oninput="debounceSearch()">
+                        <select id="statusFilter" class="form-control" style="width: 140px;" onchange="loadReleases()">
+                            <option value="all">All Statuses</option>
+                            <option value="published">Published</option>
+                            <option value="draft">Draft</option>
+                            <option value="disabled">Disabled</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="loadReleases()" title="Refresh List">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table" id="releasesTable">
+                        <thead>
+                            <tr>
+                                <th>Version & Code</th>
+                                <th>Release Title & Notes</th>
+                                <th>File Size & Checksum</th>
+                                <th>Update Type</th>
+                                <th>Status</th>
+                                <th>Downloads</th>
+                                <th>Created</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="releasesTableBody">
+                            <tr>
+                                <td colspan="8" style="text-align:center; padding: 40px; color: #888;">Loading releases...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Upload New Release Modal -->
+<div class="modal" id="uploadModal" style="display:none;">
+    <div class="modal-backdrop" onclick="closeUploadModal()"></div>
+    <div class="modal-content" style="max-width: 650px;">
+        <div class="modal-header">
+            <h3 class="modal-title" style="display:flex; align-items:center; gap:8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+                Publish New Customer Android APK
+            </h3>
+            <button class="modal-close" onclick="closeUploadModal()">&times;</button>
+        </div>
+        <form id="uploadForm" onsubmit="handleUploadSubmit(event)">
+            <div class="modal-body" style="display:flex; flex-direction:column; gap:16px;">
+                <!-- Drag and drop zone -->
+                <div>
+                    <label class="form-label">APK Binary File <span style="color:#C62828;">*</span></label>
+                    <div class="drag-drop-zone" id="dropZone" onclick="document.getElementById('apkFileInput').click()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#123F2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <div style="font-weight:700; color:#123F2B;" id="dropZoneText">Click or Drag & Drop APK File Here</div>
+                        <div style="font-size:12px; color:#666; margin-top:4px;" id="dropZoneSub">Supports Android APK files (.apk) up to 150 MB</div>
+                    </div>
+                    <input type="file" id="apkFileInput" accept=".apk,application/vnd.android.package-archive" style="display:none;" onchange="handleFileSelected(event)">
+                    <div class="progress-bar-container" id="uploadProgressContainer">
+                        <div class="progress-bar-fill" id="uploadProgressBar"></div>
+                    </div>
+                    <div id="uploadProgressText" style="font-size:12px; color:#123F2B; font-weight:700; margin-top:4px; display:none;">Uploading: 0%</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div>
+                        <label class="form-label">Version Number <span style="color:#C62828;">*</span></label>
+                        <input type="text" id="inputVersion" class="form-control" placeholder="e.g. 1.2.0" required>
+                        <small style="font-size:11px; color:#777;">Semantic format: Major.Minor.Patch</small>
+                    </div>
+                    <div>
+                        <label class="form-label">Version Code (Build) <span style="color:#C62828;">*</span></label>
+                        <input type="number" id="inputVersionCode" class="form-control" placeholder="e.g. 12" required min="1">
+                        <small style="font-size:11px; color:#777;">Integer higher than previous version</small>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="form-label">Release Title <span style="color:#C62828;">*</span></label>
+                    <input type="text" id="inputTitle" class="form-control" placeholder="e.g. Spring Freshness & Delivery Partner Tips" required>
+                </div>
+
+                <div>
+                    <label class="form-label">What's New / Release Notes</label>
+                    <textarea id="inputNotes" class="form-control" rows="4" placeholder="• Added Delivery Partner Tip option at checkout&#10;• Faster coupon code verification&#10;• Performance and stability enhancements"></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div>
+                        <label class="form-label">Min Supported Version</label>
+                        <input type="text" id="inputMinVersion" class="form-control" value="1.0.0" placeholder="1.0.0">
+                        <small style="font-size:11px; color:#777;">Versions below this will be forced to upgrade</small>
+                    </div>
+                    <div>
+                        <label class="form-label">Update Policy</label>
+                        <div style="margin-top:8px;">
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                <input type="checkbox" id="inputMandatory" value="true">
+                                <span style="font-weight:600; font-size:13px; color:#C62828;">Mandatory Update (Blocking)</span>
+                            </label>
+                            <small style="font-size:11px; color:#777; display:block; margin-top:2px;">User cannot use app without updating</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="border-top:1px solid #EEE; padding-top:14px;">
+                    <label class="form-label">Initial Status</label>
+                    <div style="display:flex; gap:20px;">
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="radio" name="inputStatus" value="draft" checked>
+                            <span>Save as Draft (Preview before publish)</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="radio" name="inputStatus" value="published">
+                            <span style="color:#1B5E20; font-weight:700;">Publish Immediately to Production</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer flex-between">
+                <button type="button" class="btn btn-secondary" onclick="closeUploadModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="btnSubmitRelease">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Upload & Save Release
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Release Preview Modal -->
+<div class="modal" id="previewModal" style="display:none;">
+    <div class="modal-backdrop" onclick="closePreviewModal()"></div>
+    <div class="modal-content" style="max-width: 580px;">
+        <div class="modal-header">
+            <h3 class="modal-title" id="previewModalTitle">Release Details</h3>
+            <button class="modal-close" onclick="closePreviewModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="previewModalBody">
+            <!-- Dynamic Preview Content -->
+        </div>
+        <div class="modal-footer flex-between" id="previewModalFooter">
+            <button class="btn btn-secondary" onclick="closePreviewModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/admin-shell.js"></script>
+<script src="js/api-client.js"></script>
+<script>
+let currentReleases = [];
+let selectedFile = null;
+let searchTimer = null;
+const token = localStorage.getItem("thulirva_admin_token") || localStorage.getItem("token") || "";
+
+function getApiBase() {
+    if (window.location.protocol === "file:") return "http://localhost:5500";
+    return "";
+}
+
+// Drag & Drop handlers
+const dropZone = document.getElementById("dropZone");
+['dragenter', 'dragover'].forEach(name => {
+    dropZone.addEventListener(name, (e) => {
+        e.preventDefault();
+        dropZone.classList.add("dragover");
+    }, false);
+});
+['dragleave', 'drop'].forEach(name => {
+    dropZone.addEventListener(name, (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("dragover");
+    }, false);
+});
+dropZone.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    if (files.length > 0) {
+        handleFileObj(files[0]);
+    }
+});
+
+function handleFileSelected(e) {
+    if (e.target.files.length > 0) {
+        handleFileObj(e.target.files[0]);
+    }
+}
+
+function handleFileObj(file) {
+    if (!file.name.toLowerCase().endsWith(".apk")) {
+        alert("Please select a valid Android APK file (.apk)");
+        return;
+    }
+    selectedFile = file;
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+    document.getElementById("dropZoneText").innerHTML = `✓ Selected: <strong>${escapeHtml(file.name)}</strong> (${sizeMb} MB)`;
+    document.getElementById("dropZoneSub").innerText = "Ready to upload";
+
+    // Auto-detect version if present in filename (e.g. app-v1.2.0.apk or thulirva-1.2.0.apk)
+    const match = file.name.match(/v?(\d+\.\d+\.\d+)/i);
+    if (match && !document.getElementById("inputVersion").value) {
+        document.getElementById("inputVersion").value = match[1];
+    }
+}
+
+function openUploadModal() {
+    document.getElementById("uploadForm").reset();
+    selectedFile = null;
+    document.getElementById("dropZoneText").innerText = "Click or Drag & Drop APK File Here";
+    document.getElementById("dropZoneSub").innerText = "Supports Android APK files (.apk) up to 150 MB";
+    document.getElementById("uploadProgressContainer").style.display = "none";
+    document.getElementById("uploadProgressText").style.display = "none";
+    document.getElementById("uploadModal").style.display = "flex";
+}
+
+function closeUploadModal() {
+    document.getElementById("uploadModal").style.display = "none";
+}
+
+function closePreviewModal() {
+    document.getElementById("previewModal").style.display = "none";
+}
+
+function debounceSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+        loadReleases();
+    }, 300);
+}
+
+// Copy text helper
+function copyText(txt) {
+    if (!txt || txt === "—") return;
+    navigator.clipboard.writeText(txt).then(() => {
+        alert("SHA-256 Checksum copied to clipboard:\n" + txt);
+    }).catch(() => {
+        prompt("Copy SHA-256 Checksum:", txt);
+    });
+}
+
+function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// Load statistics
+async function loadStatistics() {
+    try {
+        const res = await fetch(`${getApiBase()}/api/admin/app/releases/statistics`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && data.statistics) {
+            const stats = data.statistics;
+            document.getElementById("statTotalDownloads").innerText = stats.totalDownloads || 0;
+            document.getElementById("statMandatoryCount").innerText = stats.mandatoryCount || 0;
+
+            if (stats.activeRelease) {
+                const act = stats.activeRelease;
+                document.getElementById("statActiveVersion").innerText = `v${act.version}`;
+                document.getElementById("statActiveSub").innerText = `Build code ${act.version_code} • ${act.file_size_formatted}`;
+
+                // Populate active card
+                document.getElementById("activeReleaseCard").style.display = "block";
+                document.getElementById("activeTitle").innerText = act.release_title || `THULIRVA Customer App v${act.version}`;
+                document.getElementById("activeVersionText").innerText = `v${act.version}`;
+                document.getElementById("activeCodeText").innerText = act.version_code;
+                document.getElementById("activeSizeText").innerText = act.file_size_formatted;
+                document.getElementById("activeDownloadsText").innerText = act.download_count || 0;
+                document.getElementById("activeDateText").innerText = new Date(act.published_at || act.created_at).toLocaleDateString();
+                document.getElementById("activeSha256").innerText = act.checksum_sha256;
+                document.getElementById("activeNotes").innerText = act.release_notes || "No release notes provided.";
+
+                const mandPill = document.getElementById("activeMandatoryPill");
+                if (act.is_mandatory) {
+                    mandPill.className = "mandatory-pill yes";
+                    mandPill.innerText = "Mandatory Update";
+                } else {
+                    mandPill.className = "mandatory-pill no";
+                    mandPill.innerText = "Optional Update";
+                }
+            } else {
+                document.getElementById("statActiveVersion").innerText = "None";
+                document.getElementById("statActiveSub").innerText = "No published releases";
+                document.getElementById("activeReleaseCard").style.display = "none";
+            }
+
+            if (stats.latestUpload) {
+                document.getElementById("statLatestUpload").innerText = `v${stats.latestUpload.version}`;
+                document.getElementById("statLatestSub").innerText = `${stats.latestUpload.status.toUpperCase()} • ${stats.latestUpload.file_size_formatted}`;
+            } else {
+                document.getElementById("statLatestUpload").innerText = "—";
+            }
+        }
+    } catch (err) {
+        console.error("Error loading statistics:", err);
+    }
+}
+
+// Load releases table
+async function loadReleases() {
+    const status = document.getElementById("statusFilter").value;
+    const search = document.getElementById("searchInput").value;
+
+    try {
+        const query = new URLSearchParams({ status, search, limit: 50 });
+        const res = await fetch(`${getApiBase()}/api/admin/app/releases?${query.toString()}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        if (data.success && data.releases) {
+            currentReleases = data.releases;
+            document.getElementById("totalReleasesBadge").innerText = `${data.total || data.releases.length} Releases`;
+            renderTable(data.releases);
+        } else {
+            document.getElementById("releasesTableBody").innerHTML = `
+                <tr><td colspan="8" style="text-align:center; padding:30px; color:#C62828;">Failed to load releases: ${escapeHtml(data.error || 'Server error')}</td></tr>
+            `;
+        }
+    } catch (err) {
+        console.error("Error loading releases:", err);
+        document.getElementById("releasesTableBody").innerHTML = `
+            <tr><td colspan="8" style="text-align:center; padding:30px; color:#C62828;">Connection error loading releases.</td></tr>
+        `;
+    }
+}
+
+function renderTable(releases) {
+    const tbody = document.getElementById("releasesTableBody");
+    if (!releases || releases.length === 0) {
+        tbody.innerHTML = `
+            <tr><td colspan="8" style="text-align:center; padding:40px; color:#888;">No releases found. Click <strong>Upload New Version</strong> to publish your first APK.</td></tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = releases.map(rel => {
+        const isPub = rel.status === 'published';
+        const isDraft = rel.status === 'draft';
+        const isDis = rel.status === 'disabled';
+        const mandBadge = rel.is_mandatory 
+            ? `<span class="mandatory-pill yes">Mandatory</span>`
+            : `<span class="mandatory-pill no">Optional</span>`;
+
+        const statusBadge = `<span class="status-badge ${rel.status}">● ${rel.status.toUpperCase()}</span>`;
+
+        let actionBtns = `
+            <button class="btn btn-sm btn-secondary" onclick="viewReleaseDetails('${rel.id}')" title="Preview Release">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <a href="${getApiBase()}/api/app/releases/download/${rel.id}" class="btn btn-sm btn-secondary" title="Download APK" download>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </a>
+        `;
+
+        if (!isPub) {
+            actionBtns += `
+                <button class="btn btn-sm btn-primary" onclick="publishReleasePrompt('${rel.id}', '${escapeHtml(rel.version)}')" title="Publish this version to all customer apps">
+                    Publish
+                </button>
+            `;
+        } else {
+            actionBtns += `
+                <button class="btn btn-sm btn-secondary" style="color:#C62828;" onclick="disableReleasePrompt('${rel.id}')" title="Disable Release">
+                    Disable
+                </button>
+            `;
+        }
+
+        if (!isPub && rel.status === 'archived') {
+            actionBtns += `
+                <button class="btn btn-sm btn-secondary" style="color:#D4AF37;" onclick="rollbackReleasePrompt('${rel.id}', '${escapeHtml(rel.version)}')" title="Roll back production to this version">
+                    Roll Back
+                </button>
+            `;
+        }
+
+        if (!isPub) {
+            actionBtns += `
+                <button class="btn btn-sm btn-secondary" style="color:#C62828;" onclick="deleteReleasePrompt('${rel.id}', '${escapeHtml(rel.version)}')" title="Delete Draft/Archived Release">
+                    &times;
+                </button>
+            `;
+        }
+
+        const dateStr = new Date(rel.created_at).toLocaleDateString();
+        const shortSha = rel.checksum_sha256 ? `${rel.checksum_sha256.substring(0, 10)}...` : '—';
+
+        return `
+            <tr style="${isPub ? 'background: #FAF7EE;' : ''}">
+                <td>
+                    <div style="font-weight:700; color:#123F2B; font-size:14px;">v${escapeHtml(rel.version)}</div>
+                    <div style="font-size:11px; color:#777;">Code: <strong>${rel.version_code}</strong></div>
+                </td>
+                <td>
+                    <div style="font-weight:600; color:#222; font-size:13px;">${escapeHtml(rel.release_title)}</div>
+                    <div style="font-size:11px; color:#666; max-width:280px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        ${escapeHtml(rel.release_notes || 'No release notes')}
+                    </div>
+                </td>
+                <td>
+                    <div style="font-size:12px; font-weight:600;">${rel.file_size_formatted || '0 MB'}</div>
+                    <span class="checksum-code" title="${rel.checksum_sha256}" onclick="copyText('${rel.checksum_sha256}')">${shortSha}</span>
+                </td>
+                <td>${mandBadge}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <div style="font-weight:700; color:#123F2B;">${rel.download_count || 0}</div>
+                </td>
+                <td>
+                    <div style="font-size:12px;">${dateStr}</div>
+                    <div style="font-size:11px; color:#888;">by ${escapeHtml(rel.uploaded_by || 'Admin')}</div>
+                </td>
+                <td style="text-align: right;">
+                    <div style="display:inline-flex; gap:6px; align-items:center;">
+                        ${actionBtns}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+// Upload APK handler with progress
+async function handleUploadSubmit(e) {
+    e.preventDefault();
+    if (!selectedFile) {
+        alert("Please select or drop an APK file to upload.");
+        return;
+    }
+
+    const version = document.getElementById("inputVersion").value.trim();
+    const versionCode = document.getElementById("inputVersionCode").value.trim();
+    const title = document.getElementById("inputTitle").value.trim();
+    const notes = document.getElementById("inputNotes").value.trim();
+    const minVersion = document.getElementById("inputMinVersion").value.trim();
+    const isMandatory = document.getElementById("inputMandatory").checked;
+    const status = document.querySelector('input[name="inputStatus"]:checked').value;
+
+    const formData = new FormData();
+    formData.append("apk_file", selectedFile);
+    formData.append("version", version);
+    formData.append("version_code", versionCode);
+    formData.append("release_title", title);
+    formData.append("release_notes", notes);
+    formData.append("min_supported_version", minVersion);
+    formData.append("is_mandatory", isMandatory);
+    formData.append("status", status);
+
+    const submitBtn = document.getElementById("btnSubmitRelease");
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = "Uploading APK...";
+
+    const progressContainer = document.getElementById("uploadProgressContainer");
+    const progressBar = document.getElementById("uploadProgressBar");
+    const progressText = document.getElementById("uploadProgressText");
+    progressContainer.style.display = "block";
+    progressText.style.display = "block";
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${getApiBase()}/api/admin/app/releases`, true);
+    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+
+    xhr.upload.onprogress = (evt) => {
+        if (evt.lengthComputable) {
+            const percent = Math.round((evt.loaded / evt.total) * 100);
+            progressBar.style.width = percent + "%";
+            progressText.innerText = `Uploading APK: ${percent}% (${(evt.loaded / (1024 * 1024)).toFixed(1)} MB / ${(evt.total / (1024 * 1024)).toFixed(1)} MB)`;
+        }
+    };
+
+    xhr.onload = () => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = "Upload & Save Release";
+        if (xhr.status >= 200 && xhr.status < 300) {
+            const resp = JSON.parse(xhr.responseText);
+            alert(resp.message || "Release uploaded successfully!");
+            closeUploadModal();
+            loadStatistics();
+            loadReleases();
+        } else {
+            try {
+                const err = JSON.parse(xhr.responseText);
+                alert("Upload failed: " + (err.error || err.message || xhr.statusText));
+            } catch (p) {
+                alert("Upload failed with HTTP status: " + xhr.status);
+            }
+        }
+    };
+
+    xhr.onerror = () => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = "Upload & Save Release";
+        alert("Network error occurred during APK upload. Please check server connection.");
+    };
+
+    xhr.send(formData);
+}
+
+// Publish Release Prompt
+async function publishReleasePrompt(id, version) {
+    if (!confirm(`Are you sure you want to PUBLISH v${version} to Production?\n\nThis will instantly make v${version} the live version for all customers, and broadcast an update announcement!`)) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`${getApiBase()}/api/admin/app/releases/${id}/publish`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message || `v${version} published successfully!`);
+            loadStatistics();
+            loadReleases();
+        } else {
+            alert("Error: " + (data.error || data.message));
+        }
+    } catch (err) {
+        alert("Failed to publish release: " + err.message);
+    }
+}
+
+// Disable Active Release
+async function disableActiveRelease() {
+    const statsRes = await fetch(`${getApiBase()}/api/admin/app/releases/statistics`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    const sData = await statsRes.json();
+    if (!sData.statistics || !sData.statistics.activeRelease) {
+        alert("No active release to disable.");
+        return;
+    }
+    const act = sData.statistics.activeRelease;
+    disableReleasePrompt(act.id);
+}
+
+// Disable Release Prompt
+async function disableReleasePrompt(id) {
+    if (!confirm("Are you sure you want to DISABLE this release? Customers will not be able to download this version until it is re-published.")) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`${getApiBase()}/api/admin/app/releases/${id}/disable`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message || "Release disabled.");
+            loadStatistics();
+            loadReleases();
+        } else {
+            alert("Error: " + (data.error || data.message));
+        }
+    } catch (err) {
+        alert("Failed to disable release: " + err.message);
+    }
+}
+
+// Rollback Release Prompt
+async function rollbackReleasePrompt(id, version) {
+    if (!confirm(`⚠️ ROLLBACK CONFIRMATION\n\nAre you sure you want to roll back production to v${version}?\n\nThis will restore v${version} as the live published release for all customer apps.`)) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`${getApiBase()}/api/admin/app/releases/${id}/rollback`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message || `Successfully rolled back to v${version}!`);
+            loadStatistics();
+            loadReleases();
+        } else {
+            alert("Error: " + (data.error || data.message));
+        }
+    } catch (err) {
+        alert("Failed to rollback: " + err.message);
+    }
+}
+
+// Delete Release Prompt
+async function deleteReleasePrompt(id, version) {
+    if (!confirm(`Are you sure you want to permanently delete Release v${version}?\n\nThis will remove the release record and delete its APK file from the server.`)) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`${getApiBase()}/api/admin/app/releases/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message || `Release v${version} deleted.`);
+            loadStatistics();
+            loadReleases();
+        } else {
+            alert("Error: " + (data.error || data.message));
+        }
+    } catch (err) {
+        alert("Failed to delete release: " + err.message);
+    }
+}
+
+// View Release Details Modal
+function viewReleaseDetails(id) {
+    const rel = currentReleases.find(r => String(r.id) === String(id));
+    if (!rel) return;
+
+    document.getElementById("previewModalTitle").innerText = `Customer App Release v${rel.version} (Build ${rel.version_code})`;
+    document.getElementById("previewModalBody").innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:14px;">
+            <div style="background:#FAF7EE; padding:14px; border-radius:8px; border:1px solid #E5C97A;">
+                <div style="font-size:12px; color:#666;">Title</div>
+                <div style="font-size:16px; font-weight:800; color:#123F2B;">${escapeHtml(rel.release_title)}</div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:13px;">
+                <div><strong>Status:</strong> <span class="status-badge ${rel.status}">● ${rel.status.toUpperCase()}</span></div>
+                <div><strong>Policy:</strong> ${rel.is_mandatory ? '<span style="color:#C62828; font-weight:700;">Mandatory Update</span>' : '<span style="color:#2E7D32; font-weight:700;">Optional Update</span>'}</div>
+                <div><strong>Min Version:</strong> ${escapeHtml(rel.min_supported_version)}</div>
+                <div><strong>File Size:</strong> ${rel.file_size_formatted}</div>
+                <div><strong>Downloads:</strong> ${rel.download_count || 0}</div>
+                <div><strong>Uploaded By:</strong> ${escapeHtml(rel.uploaded_by || 'Admin')}</div>
+            </div>
+            <div>
+                <strong style="font-size:12px; color:#555;">SHA-256 Checksum:</strong>
+                <div class="checksum-code" style="display:block; margin-top:4px; word-break:break-all;" onclick="copyText('${rel.checksum_sha256}')">${rel.checksum_sha256}</div>
+            </div>
+            <div>
+                <strong style="font-size:12px; color:#555;">What's New / Release Notes:</strong>
+                <div style="margin-top:6px; background:#F8F9FA; padding:12px; border-radius:6px; font-size:13px; white-space:pre-wrap; line-height:1.5;">${escapeHtml(rel.release_notes || 'No release notes provided.')}</div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById("previewModalFooter").innerHTML = `
+        <a href="${getApiBase()}/api/app/releases/download/${rel.id}" class="btn btn-primary" download>Download APK (${rel.file_size_formatted})</a>
+        <button class="btn btn-secondary" onclick="closePreviewModal()">Close</button>
+    `;
+
+    document.getElementById("previewModal").style.display = "flex";
+}
+
+// Init
+document.addEventListener("DOMContentLoaded", () => {
+    loadStatistics();
+    loadReleases();
+});
+</script>
+</body>
+</html>
+
